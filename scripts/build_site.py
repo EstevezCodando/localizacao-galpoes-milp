@@ -127,7 +127,14 @@ def _csv(name: str) -> list[dict[str, object]]:
 
 def national_map() -> dict[str, object] | None:
     path = RES / "rede_mapa.json"
-    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
+    if not path.exists():
+        return None
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    focus = RES / "foco" / "rede_mapa.json"
+    if focus.exists():  # vistas da rede restrita ao Sul, Sudeste e Centro-Oeste
+        for v in json.loads(focus.read_text(encoding="utf-8"))["vistas"]:
+            payload["vistas"].append({**v, "nome": f"S+SE+CO: {v['nome']}"})
+    return payload
 
 
 def ml_block() -> dict[str, object]:

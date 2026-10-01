@@ -4,21 +4,59 @@
 
 **Onde abrir centros de distribuição e qual deles atende cada região, ao menor custo.**
 
-Localização capacitada com fonte única (SSCFLP) sobre pedidos reais do Brasil, resolvida por heurística,
-matheurística (LNS) e programação inteira mista, com frete oficial da ANTT, aluguel de galpões coletado
-e validação contra ótimos publicados.
+Localização capacitada com fonte única (SSCFLP) sobre pedidos reais do Brasil, resolvida por heurísticas,
+matheurística (LNS) e programação inteira mista, com frete oficial da ANTT, aluguel de galpões coletado,
+dados abertos do IBGE e do OpenStreetMap, previsão de demanda e validação contra ótimos publicados.
 
-`Python 3.12` · `OR-Tools (SCIP, GLOP)` · `scikit-learn` · `uv` · `mypy --strict` · `ruff` · `pytest`
+`Python 3.12` · `OR-Tools (SCIP, GLOP)` · `scikit-learn` · `uv` · `mypy --strict` · `ruff` · `pytest (91 testes)`
 
-[Mapa e resultados](docs/index.html) · [Estudo integrado](docs/estudo_integrado/index.html)
+[Mapa e resultados](docs/index.html) · [Estudo integrado](docs/estudo_integrado/index.html) · [Problema](#o-problema) · [Resultados](#resultados) · [Dados](#dados-e-fontes) · [Como executar](#como-executar) · [Limitações](#limitações-e-honestidade-dos-números)
 
 </div>
 
 ---
 
+## Sumário
+
+1. [Em uma página](#em-uma-página)
+2. [O problema](#o-problema)
+3. [Os métodos, explicados](#os-métodos-explicados)
+4. [Arquitetura](#arquitetura)
+5. [Dados e fontes](#dados-e-fontes)
+6. [Camada territorial e aprendizado de máquina](#camada-territorial-e-aprendizado-de-máquina)
+7. [Rede nacional e visão de futuro](#rede-nacional-e-visão-de-futuro)
+8. [Foco no Sul, Sudeste e Centro-Oeste, com vias do OpenStreetMap](#foco-no-sul-sudeste-e-centro-oeste-com-vias-do-openstreetmap)
+9. [Resultados](#resultados)
+10. [Validação externa](#validação-externa)
+11. [Como executar](#como-executar)
+12. [Estrutura do repositório](#estrutura-do-repositório)
+13. [Qualidade e reprodutibilidade](#qualidade-e-reprodutibilidade)
+14. [Limitações e honestidade dos números](#limitações-e-honestidade-dos-números)
+15. [Trabalhos relacionados](#trabalhos-relacionados)
+16. [Licenças e atribuições](#licenças-e-atribuições)
+
+---
+
+## Em uma página
+
+| | |
+|---|---|
+| **Pergunta** | Quais centros de distribuição abrir e a qual centro cada região de demanda será atendida, respeitando capacidade e minimizando custo fixo + frete + penalidade por pedido não atendido? |
+| **Dados** | 96.476 pedidos entregues do [Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce) em 850 regiões (prefixo de CEP de 3 dígitos); população, idade, renda, IDHM e PIB de 5.571 municípios (IBGE e Ipeadata); vias, rodovias e galpões do OpenStreetMap; distâncias de estrada (OSRM) |
+| **Custos reais** | Frete: piso mínimo da ANTT (Res. 6.084/2026). Custo fixo: aluguel de galpões por estado (levantamento de fev/2026, preços pedidos) |
+| **Métodos** | Guloso, busca local, LNS, MILP (frio e aquecido) e relaxação linear como limite inferior |
+| **Validação** | OR-Library: 7 de 7 ótimos reproduzidos. Holmberg et al. (1999): 71 instâncias de fonte única com ótimo publicado |
+| **Aprendizado de máquina** | Demanda por município (Poisson e gradient boosting), previsão de população contra o Censo 2022, clusterização e score de candidatos, todos com validação espacial |
+| **Achado central** | Com capacidade folgada (recortes do Olist) o LNS chega ao nível do MILP ou melhor; com capacidade apertada (Holmberg) o MILP domina. Uma rede projetada só para 2025 custa +25% a +47% em 2030 base e +206% a +209% no cenário alto |
+| **Resultado negativo mantido** | Variáveis do OpenStreetMap (densidade viária, galpões) **não** melhoraram o modelo de demanda nem o score de candidatos |
+
+> Projeto de portfólio. Capacidades, penalidade de não atendimento, pedidos por veículo e densidade de pedidos por m² são **premissas declaradas**. Nada aqui é ganho medido em operação real.
+
+---
+
 ## O problema
 
-Uma empresa precisa decidir **quais centros de distribuição abrir** entre vários candidatos e **a qual centro cada região de demanda será atendida**. Cada centro tem capacidade limitada e um custo fixo para operar, e cada região é atendida por um único centro (fonte única). Abrir poucos centros barateia a estrutura, mas encarece o frete; abrir muitos faz o contrário. O objetivo é o equilíbrio de menor custo total.
+Uma empresa precisa decidir **quais centros de distribuição abrir** entre vários candidatos e **a qual centro cada região de demanda será atendida**. Cada centro tem capacidade limitada e custo fixo, e cada região é atendida por um único centro (fonte única). Abrir poucos centros barateia a estrutura e encarece o frete; abrir muitos faz o contrário. Interessa o equilíbrio de menor custo total.
 
 ```
 min   Σ f_i y_i  +  Σ d_j c_ij x_ij  +  p Σ d_j (1 − Σ_i x_ij)
@@ -28,56 +66,181 @@ s.a.  Σ_i x_ij ≤ 1                       para cada região j
       x, y binários
 ```
 
-`y_i` abre o centro *i*; `x_ij` atribui a região *j* ao centro *i*. A penalidade `p` por pedido não atendido mantém toda instância viável e torna explícito o custo de adiar pedidos, em vez de esconder inviabilidade.
+| Símbolo | Significado |
+|---|---|
+| `y_i` | 1 se o centro *i* abre |
+| `x_ij` | 1 se a região *j* é atendida pelo centro *i* |
+| `f_i` | custo fixo de operar o centro *i* (aluguel × área, ver [custos reais](#custos-reais)) |
+| `c_ij` | custo de transportar um pedido de *i* até *j* |
+| `d_j` | demanda da região *j* |
+| `Q_i` | capacidade do centro *i* |
+| `p` | penalidade por pedido não atendido |
 
-## Como o trabalho foi conduzido
+**Por que a penalidade `p`?** Mantém toda instância viável e torna explícito o custo de adiar ou terceirizar pedidos, em vez de esconder inviabilidade. Isso tem uma consequência: *viável* não significa *atendido integralmente*. Rejeitar pedido é permitido, a um preço.
 
-O projeto avançou em etapas, cada uma respondendo a uma dúvida da anterior.
+**Por que fonte única?** É a regra operacional comum (um centro por região) e é o que torna o problema difícil: sem ela, a demanda pode ser dividida e o problema fica muito mais fácil (a OR-Library usa essa variante, ver [validação](#validação-externa)).
 
-### 1. Modelo e referências de comparação
+### Um exemplo que cabe na cabeça
 
-Um modelo único ([`solvers/model.py`](src/alocacao_capacitada/solvers/model.py)) serve ao MILP e à relaxação linear, que fornece um **limite inferior** para medir a distância de qualquer solução ao ótimo. Como comparação, uma heurística gulosa e uma busca local. Toda solução passa por uma **avaliação única** ([`domain/evaluation.py`](src/alocacao_capacitada/domain/evaluation.py)): nenhum método avalia a si mesmo, e o domínio (`Instance`, `Solution`) não depende de nenhum solver.
+[`examples/exemplo_didatico.py`](examples/exemplo_didatico.py): 3 centros candidatos, 5 regiões. Há 4⁵ = 1.024 atribuições possíveis, todas enumeráveis.
 
-### 2. Dados reais e custos reais
+| Método | Custo |
+|---|---:|
+| Guloso | 232 |
+| Busca local | 210 |
+| **MILP e enumeração completa** | **203** |
+| Relaxação linear (limite inferior) | 189,57 |
 
-Os dados são 96.476 pedidos entregues do [Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce), agrupados em 850 regiões (prefixo de CEP de 3 dígitos). O frete segue o piso mínimo da ANTT (Res. 6.084/2026) e o custo fixo vem de um levantamento de aluguel de galpões (fev/2026).
+O ótimo abre B e C, e fecha A. O limite do PL (189,57) está abaixo do ótimo inteiro (203): a relaxação **delimita**, não resolve. O [estudo integrado](docs/estudo_integrado/index.html) tem a versão interativa, com os custos enumerados em 3D.
+
+![O exemplo didático: atribuições possíveis e a solução ótima.](docs/estudo_integrado/figuras/02_otimo_3d.png)
+
+---
+
+## Os métodos, explicados
+
+| Método | Ideia | Ponto forte | Ponto fraco |
+|---|---|---|---|
+| **Guloso** | Abre centros um a um, escolhendo o de maior economia imediata | Instantâneo | Ignora o custo de abrir na escolha; pode errar muito (46% de gap médio em Holmberg) |
+| **Busca local** | Parte do guloso e troca/abre/fecha centros enquanto melhora | Barata e robusta | Fica presa em ótimos locais |
+| **MILP** | Resolve o modelo inteiro com branch-and-bound (SCIP via OR-Tools) | Dá **prova** de otimalidade quando termina | Perde fôlego em instâncias grandes |
+| **MILP aquecido** | Mesmo MILP, começando de uma solução boa (a da busca local) | Incumbente bom desde o início | O aquecimento consome parte do orçamento |
+| **LNS** (matheurística) | A cada iteração, solta uma vizinhança de regiões e reotimiza **só ela** com um subproblema exato, mantendo o resto fixo | Escala bem e mistura exatidão local com busca global | Não prova otimalidade; depende do tamanho da vizinhança |
+| **Relaxação linear (PL)** | Permite `y` e `x` fracionários | Dá um **limite inferior**: nenhuma solução inteira custa menos | Não é uma solução operacional |
+
+**Como ler um gap.** Para minimização, `LB ≤ ótimo ≤ UB`. `UB` é o custo de uma solução viável; `LB` vem da relaxação ou do solver. Este projeto reporta dois tipos de gap, e eles não são a mesma coisa:
+
+- **Distância até o limite inferior (`gap_ub`)**: `(UB − LB) / UB`. Quanto a solução pode ainda estar acima do ótimo, no máximo.
+- **Excesso sobre o ótimo ou o melhor conhecido**: só existe quando o ótimo é conhecido (Holmberg) ou usamos o melhor custo encontrado como referência.
+
+**Uma leitura útil do dual.** O valor dual da restrição de capacidade, multiplicado por `y`, estima o ganho de uma unidade a mais de capacidade em um centro aberto (teorema do envelope). Isso aparece nos capítulos didáticos como "valor marginal da capacidade".
+
+---
+
+## Arquitetura
 
 ```
-bronze ──▶ silver ──▶ gold ──▶ instância ──▶ solvers ──▶ avaliação única
-HTML/CSV   tabelas    frete,     imutável     guloso       custo, viabilidade,
-brutos +   tipadas    aluguel                 busca local  pedido não atendido
-hash/data             rastreável              LNS · MILP
-                      ao bronze               PL (limite)
+bronze ─────▶ silver ─────▶ gold ─────▶ instância ─────▶ solvers ─────▶ avaliação única
+HTML, CSV,    tabelas       frete,       imutável,         guloso          custo, viabilidade,
+JSON brutos   tipadas       aluguel,     validada          busca local     pedido não atendido
++ hash e      e limpas      painel                         LNS · MILP
+data de                     rastreável                     PL (limite)
+coleta                      ao bronze
 ```
 
-A coleta de páginas respeita o `robots.txt`, usa user-agent identificado, espera 5 s entre requisições e grava hash, data e status ([`lake/bronze.py`](src/alocacao_capacitada/lake/bronze.py)). Ela usa o [Cavuca](https://github.com/EstevezCodando/Cavuca), que é **dependência opcional**: sem ele, tudo o mais funciona e basta fornecer outra função de busca ao coletor.
+Princípios que moldaram o código:
 
-### 3. Matheurística (LNS)
+- **O domínio não depende de nenhum solver.** `Instance` e `Solution` ([`domain/`](src/alocacao_capacitada/domain)) são puros, imutáveis (arrays somente leitura) e validados na construção: NaN, infinito, IDs repetidos e atribuições fora do intervalo são recusados.
+- **Avaliação única.** Toda solução passa por [`domain/evaluation.py`](src/alocacao_capacitada/domain/evaluation.py). Nenhum método avalia a si mesmo; o custo reportado é sempre o mesmo código, independentemente de quem produziu a solução.
+- **Um modelo só.** [`solvers/model.py`](src/alocacao_capacitada/solvers/model.py) alimenta o MILP e a relaxação linear. Há uma variante com demanda divisível, usada apenas para validar contra a OR-Library.
+- **Proveniência em tudo.** Cada arquivo bruto guarda URL, data, status e hash SHA-256 ao lado (`*.provenance.json`).
+- **Coleta polida.** A coleta de páginas respeita o `robots.txt`, usa user-agent identificado, espera entre requisições e usa cache; não há proxy nem disfarce de navegador. O [Cavuca](https://github.com/EstevezCodando/Cavuca) é **dependência opcional**: sem ele, basta fornecer outra função de busca ao coletor.
+- **Falhas visíveis.** Resultados negativos e erros que quase passaram ficam no repositório, não escondidos (ver [limitações](#limitações-e-honestidade-dos-números)).
 
-Para instâncias maiores, o MILP sozinho perde fôlego. O LNS reotimiza, a cada iteração, só uma vizinhança de regiões com um subproblema exato, partindo de uma boa solução. O tamanho da vizinhança virou parâmetro; os testes levaram o padrão a 50 regiões.
+---
 
-### 4. Validação externa
+## Dados e fontes
 
-Antes de confiar nos números, o modelo foi confrontado com resultados publicados:
+Tudo é dado aberto ou público. Os brutos ficam em `data/bronze/`; as tabelas tratadas, em `data/reference/`.
 
-- **OR-Library:** o modelo com demanda divisível reproduz os 7 ótimos publicados (cap41–44, 51, 61, 71). Isso valida a formulação, não o LNS.
-- **Holmberg et al. (1999):** 71 instâncias de fonte única com ótimo publicado, o benchmark certo para este problema.
+| Fonte | O que traz | Papel no projeto | Limite declarado |
+|---|---|---|---|
+| **Olist** (Kaggle) | 99.441 pedidos (96.478 entregues), clientes e vendedores, 2016–2018 | Demanda histórica e geografia (850 regiões de CEP) | Um marketplace específico, concentrado no Sudeste; não mede o mercado inteiro |
+| **IBGE** (SIDRA, Censo 2022, malhas) | População 2000/2010/2022 e estimativas anuais, idade, PIB, polígonos municipais | Exposição populacional, previsão e geometria | Datas e revisões diferentes entre tabelas |
+| **Ipeadata** | IDHM, renda per capita, Gini | Atributos socioeconômicos | **Decenais: o último é de 2010** |
+| **ANTT** (Res. 6.076 e 6.084) | Piso mínimo de frete por viagem | Custo de transporte por pedido | Piso por viagem não é a tarifa observada por pedido |
+| **Aluguel de galpões** | 8.700+ anúncios de 18 cidades (faixa de 1.001 a 3.000 m²), fev/2026 | Custo fixo por estado | Preço **pedido**, não contrato; média por estado; termos de uso do site não conferidos |
+| **OSRM** (servidor de demonstração) | Distâncias e tempos de estrada | Frete da rede nacional e score | Serviço compartilhado; rotas sem resposta são imputadas por linha reta × 1,29 |
+| **OpenStreetMap** (extratos do Geofabrik) | Rodovias, arruamentos, galpões e zonas industriais de S, SE e CO | Variáveis de infraestrutura e visualização | Completude varia entre cidades; objeto no mapa não prova imóvel disponível |
+| **OR-Library** e **Holmberg et al.** | Instâncias de benchmark com ótimos publicados | Validação do solver | Ótimos de Holmberg transcritos à mão de um visualizador |
 
-A validação revelou problemas reais: em cap41–44 e cap51 há clientes com demanda maior que a capacidade de qualquer centro, o que as torna inviáveis com fonte única; alguns arquivos de Holmberg trazem cabeçalhos de e-mail de 1995 e bytes nulos, que o carregador ignora; e coeficientes de frete de um blog diferiam dos oficiais em até 8%, o que tornou obrigatória a fonte primária.
+**Datação das variáveis (para não vazar o futuro).** Pedidos são de 2016–2018 (a janela de modelagem é jan/2017 a ago/2018, 20 meses). IDHM, renda e Gini são de 2010. Faixa etária e crescimento vêm do Censo 2022. Usar 2022 para explicar 2017–2018 é análise **retrospectiva**, não previsão disponível à época; isso é dito onde importa.
 
-### 5. Sensibilidade e demanda incerta
+**Cobertura do painel Olist→município.** 98,78% dos pedidos caem em polígono do IBGE, 1,15% resolvem por nome e 0,07% ficam sem município. 3.955 dos 5.571 municípios têm pedidos; a ausência de pedidos não demonstra ausência de mercado.
 
-Análise de sensibilidade nos parâmetros e um modelo de dois estágios com demanda incerta (SAA, VSS e EVPI), para saber se vale planejar sob incerteza ou se o determinístico basta.
+---
 
-### 6. Dados territoriais, aprendizado de máquina e rede nacional
+## Camada territorial e aprendizado de máquina
 
-Uma camada de dados abertos (IBGE/Censo 2022, Ipeadata, malhas do IBGE, OpenStreetMap e rotas OSRM) alimenta:
+O Olist cobre bem alguns municípios e quase nada de outros. A camada territorial usa dados abertos para estimar a demanda onde não há pedidos e para olhar para o futuro, não só para o passado.
 
-- um **modelo supervisionado de demanda** por município (Poisson e gradient boosting);
-- uma **previsão de população** com validação contra o Censo 2022;
-- uma **clusterização** dos municípios;
-- um **score de candidatos** para pré-selecionar locais antes do MILP;
-- uma **rede nacional** (400 nós, 60 candidatos) com cenários de demanda futura.
+### Demanda por município (`ml/demand_model.py`)
+
+Modelo supervisionado da **taxa de pedidos por habitante**, com peso igual à população (equivale a uma regressão de Poisson com exposição). Variáveis: população, crescimento, faixas etárias, IDHM (geral, renda, educação), renda, Gini, PIB per capita e distância ao polo vendedor.
+
+- **Validação espacial, nunca aleatória.** Vizinhos se parecem e inflariam o resultado. Cada município é previsto por um modelo que **não viu o seu estado** (5 dobras de UFs) ou **a sua macrorregião** (deixa uma de fora por vez).
+- **Modelos comparados:** proporcional à população (baseline), GLM de Poisson só com população e distância, GLM completo e gradient boosting.
+- **Importância por permutação** e **calibração por decil** acompanham os números.
+
+### Previsão de população (`ml/forecast.py`)
+
+Estima a população de 2025 a 2030 por município. Duas validações contam histórias diferentes:
+
+| Teste | Erro mediano | Leitura |
+|---|---:|---|
+| Contra a série **oficial** de estimativas | ~1,5% | **Engana**: as estimativas oficiais são modeladas e suaves |
+| Contra o **Censo 2022** real (usando só 2000 e 2010) | ~9% na extrapolação simples | Honesto: o crescimento desacelerou e a extrapolação superestima |
+
+O modelo final usa taxa encolhida ao grupo do município, amortecimento ao longo dos anos (escolhido por validação espacial) e uma trava de plausibilidade. O amortecimento reduziu o erro contra o Censo de 10–13% para 6–8%.
+
+### Clusterização (`ml/clustering.py`)
+
+k-means com escolha de k por silhueta **e** estabilidade sob reamostragem (índice de Rand ajustado). k = 3 foi o mais estável (ARI 0,98); com mais grupos a estabilidade cai para 0,78. Os nomes dos grupos são interpretações do perfil, não rótulos do algoritmo.
+
+### Score de candidatos (`ml/scoring.py`)
+
+Usa o otimizador como professor: resolve a rede em vários cenários, marca cada candidato como aberto ou não, e treina um classificador para prever isso a partir das características do município. A validação deixa uma macrorregião de fora. **O que importa não é o AUC, e sim se a rede restrita aos melhores candidatos custa quase o mesmo** que a rede com todos.
+
+---
+
+## Rede nacional e visão de futuro
+
+Uma operadora hipotética com **10% do mercado** decide onde abrir módulos de **100 mil ou 250 mil pedidos por mês**.
+
+- **Demanda potencial** = taxa estimada × população projetada × volume nacional de pedidos (435,6 milhões em 2025, projeção da ABComm, fonte setorial não auditada), com crescimento anual dos pedidos de 3%, 6% ou 9% como cenários baixo, base e alto (premissa).
+- **Zonas de demanda.** Com fonte única, um município com mais demanda que um módulo ficaria sem atendimento (São Paulo, Rio). A solução é dividi-lo em zonas menores, co-localizadas.
+- **Terceirização como válvula**, a R$ 100 por pedido (premissa): evita o modelo "obrigado a atender tudo".
+- **Distância de estrada** do OpenStreetMap (OSRM), em blocos 50×50, com cache.
+- **Arrependimento (regret).** Fixa-se a capacidade instalada (o *projeto*) e avalia-se o custo em cada cenário de 2030, reotimizando só a atribuição. Arrependimento = excesso de custo sobre o melhor projeto daquele cenário.
+
+Também se testa se **uma previsão melhor de população muda a decisão** (projetos feitos com cada previsão e avaliados no Censo 2022 real) e se a **linha reta engana** em relação à estrada.
+
+---
+
+## Foco no Sul, Sudeste e Centro-Oeste, com vias do OpenStreetMap
+
+O Olist quase não tem pedidos no Norte e no Nordeste; para lá, o modelo extrapola. Esta etapa **descarta essas regiões** e enriquece as demais.
+
+**O que foi feito**
+
+1. **Recorte:** 3.327 municípios de 11 UFs (MG, ES, RJ, SP, PR, SC, RS, MS, MT, GO, DF). O volume total é a fração do mercado nacional atribuída a essas UFs pelo modelo nacional (89%); a distribuição entre municípios vem de um modelo treinado só com elas.
+2. **Extratos do OpenStreetMap** (Geofabrik, versão de 30/09/2026, licença ODbL): Centro-Oeste 206 MB, Sul 426 MB e Sudeste 860 MB, com MD5 conferido.
+3. **Rodovias e arruamentos em shapefile**, por região (4,4 GB, fora do git):
+
+| Região | Trechos de rodovia | Trechos de arruamento | Polígonos de galpão/zona industrial |
+|---|---:|---:|---:|
+| Centro-Oeste | 56.704 | 574.836 | 3.528 |
+| Sul | 129.389 | 1.126.048 | 18.790 |
+| Sudeste | 258.465 | 2.253.799 | 27.909 |
+
+   *Rodovias*: `motorway`, `trunk`, `primary`, `secondary` e acessos. *Arruamentos*: `tertiary`, `unclassified`, `residential`, `living_street`, `service`. Ficam de fora trilhas, caminhos, calçadas, ciclovias e vias em construção.
+4. **Agregação por município** ([`data/reference/osm_vias_municipio.csv`](data/reference/osm_vias_municipio.csv), [`osm_industrial_municipio.csv`](data/reference/osm_industrial_municipio.csv)): quilômetros por classe, densidade por km² e área de galpões e zonas industriais. Comprimentos em SIRGAS 2000 / Brazil Polyconic; cada trecho vai ao município do seu ponto médio.
+5. **Refeitos com o recorte:** modelo de demanda, rede, score de candidatos, mapa. Saídas em [`results/foco/`](results/foco).
+
+**O que se descobriu (inclusive o que não funcionou)**
+
+| Modelo de demanda (validação por UF) | Deviance (menor é melhor) | Validação por região |
+|---|---:|---:|
+| GBM nacional, avaliado só nos municípios do foco | 4,21 | 6,21 |
+| **GBM treinado só no foco** | **3,88** | 6,52 |
+| GBM no foco, **com variáveis do OSM** | 4,25 | 6,60 |
+
+- Restringir ajuda um pouco por UF e atrapalha por região (sobram duas regiões para treinar).
+- **As variáveis do OSM não melhoraram** a previsão. A hipótese, **não testada**, é que a densidade viária funciona como substituta de população e urbanização, que o modelo já tem.
+- **No score de candidatos o OSM também piorou o AUC** (0,667 a 0,710, contra 0,693 a 0,716 sem). A demanda local sozinha (0,718) é tão boa quanto os modelos.
+- **A ordem dos filtros de candidatos não se manteve** entre a rede nacional e a regional: um score precisa ser validado em cada instância.
+
+---
 
 ## Resultados
 
@@ -93,25 +256,13 @@ Frete ANTT de 2 eixos. 30 s em 50×15 e 100×30; 60 s em 200×50. LNS com 3 a 5 
 
 O limite do PL garante que o ótimo inteiro está no máximo nessa distância; não é o ótimo em si.
 
-### Holmberg et al. (1999): capacidade apertada, ótimo publicado
+### Evolução do LNS
 
-71 instâncias, até 30 centros e 200 clientes; 10 s por método; gap em relação ao ótimo publicado de fonte única.
-
-| Método | Gap médio | Mediana | Igual à referência¹ | Provado pelo solver² | Tempo médio |
-|---|---:|---:|---:|---:|---:|
-| Guloso | 46,56% | 49,13% | 0 | – | 0,0 s |
-| Busca local | 3,14% | 2,81% | 3 | – | 0,6 s |
-| LNS, vizinhança de 12 | 2,05% | 1,24% | 18 | – | 10,0 s |
-| LNS, vizinhança de 60 | 0,59% | 0,06% | 30 (+1 a 0,0095%) | – | 10,1 s |
-| **MILP** | **0,20%** | **0,00%** | **61** | **60** | 2,6 s |
-
-¹ Custo idêntico ao publicado (tolerância relativa 10⁻⁶). ² Status `OTIMO` do solver; coincidir com a referência e provar a otimalidade são evidências diferentes.
-
-**Achado central.** Nos recortes do Olist, de capacidade folgada, o LNS fica no nível do MILP ou melhor; com capacidade apertada (Holmberg) o MILP domina, e o LNS só se aproxima com vizinhanças maiores. A folga de capacidade é uma hipótese para a diferença, não um fato isolado: as famílias de instâncias também diferem em geografia, custos e tamanho.
+![Trajetória real do LNS: incumbente após cada reparo; a linha tracejada é o limite inferior, não o ótimo.](docs/estudo_integrado/figuras/09_evolucao.png)
 
 ### Custos reais
 
-**Aluguel.** 8.700+ anúncios de 18 cidades (preços pedidos, faixa de 1.001 a 3.000 m²), cobrindo 9 estados; os demais usam a média e são marcados como imputados. O custo fixo de cada centro é `aluguel do estado × capacidade ÷ densidade`, em que a densidade (pedidos por m² por mês) é premissa. Em 100 × 30:
+**Aluguel.** O custo fixo de cada centro é `aluguel do estado × capacidade ÷ densidade`, em que a densidade (pedidos por m² por mês) é premissa. Estados sem anúncio usam a média e são marcados como imputados. Em 100 × 30:
 
 | Densidade | Centros abertos | Custo fixo no custo total |
 |---|---:|---:|
@@ -125,31 +276,221 @@ Com aluguel real a rede muda pouco, e o frete continua dominando a decisão.
 
 **Um erro que quase passou.** A primeira tentativa usou 5.000 m² fixos por centro. O modelo abriu 2 centros e deixou 28.806 pedidos sem atendimento, porque em escala Olist um galpão desse tamanho custa mais que a entrega dos pedidos que comporta. A correção foi ligar a área à capacidade; o resultado antigo está em [`results/aluguel_area_fixa.csv`](results/aluguel_area_fixa.csv).
 
-### Sensibilidade e demanda incerta
+### Sensibilidade
 
-- **Folga de capacidade** é o único parâmetro que muda a rede de forma relevante (50×15: de 15 centros com folga 1,1 para 9 com folga 3,0).
-- **Pedidos por veículo** escala o custo quase na razão inversa; é a premissa de maior impacto e a menos fundamentada.
-- **Demanda incerta** (24 execuções): em 21 a política estocástica é igual à determinística (VSS = 0). Nas 3 restantes o VSS saiu negativo, o que é impossível com solução ótima: é gap do solver, não ganho.
+Variação de um parâmetro por vez, com o mesmo MILP, mesma tolerância e mesmo limite de tempo. Demanda e capacidade são variadas **separadamente e em conjunto**, porque são coisas diferentes.
 
-### Rede nacional e ML
+| Parâmetro | Efeito |
+|---|---|
+| **Folga de capacidade** | O único que muda a rede de forma relevante (de 15 centros com folga 1,1 para 9 com folga 3,0) |
+| **Demanda com capacidade congelada** | Custo cresce ~3× de 0,6× a 1,4× e a rede abre 6 centros a mais |
+| **Demanda e capacidade juntas** | A rede de 14 centros se mantém: o que muda é o custo |
+| **Custo fixo** | Pouco sensível: 16× no custo fixo muda ~6% do total |
+| **Pedidos por veículo** | Escala o custo quase na razão inversa; é a premissa de maior impacto e a menos fundamentada |
+| **Atribuição de regiões** | Mesmo com a rede estável, 35% a 56% do volume muda de centro |
 
-- **Previsão de população:** o backtest contra a série oficial dá 1,5% de erro e engana; contra o Censo 2022 real, a extrapolação simples erra 9%. O modelo usa taxa encolhida ao grupo, amortecimento e trava de plausibilidade.
-- **Clusterização:** k = 3 foi o mais estável (ARI 0,98).
-- **Rede nacional:** o projeto ótimo para 2025 custa +47% se a demanda de 2030 base se confirmar e +209% no cenário alto; o projeto robusto custa +2,3% em 2025. Uma previsão melhor de população não mudou a decisão (<1%). Distância viária contra linha reta: +1,3% de custo e apenas 70% dos módulos em comum.
-- **Score de candidatos:** a regressão logística com os 60 melhores candidatos fica a 0,2% do melhor custo conhecido; o ranking por demanda local, a 4,0%.
+![Fatores isolados; a faixa azul é o intervalo entre limite inferior e incumbente, não um intervalo de confiança.](docs/estudo_integrado/figuras/10_sensibilidade.png)
+
+### Demanda incerta (dois estágios, SAA)
+
+O projeto é escolhido **antes** de conhecer a demanda e a atribuição **depois**. VSS é o ganho de modelar a incerteza; EVPI é quanto valeria saber o futuro.
+
+- **24 execuções** (folga 1,5 e 1,1, choque comum ρ de 0 e 0,5, σ de 0,5 e 0,8, 3 réplicas). Em **21**, a política estocástica é igual à determinística (VSS = 0).
+- Nas **3 restantes** o VSS saiu negativo, o que é **impossível com solução ótima** (a política determinística é admissível no problema estocástico). É gap do solver (até 12,6%), não ganho.
+- Com folga 1,1 os gaps chegam a 33% e o EVPI fica negativo em algumas réplicas; **não afirmo nada** sobre o valor da informação nesse regime.
+
+### Rede nacional: o projeto de 2025 envelhece mal
+
+Arrependimento sobre o melhor projeto de cada cenário (rede nacional, 400 nós, 60 candidatos):
+
+| Projeto ↓ / cenário → | 2025 | 2030 base | 2030 baixo | 2030 alto |
+|---|---:|---:|---:|---:|
+| Para 2025 (38 módulos) | **0%** | **+47,2%** | +4,8% | **+209%** |
+| Para 2030 base (44) | +2,6% | +0,5% | +0,3% | +13,9% |
+| **Robusto, média dos 3** (44) | +2,3% | **0%** | **0%** | +14,3% |
+| Para 2030 alto (48) | +9,6% | +4,2% | +6,0% | **0%** |
+
+No recorte **S+SE+CO** o padrão se repete, mais suave: o projeto de 2025 (34 módulos) custa +25,5% em 2030 base e +206% no cenário alto; o robusto (38 módulos) custa +3,0% em 2025 e fica a 0% nos cenários base e baixo. As redes são diferentes (menos nós, outro volume), então a comparação entre os dois recortes é qualitativa.
+
+Outras leituras:
+
+- **Antecipar custa pouco; não antecipar custa muito.** O projeto robusto custa 2,3% a mais que o de 2025 se a demanda de 2025 persistir.
+- **Previsão melhor ≠ decisão melhor.** A previsão com menor erro de população produziu o pior dos cinco projetos por pequena margem; todos ficaram a menos de 1% do projeto feito com o Censo real.
+- **Estrada ou linha reta:** o projeto feito com linha reta custa +1,3% (nacional) e +0,9% (foco) quando avaliado na estrada, mas **compartilha só 70% a 79% dos módulos**. O custo é plano perto do ótimo.
+
+### Score de candidatos
+
+Custo da rede restrita aos K melhores candidatos, como excesso sobre o melhor custo conhecido (média de 4 execuções na rede nacional; 3 sementes no foco):
+
+| Filtro | Nacional, K = 60 | Nacional, K = 45 | Foco, K = 60 | Foco, K = 45 |
+|---|---:|---:|---:|---:|
+| Regressão logística | **+0,2%** | **+1,9%** | +3,3% | +12,5% |
+| Gradient boosting | +3,9% | +5,1% | **+0,15%** | +1,4% |
+| Demanda local | +4,0% | +8,8% | +1,0% | +2,1% |
+| Todos os 120 candidatos | +1,6% | | +3,2% | |
+
+Com K = 30 todos os filtros falham (de +19% a +64% na rede nacional): há um K mínimo abaixo do qual o problema muda. E o filtro vencedor de uma rede é o pior da outra.
 
 ### Mapa interativo
 
-[`docs/index.html`](docs/index.html) traz o mapa da rede (MapLibre GL) com fronteiras do IBGE embutidas, ruas do [OpenFreeMap](https://openfreemap.org/) (dados © OpenStreetMap) e rotas viárias reais pelo OSRM. As rotas são só para visualização: o custo do modelo Olist continua em linha reta, e a estrada alonga o caminho em 1,29× (mediana) e 1,49× (p90).
+[`docs/index.html`](docs/index.html) traz o mapa da rede (MapLibre GL) com fronteiras do IBGE embutidas, ruas do [OpenFreeMap](https://openfreemap.org/) (dados © OpenStreetMap) e seis vistas (três nacionais, três do recorte S+SE+CO). As linhas nó→centro são retas ilustrativas; o custo usa a distância viária (a estrada alonga o caminho em 1,29× na mediana e 1,49× no p90). Tem tema claro e escuro e uma versão estática de reserva quando WebGL não está disponível.
 
-## Limitações
+![Rede de 50×15 sobre os limites estaduais do IBGE.](docs/estudo_integrado/figuras/12_rede.png)
 
-- O Olist é um marketplace pequeno; escala e regras diferem de operações maiores.
-- Capacidades, penalidade de não atendimento, pedidos por veículo e densidade de pedidos por m² são **premissas declaradas**. Nada aqui é ganho medido em operação real.
-- A rede nacional usa distâncias do servidor de demonstração do OSRM (com imputação por linha reta × 1,29 quando falta rota); o exemplo Olist usa linha reta.
-- O aluguel vem de preços pedidos em portais, não de contratos, e é média por estado.
-- Os ótimos de Holmberg foram transcritos manualmente de um visualizador; vale conferir na fonte.
+---
+
+## Validação externa
+
+Antes de confiar nos números, o modelo foi confrontado com resultados publicados.
+
+- **OR-Library:** o modelo com demanda divisível reproduz os **7 ótimos publicados** (cap41–44, 51, 61, 71). Valida a formulação, não o LNS.
+- **Holmberg et al. (1999):** 71 instâncias de fonte única com ótimo publicado, o benchmark certo para este problema. Até 30 centros e 200 clientes; 10 s por método.
+
+| Método | Gap médio | Mediana | Igual à referência¹ | Provado pelo solver² | Tempo médio |
+|---|---:|---:|---:|---:|---:|
+| Guloso | 46,56% | 49,13% | 0 | – | 0,0 s |
+| Busca local | 3,14% | 2,81% | 3 | – | 0,6 s |
+| LNS, vizinhança de 12 | 2,05% | 1,24% | 18 | – | 10,0 s |
+| LNS, vizinhança de 60 | 0,59% | 0,06% | 30 (+1 a 0,0095%) | – | 10,1 s |
+| **MILP** | **0,20%** | **0,00%** | **61** | **60** | 2,6 s |
+
+¹ Custo idêntico ao publicado (tolerância relativa 10⁻⁶). ² Status `OTIMO` do solver; coincidir com a referência e provar a otimalidade são evidências diferentes.
+
+**Achado central.** Nos recortes do Olist, de capacidade folgada, o LNS fica no nível do MILP ou melhor; com capacidade apertada (Holmberg) o MILP domina, e o LNS só se aproxima com vizinhanças maiores. A folga de capacidade é uma **hipótese** para a diferença, não um fato isolado: as famílias de instâncias também diferem em geografia, custos e tamanho.
+
+**O que a validação revelou**
+
+- Em cap41–44 e cap51 há clientes com demanda maior que a capacidade de qualquer centro: inviáveis com fonte única.
+- Alguns arquivos de Holmberg trazem cabeçalhos de e-mail de 1995 e bytes nulos, que o carregador ignora.
+- Coeficientes de frete de um blog diferiam dos oficiais em até 8%, o que tornou obrigatória a fonte primária.
+
+---
+
+## Como executar
+
+Requisitos: Python 3.12 e [uv](https://docs.astral.sh/uv/).
+
+```bash
+uv sync
+uv run pytest                                              # 91 testes
+uv run ruff check src && uv run mypy src                   # lint e tipos (strict)
+```
+
+### Otimização sobre o Olist
+
+Baixe o dataset do Olist no Kaggle e extraia os CSVs em `data/raw/` (fora do git).
+
+```bash
+uv run python examples/exemplo_didatico.py                 # o exemplo de 3 centros × 5 regiões
+uv run alocacao-capacitada --sizes 20x5 50x15 100x30       # comparação dos métodos
+uv run python -m alocacao_capacitada.stage2 --sizes 100x30 --time-limit 60 --seeds 5
+uv run python -m alocacao_capacitada.analysis.rent_experiment --time-limit 20
+uv run python -m alocacao_capacitada.analysis.run_stochastic --slack 1.1 --rho 0.5
+uv run python -m alocacao_capacitada.validation.run                          # OR-Library
+uv run python -m alocacao_capacitada.validation.run_holmberg --milp-time 10 --lns-time 10
+```
+
+### Camada territorial e ML
+
+As coletas do IBGE, do Ipeadata e do OSRM guardam cache em `data/bronze/` e só repetem o que falta.
+
+```bash
+uv run python -m alocacao_capacitada.territory.build        # IBGE, Ipeadata e malhas → municipios.parquet
+uv run python -m alocacao_capacitada.territory.panel_build  # painel Olist → município
+uv run python -m alocacao_capacitada.ml.run_demand          # demanda (validação por UF e região)
+uv run python -m alocacao_capacitada.ml.run_forecast        # previsão de população
+uv run python -m alocacao_capacitada.ml.run_clustering      # tipologias
+```
+
+### Rede nacional
+
+```bash
+uv run python -m alocacao_capacitada.network.run_future --only b c e --iterations 100
+uv run python -m alocacao_capacitada.network.run_scoring --iterations 100
+uv run python -m alocacao_capacitada.network.run_scoring_seeds --seeds 1 2 3
+uv run python -m alocacao_capacitada.network.export_map
+```
+
+### Recorte S+SE+CO e OpenStreetMap
+
+Baixe os três extratos **datados** do Geofabrik (os links `-latest` estavam com redirecionamento quebrado em 01/10/2026) para `data/bronze/osm_regional/`: `centro-oeste-260930.osm.pbf`, `sul-260930.osm.pbf` e `sudeste-260930.osm.pbf`, de `https://download.geofabrik.de/south-america/brazil/`.
+
+```bash
+uv run python -m alocacao_capacitada.territory.osm_roads        # shapefiles + km por município
+uv run python -m alocacao_capacitada.territory.osm_industrial   # galpões e zonas industriais
+uv run python -m alocacao_capacitada.ml.run_demand --foco
+uv run python -m alocacao_capacitada.network.run_future --foco --only b c e --iterations 100
+uv run python -m alocacao_capacitada.network.run_scoring --foco --iterations 100
+uv run python -m alocacao_capacitada.network.run_scoring_seeds --foco --seeds 1 2 3
+uv run python -m alocacao_capacitada.network.export_map --foco
+```
+
+### Site e estudo integrado
+
+```bash
+uv run python scripts/build_site.py                 # regenera docs/index.html
+uv run python -m alocacao_capacitada.analysis.study --out results/uma_pasta_nova
+uv run python scripts/render_study.py --data results/uma_pasta_nova --out docs/estudo_integrado
+```
+
+> O `Dockerfile` existe, mas **não foi testado**. A coleta de páginas usa o Cavuca, que é opcional e não vem com o projeto: instale-o à parte ou passe outra função de busca ao `PoliteCollector`. Os brutos grandes (`data/raw`, `data/bronze/ibge`, os PBF e os shapefiles) ficam fora do git; as tabelas de `data/reference/` e os resultados de `results/` são versionados.
+
+---
+
+## Estrutura do repositório
+
+```
+src/alocacao_capacitada/
+├── domain/       Instance, Solution, evaluate(): puro, sem dependência de solver
+├── solvers/      guloso, busca local, LNS, MILP, relaxação linear, model.py
+├── data/         Olist e construção da instância
+├── lake/         bronze (coleta com proveniência), silver, gold, frete, aluguel, OSRM
+├── territory/    IBGE, Ipeadata, malhas, painel Olist→município, OSM (vias e galpões)
+├── ml/           demanda, previsão, clusterização, score de candidatos
+├── network/      rede nacional, cenários, arrependimento, score, mapa
+├── analysis/     sensibilidade, demanda incerta, aluguel real, estudo integrado
+├── validation/   OR-Library e Holmberg
+└── benchmark.py · stage2.py
+examples/         exemplo didático (3 × 5)
+scripts/          geração do site e das figuras do estudo
+site/             template, mapa (MapLibre) e seções do site
+docs/             página de resultados e estudo integrado
+data/bronze/      brutos com proveniência (hash, URL, data)
+data/reference/   tabelas tratadas (municípios, painel, OSM por município, aluguel, ANTT)
+results/          saídas versionadas dos experimentos (results/foco/ para o recorte)
+tests/            91 testes
+```
+
+---
+
+## Qualidade e reprodutibilidade
+
+- **Tipos e lint:** `mypy --strict` e `ruff` em `src`.
+- **Testes:** cobrem contratos do domínio, solvers, validação de benchmarks, coleta (com cache, retry e escrita atômica), geometria, previsão, score, sensibilidade e o protocolo estocástico.
+- **Proveniência:** cada coleta grava hash SHA-256, URL, data e status. O estudo integrado grava ainda um `manifest.json` (commit, versões, parâmetros e hashes do código), com os resultados novos separados dos históricos.
+- **Sementes explícitas** em todo experimento com aleatoriedade; resultados com mais de uma semente reportam média e dispersão.
+- **Avaliação independente:** custo, viabilidade e pedido não atendido são sempre calculados pelo mesmo código, não pelo método que produziu a solução.
+- **Limites de tempo e iterações.** O LNS usa orçamento por iterações quando a comparação precisa ser independente da carga da máquina; os resultados por tempo dependem do hardware.
+
+---
+
+## Limitações e honestidade dos números
+
+- O Olist é um marketplace pequeno, de 2016–2018; escala e regras diferem de operações maiores.
+- **Premissas, não medidas:** capacidades, penalidade de não atendimento (R$ 100 por pedido terceirizado), pedidos por veículo, densidade de pedidos por m², participação de mercado (10%) e o volume nacional de pedidos (435,6 milhões em 2025, ABComm). Nada aqui é ganho medido em operação real.
+- O custo fixo inclui o aluguel, mas **não** mão de obra, equipamentos nem impostos.
+- O aluguel vem de **preços pedidos** em um portal, não de contratos, e é média por estado. Os termos de uso do site não foram conferidos; foi coletada uma página, com a fonte citada.
+- A rede nacional usa o servidor de **demonstração** do OSRM, um serviço compartilhado. O exemplo Olist usa linha reta.
+- Os ótimos de **Holmberg** foram transcritos manualmente de um visualizador; vale conferir na fonte antes de citar.
 - O LNS não foi comparado com Kong (2021) nos mesmos dados.
+- O `robots.txt` do IBGE não respondeu; a malha do IBGE é uma API pública de dados abertos, baixada uma vez.
+- **Resultados históricos × novos.** Os resultados nacionais (rede, score, incerteza) foram produzidos em rodadas longas e **não** foram refeitos no [estudo integrado](docs/estudo_integrado/index.html), que reexecuta recortes menores com protocolo declarado. Custos de níveis diferentes não se somam nem se comparam.
+- **Variáveis do OSM sem ganho preditivo** (ver [foco regional](#foco-no-sul-sudeste-e-centro-oeste-com-vias-do-openstreetmap)); a coleta Overpass de galpões por cidade ficou incompleta e foi substituída pelos extratos regionais.
+- **Resultados negativos foram mantidos**: VSS negativo atribuído a gap do solver, filtro de candidatos que não se transfere entre instâncias, previsão de população que melhora o erro mas não a decisão.
+- Diferenças de custo de poucos décimos de ponto percentual entre projetos ou filtros (por exemplo, entre previsões de população) ficam **dentro do ruído do LNS**; não sustentam conclusões.
+- Não testei o mapa em navegadores de uso comum além do navegador embutido do Claude.
+
+---
 
 ## Trabalhos relacionados
 
@@ -157,38 +498,17 @@ Com aluguel real a rede muda pouco, e o frete continua dominando a decisão.
 |---|---|
 | Holmberg, Rönnqvist & Yuan (1999), *An exact algorithm for the CFLP with single sourcing*, EJOR 113(3) | Origem das 71 instâncias |
 | Guastaroba & Speranza (2014), *A heuristic for BILP problems: the SSCFLP*, EJOR 238(2) | Valores ótimos publicados e conjuntos de instâncias ([OR-Brescia](https://or-brescia.unibs.it/instances/instances_sscflp)) |
-| Kong (2021), [*A matheuristic for the SSCFLP and its variants*](https://arxiv.org/abs/2112.12974) | LNS com subproblemas exatos, da mesma família do usado aqui |
+| Kong (2021), [*A matheuristic for the SSCFLP and its variants*](https://arxiv.org/abs/2112.12974) | LNS com subproblemas exatos, da mesma família do usado aqui. O resumo reporta 191 ótimos entre 272 instâncias de benchmark e gaps médios de 0,07% a 0,22% em **dois conjuntos geográficos adicionais gerados pelo autor**, que não são os mesmos dados |
 | Ajide (2026), [*Two-Stage Stochastic Optimization for Capacitated Facility Location*](https://optimization-online.org/2026/09/two-stage-stochastic-optimization-for-capacitated-facility-location-under-demand-uncertainty/) | Mesmo arcabouço de VSS e EVPI; reporta VSS alto, aqui ≈ 0 |
 
-## Como executar
+---
 
-```bash
-uv sync
-uv run pytest
-uv run python -m alocacao_capacitada.benchmark --sizes 20x5 50x15
-uv run python -m alocacao_capacitada.stage2 --sizes 100x30 --time-limit 60 --seeds 5
-uv run python -m alocacao_capacitada.validation.run_holmberg --milp-time 10 --lns-time 10
-uv run python -m alocacao_capacitada.analysis.rent_experiment --time-limit 20
-uv run python scripts/build_site.py        # regenera docs/index.html
-```
+## Licenças e atribuições
 
-Baixe o dataset do Olist no Kaggle e extraia os CSVs em `data/raw/` (fora do git). As instâncias da OR-Library e de Holmberg, o aluguel e as resoluções da ANTT ficam em `data/bronze/` com proveniência. O `Dockerfile` existe, mas não foi testado.
-
-## Estrutura
-
-```
-src/alocacao_capacitada/
-├── domain/       Instance, Solution, evaluate(): puro
-├── solvers/      guloso, busca local, LNS, MILP, PL, model.py
-├── data/         Olist e construção da instância
-├── lake/         bronze (coleta), silver, gold, frete, aluguel, OSRM
-├── territory/    dados territoriais (IBGE, Ipeadata, OSM)
-├── ml/           demanda, previsão, clusterização, score
-├── network/      rede nacional, cenários e mapa
-├── analysis/     sensibilidade, demanda incerta, aluguel real
-├── validation/   OR-Library e Holmberg
-└── benchmark.py · stage2.py
-scripts/          geração do site e do estudo
-docs/             página de resultados e estudo integrado
-results/          saídas versionadas dos experimentos
-```
+- **Código:** defina a licença do repositório antes de publicar (não há arquivo `LICENSE` ainda).
+- **OpenStreetMap:** dados © colaboradores do OpenStreetMap, licença [ODbL](https://opendatacommons.org/licenses/odbl/). Extratos regionais do [Geofabrik](https://download.geofabrik.de/).
+- **IBGE** (SIDRA, Censo 2022, malhas) e **Ipeadata:** dados públicos; citar a fonte.
+- **ANTT:** resoluções públicas.
+- **Olist:** [dataset público no Kaggle](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce); confira os termos da licença antes de redistribuir os dados.
+- **OSRM:** [Project OSRM](https://project-osrm.org/), servidor de demonstração; respeite a política de uso.
+- **OpenFreeMap:** base cartográfica do mapa, dados © OpenStreetMap.
