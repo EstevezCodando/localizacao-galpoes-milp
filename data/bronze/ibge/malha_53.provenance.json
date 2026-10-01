@@ -1,0 +1,9 @@
+{
+  "url": "https://servicodados.ibge.gov.br/api/v3/malhas/estados/53?formato=application/vnd.geo%2Bjson&qualidade=minima&intrarregiao=municipio",
+  "fetched_at": "2026-10-01T01:35:28+00:00",
+  "sha256": "4e80727fdb17458113d381eb232dbc1d786d3846feac81743cb3b78d3717cd36",
+  "bytes": 954,
+  "user_agent": "alocacao-capacitada-portfolio/0.1 (pesquisa academica; jean.alvarez@al.infnet.edu.br)",
+  "robots_checked": false,
+  "nota": "API pública de dados abertos para acesso programático; o robots.txt do host não foi consultado ou não responde. Uma requisição por vez, com intervalo e cache."
+}

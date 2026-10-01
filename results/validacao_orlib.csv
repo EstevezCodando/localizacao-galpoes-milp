@@ -1,0 +1,8 @@
+instancia,m_x_n,otimo_publicado_divisivel,meu_modelo_divisivel,diferenca_rel,status_divisivel,sscflp_milp_status,sscflp_milp,sscflp_lns_10s,sscflp_limite_pl
+cap41,16x50,1040444.375,1040444.375,0.0,OTIMO,N/A: cliente maior que qualquer centro,,,
+cap42,16x50,1098000.45,1098000.4500045776,4.169108751165567e-12,OTIMO,N/A: cliente maior que qualquer centro,,,
+cap43,16x50,1153000.45,1153000.4499969482,2.646756335933147e-12,OTIMO,N/A: cliente maior que qualquer centro,,,
+cap44,16x50,1235500.45,1235500.4500045776,3.705124741054308e-12,OTIMO,N/A: cliente maior que qualquer centro,,,
+cap51,16x50,1025208.225,1025208.2250061035,5.953462681265911e-12,OTIMO,N/A: cliente maior que qualquer centro,,,
+cap61,16x50,932615.75,932615.75,0.0,OTIMO,OTIMO,932615.7500000001,932615.7500000001,932615.75
+cap71,16x50,932615.75,932615.75,0.0,OTIMO,OTIMO,932615.7500000001,932615.7500000001,932615.75

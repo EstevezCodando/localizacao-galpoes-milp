@@ -1,0 +1,10 @@
+{
+  "pedidos_brutos": 99441,
+  "entregues": 96478,
+  "order_id_duplicados": 0,
+  "municipios": 5571,
+  "municipios_completos": 5564,
+  "municipios_sem_pedidos": 1617,
+  "inicio": "2016-09-15 12:16:38",
+  "fim": "2018-08-29 15:00:37"
+}

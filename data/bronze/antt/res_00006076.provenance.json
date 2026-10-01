@@ -1,0 +1,10 @@
+{
+  "url": "https://anttlegis.antt.gov.br/action/ActionDatalegis.php?acao=abrirTextoAto&tipo=RES&numeroAto=00006076&seqAto=000&valorAno=2026&orgao=DG/ANTT/MT&cod_modulo=623&cod_menu=9230",
+  "fetched_at": "2026-09-30T19:21:37+00:00",
+  "status": 200,
+  "sha256": "d40b112677bed8fabbef6e60594ba98f92b501491a43c6291c06f4b51fd7d7f8",
+  "bytes": 128390,
+  "user_agent": "alocacao-capacitada-portfolio/0.1 (pesquisa academica; jean.alvarez@al.infnet.edu.br)",
+  "robots_checked": true,
+  "file": "res_00006076.html"
+}

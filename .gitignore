@@ -1,0 +1,20 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+data/raw/
+data/processed/
+!data/reference/
+!data/bronze/
+data/bronze/ibge/*.json
+!data/bronze/ibge/*.provenance.json
+data/bronze/osm/*.json
+!data/bronze/osm/*.provenance.json
+
+# extratos regionais do OSM (centenas de MB; reproduzíveis pela proveniência)
+data/bronze/osm_regional/*.pbf
+data/bronze/osm_regional/*.md5
+data/bronze/osm_regional/shp/

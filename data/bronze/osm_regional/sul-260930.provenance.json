@@ -1,0 +1,12 @@
+{
+  "fonte": "https://download.geofabrik.de/south-america/brazil/sul-260930.osm.pbf",
+  "licenca": "ODbL (OpenStreetMap contributors)",
+  "extrato": "260930",
+  "bytes": 425619965,
+  "sha256": "d7420d6fbf91b4b608ea61789afd1e41a77d8781a711023d2b818ea5d46391a5",
+  "md5": "4a491f75d7f386fd4971b2c93e63509a",
+  "trechos": {
+    "rodovias": 129389,
+    "arruamentos": 1126048
+  }
+}

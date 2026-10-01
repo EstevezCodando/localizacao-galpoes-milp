@@ -1,0 +1,4 @@
+id,custo,fixo,frete,penalidade,servico_pct,centros,tempo_s,status,bound_solver,orcamento_s,metodo
+tiny_Guloso,232.0,106.0,126.0,0.0,100.0,3,0.00010550000297371298,HEURISTICA,,5.0,Guloso
+tiny_Busca_local,210.0,68.0,142.0,0.0,100.0,2,0.0006451000081142411,OTIMO_LOCAL,,5.0,Busca local
+tiny_MILP,203.0,73.0,130.0,0.0,100.0,2,0.009779800006072037,OTIMO,203.0,5.0,MILP

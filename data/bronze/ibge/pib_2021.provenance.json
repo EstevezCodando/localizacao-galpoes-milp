@@ -1,0 +1,9 @@
+{
+  "url": "https://apisidra.ibge.gov.br/values/t/5938/n6/all/v/37/p/2021?formato=json",
+  "fetched_at": "2026-10-01T01:33:07+00:00",
+  "sha256": "0674b2278daf6e9071774c3053f9f40e563911a8593aa0dea604f75bd8877493",
+  "bytes": 1103804,
+  "user_agent": "alocacao-capacitada-portfolio/0.1 (pesquisa academica; jean.alvarez@al.infnet.edu.br)",
+  "robots_checked": false,
+  "nota": "API pública de dados abertos para acesso programático; o robots.txt do host não foi consultado ou não responde. Uma requisição por vez, com intervalo e cache."
+}

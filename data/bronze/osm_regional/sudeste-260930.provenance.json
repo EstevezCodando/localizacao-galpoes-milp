@@ -1,0 +1,12 @@
+{
+  "fonte": "https://download.geofabrik.de/south-america/brazil/sudeste-260930.osm.pbf",
+  "licenca": "ODbL (OpenStreetMap contributors)",
+  "extrato": "260930",
+  "bytes": 859843238,
+  "sha256": "f35e3e486a775d7948a9869edeb7480a6db600072547eda18bc4c919c5dc0e3f",
+  "md5": "67c204938a3ad796ec748c20c1bf00e3",
+  "trechos": {
+    "rodovias": 258465,
+    "arruamentos": 2253799
+  }
+}

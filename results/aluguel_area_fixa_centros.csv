@@ -1,0 +1,139 @@
+instancia,cenario,prefixo_cep,uf,aluguel_rs_m2,aluguel_imputado,custo_fixo
+50x15,premissa antiga,134,SP,,,2000.0
+50x15,premissa antiga,140,SP,,,2000.0
+50x15,premissa antiga,150,SP,,,2000.0
+50x15,premissa antiga,132,SP,,,2000.0
+50x15,premissa antiga,041,SP,,,2000.0
+50x15,premissa antiga,034,SP,,,2000.0
+50x15,premissa antiga,870,PR,,,2000.0
+50x15,premissa antiga,058,SP,,,2000.0
+50x15,premissa antiga,090,SP,,,2000.0
+50x15,premissa antiga,133,SP,,,2000.0
+50x15,premissa antiga,148,SP,,,2000.0
+50x15,premissa antiga,047,SP,,,2000.0
+50x15,premissa antiga,035,SP,,,2000.0
+50x15,premissa antiga,085,SP,,,2000.0
+50x15,"aluguel real, 2000 m²",149,SP,25.77285714285714,False,1030914.2857142857
+50x15,"aluguel real, 2000 m²",134,SP,25.77285714285714,False,1030914.2857142857
+50x15,"aluguel real, 2000 m²",140,SP,25.77285714285714,False,1030914.2857142857
+50x15,"aluguel real, 2000 m²",150,SP,25.77285714285714,False,1030914.2857142857
+50x15,"aluguel real, 2000 m²",132,SP,25.77285714285714,False,1030914.2857142857
+50x15,"aluguel real, 2000 m²",041,SP,25.77285714285714,False,1030914.2857142857
+50x15,"aluguel real, 2000 m²",034,SP,25.77285714285714,False,1030914.2857142857
+50x15,"aluguel real, 2000 m²",870,PR,22.92,False,916800.0
+50x15,"aluguel real, 5000 m²",149,SP,25.77285714285714,False,2577285.714285714
+50x15,"aluguel real, 5000 m²",134,SP,25.77285714285714,False,2577285.714285714
+50x15,"aluguel real, 10000 m²",149,SP,25.77285714285714,False,5154571.428571428
+100x30,premissa antiga,134,SP,,,2000.0
+100x30,premissa antiga,140,SP,,,2000.0
+100x30,premissa antiga,150,SP,,,2000.0
+100x30,premissa antiga,132,SP,,,2000.0
+100x30,premissa antiga,041,SP,,,2000.0
+100x30,premissa antiga,034,SP,,,2000.0
+100x30,premissa antiga,870,PR,,,2000.0
+100x30,premissa antiga,058,SP,,,2000.0
+100x30,premissa antiga,090,SP,,,2000.0
+100x30,premissa antiga,133,SP,,,2000.0
+100x30,premissa antiga,148,SP,,,2000.0
+100x30,premissa antiga,047,SP,,,2000.0
+100x30,premissa antiga,035,SP,,,2000.0
+100x30,premissa antiga,085,SP,,,2000.0
+100x30,premissa antiga,012,SP,,,2000.0
+100x30,premissa antiga,032,SP,,,2000.0
+100x30,premissa antiga,071,SP,,,2000.0
+100x30,premissa antiga,117,SP,,,2000.0
+100x30,premissa antiga,131,SP,,,2000.0
+100x30,premissa antiga,375,MG,,,2000.0
+100x30,premissa antiga,139,SP,,,2000.0
+100x30,premissa antiga,123,SP,,,2000.0
+100x30,premissa antiga,042,SP,,,2000.0
+100x30,premissa antiga,892,SC,,,2000.0
+100x30,premissa antiga,384,MG,,,2000.0
+100x30,premissa antiga,312,MG,,,2000.0
+100x30,premissa antiga,371,MG,,,2000.0
+100x30,premissa antiga,038,SP,,,2000.0
+100x30,"aluguel real, 2000 m²",149,SP,25.77285714285714,False,1030914.2857142857
+100x30,"aluguel real, 2000 m²",134,SP,25.77285714285714,False,1030914.2857142857
+100x30,"aluguel real, 2000 m²",140,SP,25.77285714285714,False,1030914.2857142857
+100x30,"aluguel real, 2000 m²",150,SP,25.77285714285714,False,1030914.2857142857
+100x30,"aluguel real, 2000 m²",132,SP,25.77285714285714,False,1030914.2857142857
+100x30,"aluguel real, 2000 m²",041,SP,25.77285714285714,False,1030914.2857142857
+100x30,"aluguel real, 2000 m²",034,SP,25.77285714285714,False,1030914.2857142857
+100x30,"aluguel real, 2000 m²",870,PR,22.92,False,916800.0
+100x30,"aluguel real, 2000 m²",058,SP,25.77285714285714,False,1030914.2857142857
+100x30,"aluguel real, 2000 m²",090,SP,25.77285714285714,False,1030914.2857142857
+100x30,"aluguel real, 2000 m²",133,SP,25.77285714285714,False,1030914.2857142857
+100x30,"aluguel real, 2000 m²",148,SP,25.77285714285714,False,1030914.2857142857
+100x30,"aluguel real, 2000 m²",047,SP,25.77285714285714,False,1030914.2857142857
+100x30,"aluguel real, 2000 m²",035,SP,25.77285714285714,False,1030914.2857142857
+100x30,"aluguel real, 5000 m²",149,SP,25.77285714285714,False,2577285.714285714
+100x30,"aluguel real, 5000 m²",134,SP,25.77285714285714,False,2577285.714285714
+100x30,"aluguel real, 10000 m²",149,SP,25.77285714285714,False,5154571.428571428
+200x50,premissa antiga,149,SP,,,2000.0
+200x50,premissa antiga,134,SP,,,2000.0
+200x50,premissa antiga,140,SP,,,2000.0
+200x50,premissa antiga,150,SP,,,2000.0
+200x50,premissa antiga,132,SP,,,2000.0
+200x50,premissa antiga,041,SP,,,2000.0
+200x50,premissa antiga,034,SP,,,2000.0
+200x50,premissa antiga,870,PR,,,2000.0
+200x50,premissa antiga,058,SP,,,2000.0
+200x50,premissa antiga,090,SP,,,2000.0
+200x50,premissa antiga,133,SP,,,2000.0
+200x50,premissa antiga,148,SP,,,2000.0
+200x50,premissa antiga,047,SP,,,2000.0
+200x50,premissa antiga,035,SP,,,2000.0
+200x50,premissa antiga,085,SP,,,2000.0
+200x50,premissa antiga,012,SP,,,2000.0
+200x50,premissa antiga,032,SP,,,2000.0
+200x50,premissa antiga,071,SP,,,2000.0
+200x50,premissa antiga,117,SP,,,2000.0
+200x50,premissa antiga,131,SP,,,2000.0
+200x50,premissa antiga,130,SP,,,2000.0
+200x50,premissa antiga,375,MG,,,2000.0
+200x50,premissa antiga,139,SP,,,2000.0
+200x50,premissa antiga,123,SP,,,2000.0
+200x50,premissa antiga,892,SC,,,2000.0
+200x50,premissa antiga,384,MG,,,2000.0
+200x50,premissa antiga,312,MG,,,2000.0
+200x50,premissa antiga,371,MG,,,2000.0
+200x50,premissa antiga,038,SP,,,2000.0
+200x50,premissa antiga,082,SP,,,2000.0
+200x50,premissa antiga,803,PR,,,2000.0
+200x50,premissa antiga,070,SP,,,2000.0
+200x50,premissa antiga,256,RJ,,,2000.0
+200x50,premissa antiga,858,PR,,,2000.0
+200x50,premissa antiga,883,SC,,,2000.0
+200x50,premissa antiga,129,SP,,,2000.0
+200x50,premissa antiga,122,SP,,,2000.0
+200x50,premissa antiga,044,SP,,,2000.0
+200x50,premissa antiga,144,SP,,,2000.0
+200x50,premissa antiga,222,RJ,,,2000.0
+200x50,premissa antiga,051,SP,,,2000.0
+200x50,"aluguel real, 2000 m²",149,SP,25.77285714285714,False,1030914.2857142857
+200x50,"aluguel real, 2000 m²",134,SP,25.77285714285714,False,1030914.2857142857
+200x50,"aluguel real, 2000 m²",140,SP,25.77285714285714,False,1030914.2857142857
+200x50,"aluguel real, 2000 m²",150,SP,25.77285714285714,False,1030914.2857142857
+200x50,"aluguel real, 2000 m²",132,SP,25.77285714285714,False,1030914.2857142857
+200x50,"aluguel real, 2000 m²",041,SP,25.77285714285714,False,1030914.2857142857
+200x50,"aluguel real, 2000 m²",034,SP,25.77285714285714,False,1030914.2857142857
+200x50,"aluguel real, 2000 m²",870,PR,22.92,False,916800.0
+200x50,"aluguel real, 2000 m²",058,SP,25.77285714285714,False,1030914.2857142857
+200x50,"aluguel real, 2000 m²",090,SP,25.77285714285714,False,1030914.2857142857
+200x50,"aluguel real, 2000 m²",133,SP,25.77285714285714,False,1030914.2857142857
+200x50,"aluguel real, 2000 m²",148,SP,25.77285714285714,False,1030914.2857142857
+200x50,"aluguel real, 2000 m²",047,SP,25.77285714285714,False,1030914.2857142857
+200x50,"aluguel real, 2000 m²",035,SP,25.77285714285714,False,1030914.2857142857
+200x50,"aluguel real, 2000 m²",085,SP,25.77285714285714,False,1030914.2857142857
+200x50,"aluguel real, 2000 m²",071,SP,25.77285714285714,False,1030914.2857142857
+200x50,"aluguel real, 2000 m²",375,MG,24.75,False,990000.0
+200x50,"aluguel real, 2000 m²",123,SP,25.77285714285714,False,1030914.2857142857
+200x50,"aluguel real, 2000 m²",038,SP,25.77285714285714,False,1030914.2857142857
+200x50,"aluguel real, 5000 m²",149,SP,25.77285714285714,False,2577285.714285714
+200x50,"aluguel real, 5000 m²",134,SP,25.77285714285714,False,2577285.714285714
+200x50,"aluguel real, 5000 m²",140,SP,25.77285714285714,False,2577285.714285714
+200x50,"aluguel real, 5000 m²",150,SP,25.77285714285714,False,2577285.714285714
+200x50,"aluguel real, 5000 m²",132,SP,25.77285714285714,False,2577285.714285714
+200x50,"aluguel real, 5000 m²",041,SP,25.77285714285714,False,2577285.714285714
+200x50,"aluguel real, 5000 m²",870,PR,22.92,False,2292000.0000000005
+200x50,"aluguel real, 10000 m²",149,SP,25.77285714285714,False,5154571.428571428

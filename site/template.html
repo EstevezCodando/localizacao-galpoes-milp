@@ -1,0 +1,434 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Alocação Capacitada</title>
+<meta name="description" content="Otimização de alocação de pedidos a centros de distribuição com dados reais do Brasil: modelo, métodos, validação externa e custos reais.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: editorial de uma coluna larga; mapa do Brasil no topo, um bloco por pergunta (o que foi feito, funciona?, quanto custa?, o que falta?). */
+:root{
+  --bg:#eef2f5; --surface:#ffffff; --ink:#0f1c2b; --muted:#56687a; --line:#d3dce5;
+  --accent:#1f3fd1; --accent-soft:#dfe5fb; --amber:#c76a00; --amber-soft:#fbead3;
+  --good:#167a3f; --warn:#b4530a; --grey:#8b9bab; --slate:#3d5267;
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0b1520; --surface:#111e2c; --ink:#e6eef6; --muted:#8fa3b6; --line:#223548;
+  --accent:#7d96ff; --accent-soft:#1c2a55; --amber:#f2a03a; --amber-soft:#3a2a12;
+  --good:#4cc27f; --warn:#f0a15a; --grey:#6d8196; --slate:#a9bccd; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0b1520; --surface:#111e2c; --ink:#e6eef6; --muted:#8fa3b6; --line:#223548;
+  --accent:#7d96ff; --accent-soft:#1c2a55; --amber:#f2a03a; --amber-soft:#3a2a12;
+  --good:#4cc27f; --warn:#f0a15a; --grey:#6d8196; --slate:#a9bccd; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6;padding-inline:clamp(16px,4vw,40px);padding-block:0 64px}
+.wrap{max-width:1120px;margin-inline:auto}
+a{color:var(--accent)}
+h1,h2,h3{font-family:var(--display);line-height:1.12;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.1rem,5.4vw,3.6rem);font-weight:700;letter-spacing:-.02em}
+h2{font-size:clamp(1.5rem,3vw,2.05rem);font-weight:700;letter-spacing:-.01em}
+h3{font-size:1.1rem;font-weight:600}
+p{margin:0}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);margin-inline:calc(-1*clamp(16px,4vw,40px));padding-inline:clamp(16px,4vw,40px)}
+nav .wrap{display:flex;align-items:center;gap:20px;padding-block:10px;overflow-x:auto;white-space:nowrap}
+nav a{color:var(--muted);text-decoration:none;font-size:.88rem;font-weight:500}
+nav a:hover,nav a:focus-visible{color:var(--ink)}
+nav .brand{font-family:var(--display);font-weight:700;color:var(--ink);margin-right:auto}
+button.theme{font:inherit;font-size:.82rem;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
+button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,4vw,56px);align-items:center;padding-block:clamp(32px,6vw,72px) 32px}
+.hero .lede{color:var(--muted);font-size:1.12rem;max-width:34em;margin-top:18px}
+.eyebrow{font-family:var(--mono);font-size:.76rem;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);margin-bottom:14px}
+.tabs{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:10px;background:var(--surface)}
+.tabs button{font:inherit;font-size:.82rem;border:0;background:transparent;color:var(--muted);padding:6px 12px;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.mapbox{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;min-width:0}
+.mapbox svg{width:100%;height:auto;display:block}
+.cap{font-size:.82rem;color:var(--muted);margin-top:8px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-block:8px 0}
+.kpi{background:var(--surface);padding:18px 18px 16px;min-width:0}
+.kpi b{display:block;font-family:var(--display);font-size:clamp(1.6rem,3.4vw,2.3rem);line-height:1.05;font-variant-numeric:tabular-nums}
+.kpi span{display:block;font-size:.84rem;color:var(--muted);margin-top:6px}
+section{padding-block:clamp(40px,6vw,72px) 0}
+section>.head{display:grid;gap:10px;max-width:46em;margin-bottom:26px}
+section>.head p{color:var(--muted)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:clamp(14px,2.4vw,24px);min-width:0}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.step{border-top:3px solid var(--accent);padding-top:10px;font-size:.88rem;min-width:0}
+.step h3{font-size:.95rem;margin-bottom:4px}
+.step p{color:var(--muted);font-size:.84rem}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.05em}
+td.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.pill{display:inline-block;font-size:.74rem;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+.pill.good{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
+.pill.warn{background:var(--amber-soft);color:var(--warn)}
+.callout{border-left:4px solid var(--amber);background:var(--amber-soft);padding:14px 16px;border-radius:0 10px 10px 0;font-size:.94rem}
+.callout b{font-family:var(--display)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.82rem;color:var(--muted);margin-bottom:10px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+svg text{font-family:var(--body);fill:var(--muted);font-size:11px}
+svg .v{fill:var(--ink);font-family:var(--mono);font-size:11px}
+.panel>div[id]{overflow-x:auto}
+.note{font-size:.84rem;color:var(--muted);margin-top:10px}
+ul.clean{margin:0;padding-left:1.1em;display:grid;gap:8px}
+details{border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:var(--surface)}
+summary{cursor:pointer;font-weight:600}
+code{font-family:var(--mono);font-size:.86em;background:var(--accent-soft);color:var(--ink);padding:1px 6px;border-radius:5px}
+footer{margin-top:72px;padding-top:20px;border-top:1px solid var(--line);font-size:.86rem;color:var(--muted);display:grid;gap:6px}
+@media (max-width:860px){
+  .hero,.grid2,.grid3{grid-template-columns:minmax(0,1fr)}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .flow{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/*__MAPLIBRE_CSS__*/
+.maphead{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;margin-bottom:12px}
+.mapgrid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;align-items:start}
+#gmap{height:clamp(420px,68vh,680px);border-radius:12px;overflow:hidden;background:var(--surface);border:1px solid var(--line)}
+#gmap .maplibregl-popup-content{background:var(--surface);color:var(--ink);font-family:var(--body);font-size:.84rem;border-radius:10px;padding:10px 12px;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+#gmap .maplibregl-popup-tip{border-top-color:var(--surface);border-bottom-color:var(--surface)}
+#gmap .maplibregl-ctrl-attrib{font-size:.7rem}
+.hubs{border:1px solid var(--line);border-radius:12px;background:var(--surface);max-height:clamp(420px,68vh,680px);overflow:auto}
+.hubs h3{padding:12px 14px 6px;font-size:.95rem}
+.hub{display:grid;gap:4px;width:100%;text-align:left;font:inherit;background:none;border:0;border-top:1px solid var(--line);padding:10px 14px;cursor:pointer;color:var(--ink)}
+.hub:hover,.hub:focus-visible{background:var(--accent-soft)}
+.hub b{font-size:.9rem}
+.hub span{font-size:.78rem;color:var(--muted);font-family:var(--mono)}
+.bar{height:5px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font-size:.8rem;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 11px;color:var(--muted)}
+.chip b{color:var(--ink);font-family:var(--mono);font-weight:500}
+.mapnote{font-size:.8rem;color:var(--muted);margin-top:10px}
+@media (max-width:860px){.mapgrid{grid-template-columns:minmax(0,1fr)}.hubs{max-height:320px}}
+</style>
+
+<nav><div class="wrap">
+  <span class="brand">Alocação Capacitada</span>
+  <a href="#mapa">Mapa</a><a href="#demanda">Demanda</a><a href="#futuro">Futuro</a><a href="#tipos">Tipos</a><a href="#rede">Rede</a><a href="#metodo">Método</a><a href="#resultados">Resultados</a><a href="#validacao">Validação</a><a href="#custos">Custos reais</a><a href="#incerteza">Incerteza</a><a href="#limites">Limites</a>
+  <button class="theme" id="themeBtn" type="button" aria-label="Alternar tema claro e escuro">Tema</button>
+</div></nav>
+
+<main class="wrap">
+<header class="hero" style="grid-template-columns:minmax(0,1fr)">
+  <div>
+    <div class="eyebrow">Pesquisa Operacional · Logística</div>
+    <h1>Onde abrir centros e qual deles atende cada região</h1>
+    <p class="lede">Modelo de localização capacitada com fonte única, resolvido por heurística, matheurística (LNS) e programação inteira mista. Dados reais de pedidos do Brasil, frete oficial da ANTT, aluguel de galpões coletado e validação contra ótimos publicados.</p>
+  </div>
+</header>
+
+<div class="kpis" id="kpis"></div>
+
+
+<section id="mapa">
+  <div class="head">
+    <h2>A rede nacional no mapa</h2>
+    <p>Uma operadora hipotética com 10% do mercado de comércio eletrônico, demanda potencial por município estimada a partir de IBGE e Olist, e módulos de capacidade. Compare o projeto feito para 2025 com o projeto robusto para os cenários de 2030.</p>
+  </div>
+  <div class="maphead">
+    <div class="tabs" role="group" aria-label="Vista do mapa" id="mapViews"></div>
+    <div class="tabs" role="group" aria-label="Base do mapa">
+      <button type="button" id="baseB" aria-pressed="true">Fronteiras</button>
+      <button type="button" id="baseS" aria-pressed="false">Ruas</button>
+    </div>
+  </div>
+  <div class="chips" id="mapChips" style="margin-bottom:12px"></div>
+  <div class="mapgrid">
+    <div id="gmap" role="application" aria-label="Mapa interativo da rede nacional"></div>
+    <aside class="hubs" id="hubList" aria-label="Centros abertos"></aside>
+  </div>
+  <p class="mapnote" id="mapNote"></p>
+</section>
+
+<!--__ML_SECTIONS__-->
+
+<section id="metodo">
+  <div class="head">
+    <h2>Do dado aberto à decisão</h2>
+    <p>Cada etapa é um módulo separado e testado. O domínio não conhece os solvers, e todos os métodos são medidos pela mesma função de avaliação.</p>
+  </div>
+  <div class="panel">
+    <div class="flow">
+      <div class="step"><h3>Bronze</h3><p>Coleta respeitando o <code>robots.txt</code>, com hash, data e fonte de cada arquivo.</p></div>
+      <div class="step"><h3>Silver</h3><p>Tabelas tipadas. Vírgula decimal e milhar pt-BR tratados, com teste de regressão.</p></div>
+      <div class="step"><h3>Gold</h3><p>Frete da ANTT e aluguel por estado, rastreáveis ao arquivo de origem.</p></div>
+      <div class="step"><h3>Modelo</h3><p>Instância imutável; abrir centro, atribuir região, penalizar pedido não atendido.</p></div>
+      <div class="step"><h3>Solvers</h3><p>Guloso, busca local, LNS, MILP e relaxação linear como limite inferior.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="resultados">
+  <div class="head">
+    <h2>Resultados em pedidos reais do Olist</h2>
+    <p>Custo acima do limite inferior da relaxação linear (quanto menor, mais perto do ótimo possível). Frete ANTT, 2 eixos.</p>
+  </div>
+  <div class="panel">
+    <div class="legend" id="lg1"></div>
+    <div id="olistChart"></div>
+    <p class="note" id="olistNote"></p>
+  </div>
+
+  <div class="head" style="margin-top:44px">
+    <h3 style="font-size:1.35rem">Mas em instâncias de capacidade apertada o quadro muda</h3>
+    <p>Os 71 problemas de Holmberg et al. (1999) têm ótimo publicado. Aqui o MILP domina, e o LNS só ficou competitivo depois de ampliar a vizinhança.</p>
+  </div>
+  <div class="grid2">
+    <div class="panel"><div class="tbl" id="holmTable"></div></div>
+    <div class="panel"><div class="legend"><span><i style="background:var(--amber)"></i>LNS</span><span><i style="background:var(--accent)"></i>MILP</span></div><div id="holmScatter"></div><p class="note">Cada ponto é uma instância; eixo vertical em escala de raiz para mostrar os erros pequenos.</p></div>
+  </div>
+  <div class="callout" style="margin-top:18px"><b>O que isso corrige.</b> Nas instâncias do Olist o LNS ganhou do MILP porque a folga de capacidade é alta. Nas de Holmberg a conclusão se inverte. A vizinhança de 12 regiões dava 2,05% de gap médio; com 60, caiu para 0,59%, e ainda fica acima dos 0,20% do MILP.</div>
+</section>
+
+<section id="validacao">
+  <div class="head">
+    <h2>Validação contra resultados publicados</h2>
+    <p>O modelo com demanda divisível reproduz os ótimos da OR-Library. Isso valida a formulação, não o LNS.</p>
+  </div>
+  <div class="grid2">
+    <div class="panel"><div class="tbl" id="orlibTable"></div></div>
+    <div class="panel">
+      <h3>O que a validação revelou</h3>
+      <ul class="clean" style="margin-top:12px">
+        <li>Em cap41 a cap44 e cap51 há clientes com demanda maior que a capacidade de qualquer centro (até 12.912 contra 5.000). Com fonte única essas instâncias são inviáveis, então não servem de benchmark do problema.</li>
+        <li>Alguns arquivos de Holmberg terminam com cabeçalhos de e-mail de 1995 e bytes nulos. O carregador ignora esse lixo e falha alto se faltarem dados.</li>
+        <li>Um blog secundário trazia coeficientes de frete até 8% diferentes da resolução oficial. Por isso a fonte primária é obrigatória.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="custos">
+  <div class="head">
+    <h2>Custos reais no lugar de premissas</h2>
+    <p>O frete vem do piso mínimo da ANTT (Res. 6.084/2026). O custo fixo vem do aluguel de galpões coletado de um levantamento de fevereiro de 2026.</p>
+  </div>
+  <div class="grid2">
+    <div class="panel">
+      <h3>Frete: piso = km × CCD + CC</h3>
+      <div class="tbl" id="freteTable" style="margin-top:10px"></div>
+      <p class="note">Tabela A, carga geral. Retorno vazio soma 0,92 × km × CCD. O custo da viagem é diluído por 50 pedidos por veículo, que é premissa minha.</p>
+    </div>
+    <div class="panel">
+      <h3>Aluguel de galpão (R$/m²/mês)</h3>
+      <div id="rentChart" style="margin-top:10px"></div>
+      <p class="note" id="rentNote"></p>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:18px">
+    <h3>Efeito do aluguel real na rede</h3>
+    <p class="note" style="margin-top:4px">Centros abertos. O custo fixo de cada centro é proporcional à sua capacidade, com uma densidade de pedidos por m² por mês (premissa).</p>
+    <div class="legend" id="lgRent" style="margin-top:12px"></div>
+    <div id="rentEffect"></div>
+  </div>
+  <div class="callout" style="margin-top:18px" id="areaCallout"></div>
+</section>
+
+<section id="incerteza">
+  <div class="head">
+    <h2>Sensibilidade e demanda incerta</h2>
+    <p>Um parâmetro por vez (50 regiões × 15 centros) e programação estocástica de dois estágios.</p>
+  </div>
+  <div class="grid2">
+    <div class="panel"><h3>Folga de capacidade</h3><div id="sensCap"></div><p class="note">De 15 centros com folga 1,1 para 9 com folga 3,0. O custo fixo e os pedidos por veículo mudam a rede muito menos (14 para 13 centros).</p></div>
+    <div class="panel"><h3>Pedidos por veículo</h3><div id="sensVeh"></div><p class="note">O custo de transporte cai quase na razão inversa. É a premissa de maior impacto e a menos fundamentada.</p></div>
+  </div>
+  <p class="note" style="margin-top:12px">O valor de modelar a incerteza (VSS) e o da informação perfeita (EVPI) estão na seção da rede nacional, com o protocolo corrigido: cenários avaliados uma vez por política, intervalo de confiança pareado e choque comum entre regiões.</p>
+</section>
+
+<section id="limites">
+  <div class="head">
+    <h2>O que este projeto não prova</h2>
+    <p>Limitações de escopo, para não afirmar mais do que os dados sustentam.</p>
+  </div>
+  <div class="grid2">
+    <div class="panel"><h3>Limitações</h3><ul class="clean" style="margin-top:12px">
+      <li>Olist é um marketplace pequeno; escala e regras diferem de operações maiores.</li>
+      <li>Capacidades, penalidade de não atendimento, pedidos por veículo e densidade de pedidos por m² são premissas declaradas.</li>
+      <li>Distâncias em linha reta. O projeto de roteamento usará OSRM e OpenStreetMap.</li>
+      <li>O aluguel vem de preços pedidos em portais, cobre 9 estados e é média por estado. Os demais usam a média das 18 cidades.</li>
+      <li>O LNS não superou o estado da arte; não o comparei com Kong (2021) nos mesmos dados.</li>
+      <li>Projeto de portfólio, sem implantação operacional nem ganho medido.</li>
+    </ul></div>
+    <div class="panel"><h3>Próximos passos</h3><ul class="clean" style="margin-top:12px">
+      <li>Instâncias de SSCFLP de Yang e TBED1 para estressar o LNS em escala maior.</li>
+      <li>Demanda incerta com capacidade apertada e intervalos de confiança.</li>
+      <li>Previsão de demanda por ML alimentando o otimizador.</li>
+      <li>Distâncias viárias reais e roteamento de última milha (VRP).</li>
+      <li>Fundamentar <code>pedidos por veículo</code> e a densidade de pedidos por m².</li>
+    </ul></div>
+  </div>
+</section>
+
+<footer>
+  <div><b>Fontes.</b> Olist Brazilian E-Commerce (CC BY-NC-SA 4.0, uso não comercial) · ANTT, Res. 6.076 e 6.084/2026 · OR-Library (Beasley) · Holmberg, Rönnqvist &amp; Yuan (1999), valores ótimos de Guastaroba &amp; Speranza (2014), via OR-Brescia · levantamento de aluguel de galpões, fev/2026.</div>
+  <div>Todos os números desta página são lidos dos arquivos em <code>results/</code> por <code>scripts/build_site.py</code>.</div>
+</footer>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.js"></script>
+<script>
+const D = /*__DATA__*/null;
+const $ = (id) => document.getElementById(id);
+const C = {accent:"var(--accent)", amber:"var(--amber)", grey:"var(--grey)", slate:"var(--slate)", line:"var(--line)"};
+const nf = (v, d=0) => v.toLocaleString("pt-BR",{minimumFractionDigits:d, maximumFractionDigits:d});
+const pct = (v, d=2) => nf(100*v, d) + "%";
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const NS = "http://www.w3.org/2000/svg";
+
+/* tema */
+(function(){
+  const root = document.documentElement, btn = $("themeBtn");
+  try { const t = localStorage.getItem("theme"); if (t) root.setAttribute("data-theme", t); } catch (e) {}
+  btn.addEventListener("click", () => {
+    const dark = root.getAttribute("data-theme") === "dark" || (!root.getAttribute("data-theme") && matchMedia("(prefers-color-scheme: dark)").matches);
+    const next = dark ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch (e) {}
+  });
+})();
+
+/* helpers de SVG */
+function svg(w, h, inner, minw){ const m = minw === undefined ? Math.min(w, 620) : minw; return `<svg viewBox="0 0 ${w} ${h}" role="img" width="100%" preserveAspectRatio="xMidYMid meet" style="min-width:${m}px">${inner}</svg>`; }
+function legend(el, items){ $(el).innerHTML = items.map(([c,t]) => `<span><i style="background:${c}"></i>${esc(t)}</span>`).join(""); }
+
+/* KPIs */
+(function(){
+  const h = D.holmberg.v2, m = D.meta, ML = D.ml;
+  const mun = ML.cluster_perfil.reduce((a, r) => a + r.municipios, 0);
+  const gbm = ML.demanda_metricas.find((r) => r.modelo === "gbm_completo" && r.validacao === "uf");
+  const cen = ML.previsao_censo, best = cen.find((r) => r.w === 1 && Math.abs(r.phi - 0.9) < 1e-9), naive = cen.find((r) => r.w === 1 && r.phi === 1);
+  const k = [
+    [nf(mun), `municípios no modelo de demanda, com população, idade, IDHM e renda do IBGE (${nf(m.pedidos)} pedidos reais do Olist)`],
+    [nf(gbm.spearman_pop50k, 2), "correlação de postos entre demanda prevista e observada, em municípios que o modelo não viu"],
+    [pct(best.mediana_ape, 1), `erro mediano da projeção de população contra o Censo 2022 real (${pct(naive.mediana_ape, 1)} sem desaceleração)`],
+    [`${h.stats.milp.coincide_ref}/${h.n}`, `instâncias de Holmberg em que o MILP iguala a referência publicada (${h.stats.milp.certificado} provadas)`],
+  ];
+  $("kpis").innerHTML = k.map(([b,s]) => `<div class="kpi"><b>${b}</b><span>${s}</span></div>`).join("");
+})();
+
+/*__MAPJS__*/
+/*__MLJS__*/
+
+/* Olist: % acima do limite do PL, barras horizontais agrupadas */
+(function(){
+  const series = [["guloso","Guloso",C.grey],["busca_local","Busca local",C.slate],["milp","MILP",C.accent],["milp_warm","MILP + aquecimento","var(--accent-soft)"],["lns_medio","LNS (média das sementes)",C.amber]];
+  legend("lg1", series.map(([,t,c]) => [c === "var(--accent-soft)" ? "color-mix(in srgb,var(--accent) 45%,transparent)" : c, t]));
+  const rows = D.olist, W = 760, rowH = 18, gap = 26, L = 92, R = 70;
+  const max = Math.max(...rows.flatMap(r => series.map(([k]) => 100 * (r[k] / r.limite_pl - 1))));
+  const sx = (v) => L + v / max * (W - L - R);
+  let s = "", yy = 10;
+  [0, 1, 2, 3, 4].forEach(() => {});
+  const ticks = 5, step = Math.ceil(max / ticks);
+  for (let t = 0; t <= max + 0.001; t += step) s += `<line x1="${sx(t)}" x2="${sx(t)}" y1="0" y2="${rows.length * (series.length * rowH + gap)}" stroke="${C.line}"/><text x="${sx(t)}" y="${rows.length * (series.length * rowH + gap) + 14}" text-anchor="middle">${t}%</text>`;
+  rows.forEach((r) => {
+    s += `<text x="${L-12}" y="${yy + series.length * rowH / 2 + 4}" text-anchor="end" style="fill:var(--ink);font-weight:600">${esc(r.instancia)}</text>`;
+    series.forEach(([k,,c], i) => {
+      const v = 100 * (r[k] / r.limite_pl - 1), fill = c === "var(--accent-soft)" ? "color-mix(in srgb,var(--accent) 45%,transparent)" : c;
+      s += `<rect x="${L}" y="${yy + i * rowH + 2}" width="${Math.max(2, sx(v) - L)}" height="${rowH - 5}" rx="2" fill="${fill}"/><text class="v" x="${sx(v) + 6}" y="${yy + i * rowH + 13}">${nf(v, 2)}%</text>`;
+    });
+    yy += series.length * rowH + gap;
+  });
+  $("olistChart").innerHTML = svg(W, yy + 12, s);
+  $("olistNote").textContent = `Limite de 30 s em 50×15 e 100×30 e de 60 s em 200×50; o LNS usa ${rows[0].sementes} a ${rows[rows.length - 1].sementes} sementes. O limite do PL prova que nenhuma solução fica mais de ~0,7% acima do ótimo no LNS em 200×50; o PL em si não é o ótimo inteiro.`;
+})();
+
+/* Holmberg */
+(function(){
+  const v1 = D.holmberg.v1, v2 = D.holmberg.v2;
+  const rowsT = [["Guloso","guloso"],["Busca local","busca_local"],["LNS, vizinhança 12","lns",1],["LNS, vizinhança 60","lns",2],["MILP","milp"]];
+  const tr = rowsT.map(([name, k, which]) => { const st = (which === 1 ? v1 : v2).stats[k];
+    return `<tr><td>${name}</td><td class="num">${pct(st.media)}</td><td class="num">${pct(st.mediana)}</td><td class="num">${st.coincide_ref}/${v2.n}</td><td class="num">${k === "milp" ? st.certificado + "/" + v2.n : "–"}</td><td class="num">${nf(st.tempo_medio, 1)} s</td></tr>`; }).join("");
+  $("holmTable").innerHTML = `<table><thead><tr><th>Método</th><th>Gap médio</th><th>Mediana</th><th>Igual à ref.</th><th>Provado</th><th>Tempo</th></tr></thead><tbody>${tr}</tbody></table><p class="note">71 instâncias, 30 centros no máximo e até 200 clientes. LNS e MILP com 10 s. Gap em relação ao valor publicado. "Igual à ref.": custo idêntico à referência (tolerância 10⁻⁶). "Provado": o solver certificou a otimalidade.</p>`;
+
+  const P = D.holmberg.pontos, W = 560, H = 300, L = 44, B = 34, T = 10, Rr = 12;
+  const maxg = Math.max(...P.map(p => Math.max(p.lns, p.milp)));
+  const sy = (g) => H - B - Math.sqrt(g / maxg) * (H - B - T), sx = (n) => L + (n - 40) / 170 * (W - L - Rr);
+  let s = "";
+  [0, 0.005, 0.02, 0.05].filter(g => g <= maxg).forEach(g => { s += `<line x1="${L}" x2="${W-Rr}" y1="${sy(g)}" y2="${sy(g)}" stroke="${C.line}"/><text x="${L-6}" y="${sy(g)+4}" text-anchor="end">${nf(100*g, g ? 1 : 0)}%</text>`; });
+  [50, 100, 150, 200].forEach(n => { s += `<text x="${sx(n)}" y="${H-12}" text-anchor="middle">${n}</text>`; });
+  s += `<text x="${(L+W)/2}" y="${H-0}" text-anchor="middle">clientes por instância</text>`;
+  P.forEach(p => { const j = ((p.i.charCodeAt(1) * 7 + p.i.length * 3) % 9 - 4) * 1.4;
+    s += `<circle cx="${sx(p.n) + j}" cy="${sy(p.lns)}" r="3.6" fill="${C.amber}" fill-opacity=".75"/><circle cx="${sx(p.n) + j}" cy="${sy(p.milp)}" r="3.6" fill="none" stroke="${C.accent}" stroke-width="1.6"/>`; });
+  $("holmScatter").innerHTML = svg(W, H, s);
+})();
+
+/* OR-Library */
+(function(){
+  const tr = D.orlib.map(r => `<tr><td>${esc(r.i)}</td><td class="num">${nf(r.publicado, 3)}</td><td class="num">${nf(r.meu, 3)}</td><td><span class="pill good">igual</span></td></tr>`).join("");
+  $("orlibTable").innerHTML = `<table><thead><tr><th>Instância</th><th>Ótimo publicado</th><th>Meu modelo</th><th></th></tr></thead><tbody>${tr}</tbody></table><p class="note">16 centros × 50 clientes, demanda divisível.</p>`;
+})();
+
+/* frete */
+(function(){
+  const tr = D.frete.map(r => `<tr><td>${r.eixos}</td><td class="num">${nf(r.ccd, 4)}</td><td class="num">${nf(r.cc, 2)}</td><td class="num">${nf((500 * r.ccd * 1.92 + r.cc) / 50, 0)}</td></tr>`).join("");
+  $("freteTable").innerHTML = `<table><thead><tr><th>Eixos</th><th>CCD (R$/km)</th><th>CC (R$)</th><th>R$/pedido a 500 km</th></tr></thead><tbody>${tr}</tbody></table>`;
+})();
+
+/* aluguel por estado */
+(function(){
+  const rows = D.aluguel_estado.slice().sort((a, b) => b.rs_m2 - a.rs_m2), W = 480, rh = 26, L = 38, R = 110;
+  const max = Math.max(...rows.map(r => r.rs_m2)), sx = (v) => L + v / max * (W - L - R);
+  let s = "";
+  rows.forEach((r, i) => { const y = i * rh + 4;
+    s += `<text x="${L-8}" y="${y+14}" text-anchor="end" style="fill:var(--ink);font-weight:600">${esc(r.uf)}</text><rect x="${L}" y="${y+2}" width="${sx(r.rs_m2) - L}" height="${rh-8}" rx="2" fill="${C.accent}"/><text class="v" x="${sx(r.rs_m2)+6}" y="${y+14}">R$ ${nf(r.rs_m2, 2)}</text><text x="${sx(r.rs_m2)+72}" y="${y+14}">${r.n} ${r.n > 1 ? "cidades" : "cidade"}</text>`; });
+  $("rentChart").innerHTML = svg(W, rows.length * rh + 8, s);
+  const all = D.aluguel_cidades, mean = all.reduce((a, r) => a + r.medio_1001_3000, 0) / all.length;
+  $("rentNote").textContent = `Faixa de 1.001 a 3.000 m², preços pedidos em fev/2026. Estados sem dado usam a média das ${all.length} cidades (R$ ${nf(mean, 2)}). SP é a média de 7 cidades, bem abaixo da capital.`;
+})();
+
+/* efeito do aluguel real */
+(function(){
+  const sizes = [...new Set(D.aluguel_real.map(r => r.instancia))];
+  const cases = [["premissa antiga", "Custo fixo assumido", C.grey], ["2 pedidos", "2 pedidos/m²/mês", "#e9a13a"], ["5 pedidos", "5", C.amber], ["10 pedidos", "10", C.slate], ["25 pedidos", "25", C.accent]];
+  const label = (r) => r.cenario;
+  const pick = (size, key) => D.aluguel_real.find(r => r.instancia === size && label(r).includes(key));
+  legend("lgRent", cases.map(([, t, c]) => [c, t === "5" || t === "10" || t === "25" ? t + " pedidos/m²/mês" : t]));
+  const W = 760, rowH = 18, gap = 24, L = 70, R = 60;
+  const max = Math.max(...D.aluguel_real.filter(r => !String(r.cenario).includes("fixa")).map(r => r.centros_abertos)) + 2;
+  const sx = (v) => L + v / max * (W - L - R);
+  let s = "", yy = 6;
+  sizes.forEach(size => {
+    const [a, b] = size.split("x");
+    s += `<text x="${L-10}" y="${yy + cases.length * rowH / 2 + 4}" text-anchor="end" style="fill:var(--ink);font-weight:600">${a}×${b}</text>`;
+    cases.forEach(([key,, c], i) => { const r = pick(size, key); if (!r) return;
+      s += `<rect x="${L}" y="${yy + i * rowH + 2}" width="${sx(r.centros_abertos) - L}" height="${rowH - 5}" rx="2" fill="${c}"/><text class="v" x="${sx(r.centros_abertos) + 6}" y="${yy + i * rowH + 13}">${r.centros_abertos} centros · fixo ${nf(r.pct_fixo, 0)}% do custo</text>`; });
+    yy += cases.length * rowH + gap;
+  });
+  $("rentEffect").innerHTML = svg(W, yy, s);
+  const bad = D.area_fixa.filter(r => String(r.cenario).includes("5000"));
+  const ex = bad.find(r => r.instancia === "100x30") || bad[0];
+  $("areaCallout").innerHTML = `<b>Um erro que quase passou.</b> A primeira tentativa usou uma área fixa de 5.000 m² por centro. O modelo respondeu com ${ex.centros_abertos} centros e ${nf(ex.demanda_nao_atendida)} pedidos sem atendimento (${ex.instancia}): em escala Olist, um galpão desse tamanho custa mais que a entrega dos pedidos que ele comportaria. A correção foi ligar a área à capacidade do centro. O resultado antigo continua em <code>results/aluguel_area_fixa.csv</code>.`;
+})();
+
+/* sensibilidade */
+function line(el, xs, ys, fmtY, color){
+  const W = 420, H = 200, L = 52, B = 30, T = 14, R = 16;
+  const ymin = Math.min(...ys) * 0.92, ymax = Math.max(...ys) * 1.06;
+  const sx = (i) => L + i / (xs.length - 1) * (W - L - R), sy = (v) => H - B - (v - ymin) / (ymax - ymin) * (H - B - T);
+  let s = "";
+  [0, 1, 2, 3].forEach(k => { const v = ymin + (ymax - ymin) * k / 3; s += `<line x1="${L}" x2="${W-R}" y1="${sy(v)}" y2="${sy(v)}" stroke="${C.line}"/><text x="${L-6}" y="${sy(v)+4}" text-anchor="end">${fmtY(v)}</text>`; });
+  xs.forEach((x, i) => { s += `<text x="${sx(i)}" y="${H-10}" text-anchor="middle">${x}</text>`; });
+  s += `<polyline fill="none" stroke="${color}" stroke-width="2.2" points="${ys.map((v, i) => sx(i) + "," + sy(v)).join(" ")}"/>`;
+  ys.forEach((v, i) => { s += `<circle cx="${sx(i)}" cy="${sy(v)}" r="3.6" fill="${color}"/>`; });
+  $(el).innerHTML = svg(W, H, s);
+}
+(function(){
+  const cap = D.sensibilidade.filter(r => r.parametro.startsWith("capacidade"));
+  line("sensCap", cap.map(r => nf(r.nivel, 1)), cap.map(r => r.centros_abertos), (v) => nf(v, 0) + " centros", C.accent);
+  const veh = D.sensibilidade.filter(r => r.parametro.startsWith("pedidos"));
+  line("sensVeh", veh.map(r => nf(r.nivel, 0)), veh.map(r => r.custo_total / 1e6), (v) => nf(v, 1) + " mi", C.amber);
+})();
+</script>

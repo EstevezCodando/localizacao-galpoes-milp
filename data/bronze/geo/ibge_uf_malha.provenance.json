@@ -1,0 +1,10 @@
+{
+  "url": "https://servicodados.ibge.gov.br/api/v3/malhas/paises/BR?formato=application/vnd.geo+json&qualidade=minima&intrarregiao=UF",
+  "fetched_at": "2026-09-30T21:32:55+00:00",
+  "status": 200,
+  "sha256": "07c671aa87aa1ab296c446de6294df9827112782537b996c0a160284907e7c0f",
+  "bytes": 98502,
+  "user_agent": "alocacao-capacitada-portfolio/0.1 (pesquisa academica)",
+  "robots_checked": false,
+  "nota": "API publica de dados abertos do IBGE, feita para acesso programatico. O /robots.txt do host nao respondeu (timeout de 30 s), entao nao pude consulta-lo; uma unica requisicao de 98 KB."
+}

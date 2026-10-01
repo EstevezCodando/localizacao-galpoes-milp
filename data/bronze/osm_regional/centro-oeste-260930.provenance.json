@@ -1,0 +1,12 @@
+{
+  "fonte": "https://download.geofabrik.de/south-america/brazil/centro-oeste-260930.osm.pbf",
+  "licenca": "ODbL (OpenStreetMap contributors)",
+  "extrato": "260930",
+  "bytes": 205709859,
+  "sha256": "7ff503d0a8a4c0fe0832291221c64a08f18c55528d5e735f0e2bd013885a6a24",
+  "md5": "f2617725492112265be29b4d842be329",
+  "trechos": {
+    "rodovias": 56704,
+    "arruamentos": 574836
+  }
+}

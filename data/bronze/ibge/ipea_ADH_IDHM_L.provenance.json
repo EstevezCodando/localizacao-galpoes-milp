@@ -1,0 +1,9 @@
+{
+  "url": "http://www.ipeadata.gov.br/api/odata4/ValoresSerie(SERCODIGO=%27ADH_IDHM_L%27)?$filter=NIVNOME%20eq%20'Munic%C3%ADpios'",
+  "fetched_at": "2026-10-01T01:33:19+00:00",
+  "sha256": "1d18c9119b8ba5ea65a4f16a4810aebb36f0284e9d91968c608c32f344b644a6",
+  "bytes": 2446487,
+  "user_agent": "alocacao-capacitada-portfolio/0.1 (pesquisa academica; jean.alvarez@al.infnet.edu.br)",
+  "robots_checked": false,
+  "nota": "API pública de dados abertos para acesso programático; o robots.txt do host não foi consultado ou não responde. Uma requisição por vez, com intervalo e cache."
+}

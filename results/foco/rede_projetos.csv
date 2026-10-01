@@ -1,0 +1,193 @@
+projeto,cod,nome,uf,modulo
+2025 base,3550308,São Paulo,SP,100000
+2025 base,3550308,São Paulo,SP,250000
+2025 base,3304557,Rio de Janeiro,RJ,100000
+2025 base,3304557,Rio de Janeiro,RJ,250000
+2025 base,3106200,Belo Horizonte,MG,100000
+2025 base,5300108,Brasília,DF,100000
+2025 base,4106902,Curitiba,PR,100000
+2025 base,3509502,Campinas,SP,100000
+2025 base,4314902,Porto Alegre,RS,100000
+2025 base,3518800,Guarulhos,SP,100000
+2025 base,3547809,Santo André,SP,100000
+2025 base,3549904,São José dos Campos,SP,100000
+2025 base,5208707,Goiânia,GO,100000
+2025 base,3548500,Santos,SP,100000
+2025 base,3552205,Sorocaba,SP,100000
+2025 base,4205407,Florianópolis,SC,100000
+2025 base,3543402,Ribeirão Preto,SP,100000
+2025 base,3505708,Barueri,SP,100000
+2025 base,3170206,Uberlândia,MG,100000
+2025 base,3136702,Juiz de Fora,MG,100000
+2025 base,3118601,Contagem,MG,100000
+2025 base,3304904,São Gonçalo,RJ,100000
+2025 base,3549805,São José do Rio Preto,SP,100000
+2025 base,5002704,Campo Grande,MS,100000
+2025 base,3205309,Vitória,ES,100000
+2025 base,3506003,Bauru,SP,100000
+2025 base,4115200,Maringá,PR,100000
+2025 base,5103403,Cuiabá,MT,100000
+2025 base,4305108,Caxias do Sul,RS,100000
+2025 base,3513801,Diadema,SP,250000
+2025 base,3302403,Macaé,RJ,100000
+2025 base,3143302,Montes Claros,MG,100000
+2025 base,3501608,Americana,SP,100000
+2025 base,4202404,Blumenau,SC,100000
+2030 base,3550308,São Paulo,SP,100000
+2030 base,3550308,São Paulo,SP,250000
+2030 base,3304557,Rio de Janeiro,RJ,100000
+2030 base,3304557,Rio de Janeiro,RJ,250000
+2030 base,3106200,Belo Horizonte,MG,250000
+2030 base,5300108,Brasília,DF,100000
+2030 base,4106902,Curitiba,PR,100000
+2030 base,3509502,Campinas,SP,100000
+2030 base,4314902,Porto Alegre,RS,100000
+2030 base,3518800,Guarulhos,SP,100000
+2030 base,3548708,São Bernardo do Campo,SP,100000
+2030 base,3547809,Santo André,SP,100000
+2030 base,3549904,São José dos Campos,SP,100000
+2030 base,5208707,Goiânia,GO,100000
+2030 base,3552205,Sorocaba,SP,100000
+2030 base,3525904,Jundiaí,SP,100000
+2030 base,4205407,Florianópolis,SC,100000
+2030 base,3543402,Ribeirão Preto,SP,100000
+2030 base,3303500,Nova Iguaçu,RJ,100000
+2030 base,3170206,Uberlândia,MG,100000
+2030 base,3136702,Juiz de Fora,MG,100000
+2030 base,3304904,São Gonçalo,RJ,100000
+2030 base,3549805,São José do Rio Preto,SP,100000
+2030 base,5002704,Campo Grande,MS,100000
+2030 base,4209102,Joinville,SC,100000
+2030 base,3205309,Vitória,ES,100000
+2030 base,3506003,Bauru,SP,100000
+2030 base,4115200,Maringá,PR,100000
+2030 base,5103403,Cuiabá,MT,100000
+2030 base,3510609,Carapicuíba,SP,100000
+2030 base,4305108,Caxias do Sul,RS,100000
+2030 base,3513801,Diadema,SP,100000
+2030 base,3513801,Diadema,SP,250000
+2030 base,3302403,Macaé,RJ,100000
+2030 base,3548807,São Caetano do Sul,SP,100000
+2030 base,3143302,Montes Claros,MG,100000
+2030 base,3501608,Americana,SP,100000
+2030 base,4304606,Canoas,RS,100000
+2030 baixo,3550308,São Paulo,SP,100000
+2030 baixo,3550308,São Paulo,SP,250000
+2030 baixo,3304557,Rio de Janeiro,RJ,100000
+2030 baixo,3304557,Rio de Janeiro,RJ,250000
+2030 baixo,3106200,Belo Horizonte,MG,100000
+2030 baixo,5300108,Brasília,DF,100000
+2030 baixo,4106902,Curitiba,PR,100000
+2030 baixo,3509502,Campinas,SP,100000
+2030 baixo,4314902,Porto Alegre,RS,100000
+2030 baixo,3518800,Guarulhos,SP,100000
+2030 baixo,3548708,São Bernardo do Campo,SP,100000
+2030 baixo,3549904,São José dos Campos,SP,100000
+2030 baixo,3534401,Osasco,SP,100000
+2030 baixo,5208707,Goiânia,GO,100000
+2030 baixo,3552205,Sorocaba,SP,100000
+2030 baixo,4205407,Florianópolis,SC,100000
+2030 baixo,3543402,Ribeirão Preto,SP,100000
+2030 baixo,3505708,Barueri,SP,100000
+2030 baixo,3170206,Uberlândia,MG,100000
+2030 baixo,3136702,Juiz de Fora,MG,100000
+2030 baixo,3118601,Contagem,MG,100000
+2030 baixo,3304904,São Gonçalo,RJ,100000
+2030 baixo,3549805,São José do Rio Preto,SP,100000
+2030 baixo,5002704,Campo Grande,MS,100000
+2030 baixo,3205309,Vitória,ES,100000
+2030 baixo,3506003,Bauru,SP,100000
+2030 baixo,4115200,Maringá,PR,100000
+2030 baixo,5103403,Cuiabá,MT,100000
+2030 baixo,3529401,Mauá,SP,100000
+2030 baixo,3510609,Carapicuíba,SP,100000
+2030 baixo,4305108,Caxias do Sul,RS,100000
+2030 baixo,3513801,Diadema,SP,100000
+2030 baixo,3302403,Macaé,RJ,100000
+2030 baixo,3106705,Betim,MG,100000
+2030 baixo,3548807,São Caetano do Sul,SP,100000
+2030 baixo,3143302,Montes Claros,MG,100000
+2030 baixo,3306305,Volta Redonda,RJ,100000
+2030 baixo,3501608,Americana,SP,100000
+2030 baixo,4202404,Blumenau,SC,100000
+2030 alto,3550308,São Paulo,SP,100000
+2030 alto,3550308,São Paulo,SP,250000
+2030 alto,3304557,Rio de Janeiro,RJ,100000
+2030 alto,3304557,Rio de Janeiro,RJ,250000
+2030 alto,3106200,Belo Horizonte,MG,250000
+2030 alto,5300108,Brasília,DF,250000
+2030 alto,4106902,Curitiba,PR,250000
+2030 alto,3509502,Campinas,SP,100000
+2030 alto,4314902,Porto Alegre,RS,100000
+2030 alto,3518800,Guarulhos,SP,100000
+2030 alto,3549904,São José dos Campos,SP,100000
+2030 alto,3534401,Osasco,SP,100000
+2030 alto,5208707,Goiânia,GO,100000
+2030 alto,3548500,Santos,SP,100000
+2030 alto,3552205,Sorocaba,SP,100000
+2030 alto,3525904,Jundiaí,SP,100000
+2030 alto,4205407,Florianópolis,SC,100000
+2030 alto,3543402,Ribeirão Preto,SP,100000
+2030 alto,3303500,Nova Iguaçu,RJ,100000
+2030 alto,3505708,Barueri,SP,100000
+2030 alto,3170206,Uberlândia,MG,100000
+2030 alto,3136702,Juiz de Fora,MG,100000
+2030 alto,3304904,São Gonçalo,RJ,100000
+2030 alto,3549805,São José do Rio Preto,SP,100000
+2030 alto,5002704,Campo Grande,MS,100000
+2030 alto,3205309,Vitória,ES,100000
+2030 alto,4113700,Londrina,PR,100000
+2030 alto,3506003,Bauru,SP,100000
+2030 alto,4115200,Maringá,PR,100000
+2030 alto,5103403,Cuiabá,MT,100000
+2030 alto,3554102,Taubaté,SP,100000
+2030 alto,4305108,Caxias do Sul,RS,100000
+2030 alto,3513801,Diadema,SP,100000
+2030 alto,3513801,Diadema,SP,250000
+2030 alto,3302403,Macaé,RJ,100000
+2030 alto,3106705,Betim,MG,100000
+2030 alto,3548807,São Caetano do Sul,SP,100000
+2030 alto,3548807,São Caetano do Sul,SP,250000
+2030 alto,3143302,Montes Claros,MG,100000
+2030 alto,3306305,Volta Redonda,RJ,100000
+2030 alto,3501608,Americana,SP,100000
+2030 alto,4202404,Blumenau,SC,100000
+2030 alto,4304606,Canoas,RS,100000
+2030 média dos 3,3550308,São Paulo,SP,100000
+2030 média dos 3,3550308,São Paulo,SP,250000
+2030 média dos 3,3304557,Rio de Janeiro,RJ,100000
+2030 média dos 3,3304557,Rio de Janeiro,RJ,250000
+2030 média dos 3,3106200,Belo Horizonte,MG,250000
+2030 média dos 3,5300108,Brasília,DF,100000
+2030 média dos 3,4106902,Curitiba,PR,100000
+2030 média dos 3,3509502,Campinas,SP,100000
+2030 média dos 3,4314902,Porto Alegre,RS,100000
+2030 média dos 3,3518800,Guarulhos,SP,100000
+2030 média dos 3,3547809,Santo André,SP,100000
+2030 média dos 3,3549904,São José dos Campos,SP,100000
+2030 média dos 3,5208707,Goiânia,GO,100000
+2030 média dos 3,3548500,Santos,SP,100000
+2030 média dos 3,3552205,Sorocaba,SP,100000
+2030 média dos 3,3525904,Jundiaí,SP,100000
+2030 média dos 3,4205407,Florianópolis,SC,100000
+2030 média dos 3,3543402,Ribeirão Preto,SP,100000
+2030 média dos 3,3303500,Nova Iguaçu,RJ,100000
+2030 média dos 3,3170206,Uberlândia,MG,100000
+2030 média dos 3,3136702,Juiz de Fora,MG,100000
+2030 média dos 3,3304904,São Gonçalo,RJ,100000
+2030 média dos 3,3549805,São José do Rio Preto,SP,100000
+2030 média dos 3,5002704,Campo Grande,MS,100000
+2030 média dos 3,4209102,Joinville,SC,100000
+2030 média dos 3,3205309,Vitória,ES,100000
+2030 média dos 3,3506003,Bauru,SP,100000
+2030 média dos 3,4115200,Maringá,PR,100000
+2030 média dos 3,5103403,Cuiabá,MT,100000
+2030 média dos 3,3510609,Carapicuíba,SP,100000
+2030 média dos 3,4305108,Caxias do Sul,RS,100000
+2030 média dos 3,3513801,Diadema,SP,100000
+2030 média dos 3,3513801,Diadema,SP,250000
+2030 média dos 3,3302403,Macaé,RJ,100000
+2030 média dos 3,3548807,São Caetano do Sul,SP,100000
+2030 média dos 3,3143302,Montes Claros,MG,100000
+2030 média dos 3,3501608,Americana,SP,100000
+2030 média dos 3,4304606,Canoas,RS,100000

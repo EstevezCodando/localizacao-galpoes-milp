@@ -1,0 +1,3 @@
+projeto,modulos,custo_total,custo_fixo,frete,terceirizado,pct_terceirizado,arrependimento_pct,jaccard_modulos
+projetado com distância viária,34.0,15471816.217386592,4683634.523809523,10788181.69357707,0.0,0.0,0.0,0.7894736842105263
+projetado com linha reta,34.0,15613622.65378271,4495452.380952381,11118170.27283033,0.0,0.0,0.9165467997012566,0.7894736842105263

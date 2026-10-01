@@ -1,0 +1,53 @@
+<section id="demanda">
+  <div class="head">
+    <h2>Demanda por município, com dados do IBGE</h2>
+    <p>O Olist tem pedidos em 3.955 dos 5.571 municípios e quase nenhum no Norte e no Nordeste. Um modelo supervisionado aprende a propensão de compra por habitante a partir de população, faixa etária, IDHM, renda, Gini, PIB e distância ao polo vendedor, e estima todos os municípios. A validação nunca prevê um município com um modelo que viu o seu estado ou a sua região.</p>
+  </div>
+  <div class="grid2">
+    <div class="panel"><h3>Erro fora do bloco geográfico</h3><div class="tbl" id="demModelos" style="margin-top:10px"></div><p class="note">Deviance de Poisson (menor é melhor) e correlação de postos entre previsto e observado nos municípios com 50 mil habitantes ou mais. Validação por UF (5 dobras) e por macrorregião (deixa uma de fora).</p></div>
+    <div class="panel"><h3>Previsto ÷ observado, por decil de previsão</h3><div class="legend" id="lgCal" style="margin-top:8px"></div><div id="demCalib"></div><p class="note">Municípios de 20 mil habitantes ou mais, validação por UF. 1,0 é calibração perfeita.</p></div>
+  </div>
+  <div class="panel" style="margin-top:18px"><h3>O que o modelo usa</h3><div id="demImp" style="margin-top:10px"></div><p class="note">Aumento da deviance ao embaralhar cada variável (validação por UF). Variáveis correlacionadas dividem o crédito. O IDHM, a renda e o Gini são do Censo 2010, e a faixa etária, do Censo 2022: a datação de cada variável está declarada.</p></div>
+</section>
+
+<section id="futuro">
+  <div class="head">
+    <h2>O futuro: população 2025 a 2030</h2>
+    <p>Um backtest contra a série oficial do IBGE mostra erro de 1,5% e engana: as estimativas são suaves porque são modeladas. Contra o Censo 2022 real, a extrapolação simples erra 9% e superestima o total em quase 10%, porque o crescimento desacelerou. O modelo usa taxa do município encolhida para o grupo, amortecimento ao longo dos anos e uma trava de plausibilidade.</p>
+  </div>
+  <div class="grid2">
+    <div class="panel"><h3>Dois testes, dois erros</h3><div id="futBacktests" style="margin-top:10px"></div><p class="note">Erro mediano por município. O teste contra o Censo usa só contagens (2000 e 2010 para prever 2022, 12 anos).</p></div>
+    <div class="panel"><h3>Contra o Censo 2022 real</h3><div class="tbl" id="futCenso" style="margin-top:10px"></div><p class="note">O amortecimento foi escolhido em todas as cinco dobras espaciais e reduziu o erro de 10–13% para 6–8%.</p></div>
+  </div>
+  <div class="grid2" style="margin-top:18px">
+    <div class="panel"><h3>Projeção nacional (milhões de habitantes)</h3><div id="futCurva" style="margin-top:10px"></div><p class="note" id="futCurvaNota"></p></div>
+    <div class="panel"><h3>Por tipologia de município</h3><div class="tbl" id="futGrupos" style="margin-top:10px"></div><p class="note">A soma dos limites por município superestima a incerteza nacional: serve como estresse, não como intervalo estatístico do país.</p></div>
+  </div>
+</section>
+
+<section id="tipos">
+  <div class="head">
+    <h2>Tipologias de município</h2>
+    <p>O k-means com k = 3 teve a maior estabilidade sob reamostragem (índice de Rand ajustado de 0,98) e a maior silhueta. Com mais grupos, a estabilidade cai para 0,78: a estrutura estável é grosseira.</p>
+  </div>
+  <div class="grid2">
+    <div class="panel"><div class="tbl" id="tipPerfil"></div><p class="note">Os nomes são interpretações minhas do perfil, não rótulos do algoritmo.</p></div>
+    <div class="panel"><h3>Estabilidade por número de grupos</h3><div class="legend" id="lgK" style="margin-top:8px"></div><div id="tipK"></div></div>
+  </div>
+</section>
+
+<section id="rede">
+  <div class="head">
+    <h2>A rede nacional e o futuro</h2>
+    <p>A mesma otimização, agora com demanda potencial de cada município, módulos de 100 e 250 mil pedidos por mês, distâncias de estrada do OpenStreetMap e terceirização como alternativa. Os projetos são avaliados em cenários com a capacidade instalada fixa; o <b>arrependimento</b> é o excesso de custo sobre o melhor projeto para aquele cenário.</p>
+  </div>
+  <div class="panel"><h3>Arrependimento: projeto × cenário</h3><div class="tbl" id="redeRegret" style="margin-top:10px"></div><p class="note" id="redeRegretNota"></p></div>
+  <div class="grid2" style="margin-top:18px">
+    <div class="panel"><h3>Uma previsão melhor muda a decisão?</h3><div id="redePrev" style="margin-top:10px"></div><p class="note">Projetos feitos com cada previsão de população de 2022 e avaliados no Censo 2022 real.</p></div>
+    <div class="panel"><h3>Distância viária ou linha reta</h3><div id="redeReta" style="margin-top:10px"></div></div>
+  </div>
+  <div class="grid2" style="margin-top:18px">
+    <div class="panel"><h3>Um score de aprendizado de máquina ajuda a escolher candidatos?</h3><div class="tbl" id="redeScore" style="margin-top:10px"></div><p class="note" id="redeScoreNota"></p></div>
+    <div class="panel"><h3>Demanda incerta (SAA, dois estágios)</h3><div class="tbl" id="redeIncert" style="margin-top:10px"></div><p class="note" id="redeIncertNota"></p></div>
+  </div>
+</section>

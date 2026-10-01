@@ -1,0 +1,9 @@
+{
+  "url": "https://overpass-api.de/api/interpreter?data=%5Bout%3Ajson%5D%5Btimeout%3A90%5D%3Brel%5B%22IBGE%3AGEOCODIGO%22%3D%223170107%22%5D%3Bmap_to_area-%3E.a%3Bway%28area.a%29%5B%22landuse%22%3D%22industrial%22%5D%3Bout%20count%3B",
+  "fetched_at": "2026-10-01T02:55:55+00:00",
+  "sha256": "35f7c8a6aaed1fd7f5265b52f40306d405568b5bfae1352ca9288ee42b51aff8",
+  "bytes": 484,
+  "user_agent": "alocacao-capacitada-portfolio/0.1 (pesquisa academica; jean.alvarez@al.infnet.edu.br)",
+  "robots_checked": false,
+  "nota": "API pública de dados abertos para acesso programático; o robots.txt do host não foi consultado ou não responde. Uma requisição por vez, com intervalo e cache."
+}
