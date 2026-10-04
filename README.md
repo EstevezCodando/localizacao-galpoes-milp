@@ -7,8 +7,11 @@
 Localização capacitada com fonte única (SSCFLP) sobre pedidos reais do Brasil, resolvida por heurísticas,
 matheurística (LNS) e programação inteira mista, com frete oficial da ANTT, aluguel de galpões coletado,
 dados abertos do IBGE e do OpenStreetMap, previsão de demanda e validação contra ótimos publicados.
+Inclui uma linha de pesquisa aberta sobre **redução do espaço de busca com e sem aprendizado de máquina**,
+com pré-registro, dados congelados e manuscrito.
 
-`Python 3.12` · `OR-Tools (SCIP, GLOP)` · `scikit-learn` · `uv` · `mypy --strict` · `ruff` · `pytest (139 testes)`
+`Python 3.12` · `OR-Tools (SCIP, GLOP)` · `HiGHS` · `scikit-learn` · `uv` · `mypy --strict` · `ruff` · `pytest (139 testes)`
+Pesquisa: `PySCIPOpt (SCIP 10)` · `PyTorch (CPU)` · `LightGBM` · `psutil` · `LaTeX`
 
 [Mapa e resultados](docs/index.html) · [Estudo integrado](docs/estudo_integrado/index.html) · [Linha de pesquisa](#linha-de-pesquisa-aprender-o-espaço-de-busca) · [Problema](#o-problema) · [Resultados](#resultados) · [Dados](#dados-e-fontes) · [Como executar](#como-executar) · [Limitações](#limitações-e-honestidade-dos-números)
 
@@ -35,6 +38,7 @@ dados abertos do IBGE e do OpenStreetMap, previsão de demanda e validação con
 15. [Limitações e honestidade dos números](#limitações-e-honestidade-dos-números)
 16. [Trabalhos relacionados](#trabalhos-relacionados)
 17. [Licenças e atribuições](#licenças-e-atribuições)
+18. [Autor](#autor)
 
 ---
 
@@ -43,16 +47,18 @@ dados abertos do IBGE e do OpenStreetMap, previsão de demanda e validação con
 | | |
 |---|---|
 | **Pergunta** | Quais centros de distribuição abrir e a qual centro cada região de demanda será atendida, respeitando capacidade e minimizando custo fixo + frete + penalidade por pedido não atendido? |
-| **Dados** | 96.476 pedidos entregues do [Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce) em 850 regiões (prefixo de CEP de 3 dígitos); população, idade, renda, IDHM e PIB de 5.571 municípios (IBGE e Ipeadata); vias, rodovias e galpões do OpenStreetMap; distâncias de estrada (OSRM) |
+| **Dados** | 96.476 pedidos entregues usados (de 96.478 entregues no bruto) do [Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce) em 850 regiões (prefixo de CEP de 3 dígitos); população, idade, renda, IDHM e PIB de 5.571 municípios (IBGE e Ipeadata); vias, rodovias e galpões do OpenStreetMap; distâncias de estrada (OSRM) |
 | **Custos reais** | Frete: piso mínimo da ANTT (Res. 6.084/2026). Custo fixo: aluguel de galpões por estado (levantamento de fev/2026, preços pedidos) |
-| **Métodos** | Guloso, busca local, LNS, MILP (frio e aquecido) e relaxação linear como limite inferior |
+| **Métodos** | Guloso, busca local, LNS, MILP (frio e aquecido) e relaxação linear como limite inferior. Na linha de pesquisa: expansão adaptativa com certificado de custo reduzido, Kernel Search, LNS por clusters com capacidade residual (CLNS), ranqueadores por GNN e por PL |
 | **Validação** | OR-Library: 7 de 7 ótimos reproduzidos. Holmberg et al. (1999): 71 instâncias de fonte única com ótimo publicado |
 | **Aprendizado de máquina** | Demanda por município (Poisson e gradient boosting), previsão de população contra o Censo 2022, clusterização e score de candidatos, todos com validação espacial |
 | **Achado central** | Com capacidade folgada (recortes do Olist) o LNS chega ao nível do MILP ou melhor; com capacidade apertada (Holmberg) o MILP domina. Uma rede projetada só para 2025 custa +25% a +47% em 2030 base e +206% a +209% no cenário alto |
-| **Linha de pesquisa** | Aprender o espaço de busca no SSCFLP estrito: poda por GNN, expansão adaptativa com certificado de custo reduzido, LNS por clusters com capacidade residual, Kernel Search e memória de subproblemas. Nos pilotos, restringir o espaço de busca dá integral primal cerca de 3 vezes menor que o SCIP completo, e o ranking da relaxação linear, sem treino, é numericamente igual ou melhor que a GNN. [Detalhes](#linha-de-pesquisa-aprender-o-espaço-de-busca) |
+| **Linha de pesquisa** | No SSCFLP estrito, quanto do ganho de "aprender o espaço de busca" vem do aprendizado e quanto vem do mecanismo de restrição? Nos pilotos de validação, restringir o espaço de busca dá integral primal cerca de 3 vezes menor que o SCIP no modelo completo, e o ranking tirado da relaxação linear, sem treino, é numericamente igual ou melhor que a GNN (diferença não significativa em 16 instâncias). O teste fechado está pré-registrado e em execução. [Detalhes](#linha-de-pesquisa-aprender-o-espaço-de-busca) |
 | **Resultado negativo mantido** | Variáveis do OpenStreetMap (densidade viária, galpões) **não** melhoraram o modelo de demanda nem o score de candidatos |
 
-> Projeto de portfólio. Capacidades, penalidade de não atendimento, pedidos por veículo e densidade de pedidos por m² são **premissas declaradas**. Nada aqui é ganho medido em operação real.
+> Projeto de portfólio e de pesquisa aberta. Capacidades, penalidade de não atendimento, pedidos por veículo e densidade de pedidos por m² são **premissas declaradas**. Nada aqui é ganho medido em operação real.
+>
+> **Duas partes, dois modelos.** O estudo aplicado (seções 2 a 10) usa o modelo **com penalidade** por pedido não atendido, resolvido com OR-Tools. A linha de pesquisa (seção 11) usa o modelo **estrito**, em que todo cliente tem de ser atendido, resolvido com PySCIPOpt. Os custos das duas partes não se comparam.
 
 ---
 
@@ -79,6 +85,8 @@ s.a.  Σ_i x_ij ≤ 1                       para cada região j
 | `p` | penalidade por pedido não atendido |
 
 **Por que a penalidade `p`?** Mantém toda instância viável e torna explícito o custo de adiar ou terceirizar pedidos, em vez de esconder inviabilidade. Isso tem uma consequência: *viável* não significa *atendido integralmente*. Rejeitar pedido é permitido, a um preço.
+
+**E sem a penalidade?** Fixando `Σ_i x_ij = 1` e retirando o termo de `p`, obtém-se o SSCFLP **estrito** da literatura (Holmberg et al., 1999). É a forma usada na validação com Holmberg e em toda a [linha de pesquisa](#linha-de-pesquisa-aprender-o-espaço-de-busca).
 
 **Por que fonte única?** É a regra operacional comum (um centro por região) e é o que torna o problema difícil: sem ela, a demanda pode ser dividida e o problema fica muito mais fácil (a OR-Library usa essa variante, ver [validação](#validação-externa)).
 
@@ -115,6 +123,8 @@ O ótimo abre B e C, e fecha A. O limite do PL (189,57) está abaixo do ótimo i
 - **Distância até o limite inferior (`gap_ub`)**: `(UB − LB) / UB`. Quanto a solução pode ainda estar acima do ótimo, no máximo.
 - **Excesso sobre o ótimo ou o melhor conhecido**: só existe quando o ótimo é conhecido (Holmberg) ou usamos o melhor custo encontrado como referência.
 
+Os métodos da linha de pesquisa (expansão adaptativa, Kernel Search, CLNS) estão descritos na [seção própria](#o-método-híbrido); eles usam o modelo estrito e outro executor.
+
 **Uma leitura útil do dual.** O valor dual da restrição de capacidade, multiplicado por `y`, estima o ganho de uma unidade a mais de capacidade em um centro aberto (teorema do envelope). Isso aparece nos capítulos didáticos como "valor marginal da capacidade".
 
 ---
@@ -138,12 +148,13 @@ Princípios que moldaram o código:
 - **Proveniência em tudo.** Cada arquivo bruto guarda URL, data, status e hash SHA-256 ao lado (`*.provenance.json`).
 - **Coleta polida.** A coleta de páginas respeita o `robots.txt`, usa user-agent identificado, espera entre requisições e usa cache; não há proxy nem disfarce de navegador. O [Cavuca](https://github.com/EstevezCodando/Cavuca) é **dependência opcional**: sem ele, basta fornecer outra função de busca ao coletor.
 - **Falhas visíveis.** Resultados negativos e erros que quase passaram ficam no repositório, não escondidos (ver [limitações](#limitações-e-honestidade-dos-números)).
+- **A pesquisa é uma camada separada.** [`pesquisa/`](src/alocacao_capacitada/pesquisa) tem o próprio tipo de instância (`Problema`), o próprio validador e o próprio executor, e fala com o SCIP 10 diretamente pelo PySCIPOpt. Ela reaproveita do restante o LNS e as heurísticas construtivas, como baselines, e os leitores de Olist, frete e Holmberg. As dependências dela ficam em um grupo opcional (`uv sync --group pesquisa`), para que o estudo aplicado continue leve.
 
 ---
 
 ## Dados e fontes
 
-Tudo é dado aberto ou público. Os brutos ficam em `data/bronze/`; as tabelas tratadas, em `data/reference/`.
+Tudo é dado aberto ou público. Os brutos ficam em `data/bronze/`; as tabelas tratadas, em `data/reference/`; as instâncias, os rótulos e os modelos da pesquisa, em `data/processed/pesquisa/`, com hash em [`data/frozen/LOCK.json`](data/frozen/LOCK.json).
 
 | Fonte | O que traz | Papel no projeto | Limite declarado |
 |---|---|---|---|
@@ -154,7 +165,8 @@ Tudo é dado aberto ou público. Os brutos ficam em `data/bronze/`; as tabelas t
 | **Aluguel de galpões** | 8.700+ anúncios de 18 cidades (faixa de 1.001 a 3.000 m²), fev/2026 | Custo fixo por estado | Preço **pedido**, não contrato; média por estado; termos de uso do site não conferidos |
 | **OSRM** (servidor de demonstração) | Distâncias e tempos de estrada | Frete da rede nacional e score | Serviço compartilhado; rotas sem resposta são imputadas por linha reta × 1,29 |
 | **OpenStreetMap** (extratos do Geofabrik) | Rodovias, arruamentos, galpões e zonas industriais de S, SE e CO | Variáveis de infraestrutura e visualização | Completude varia entre cidades; objeto no mapa não prova imóvel disponível |
-| **OR-Library** e **Holmberg et al.** | Instâncias de benchmark com ótimos publicados | Validação do solver | Ótimos de Holmberg transcritos à mão de um visualizador |
+| **OR-Library** e **Holmberg et al.** | Instâncias de benchmark com ótimos publicados | Validação do solver e âncora externa da pesquisa | Ótimos de Holmberg transcritos à mão de um visualizador |
+| **Instâncias sintéticas** (gerador próprio, adaptado de Cornuéjols et al., 1991) | 256 instâncias (240 de 30 × 150 e 16 de 50 × 200) em três famílias espaciais, com rótulos de qualidade | Treino, validação e teste da linha de pesquisa | Sintéticas; a família `corredor` nunca entra em treino |
 
 **Datação das variáveis (para não vazar o futuro).** Pedidos são de 2016–2018 (a janela de modelagem é jan/2017 a ago/2018, 20 meses). IDHM, renda e Gini são de 2010. Faixa etária e crescimento vêm do Censo 2022. Usar 2022 para explicar 2017–2018 é análise **retrospectiva**, não previsão disponível à época; isso é dito onde importa.
 
@@ -372,10 +384,16 @@ Antes de confiar nos números, o modelo foi confrontado com resultados publicado
 
 > Pesquisa aberta, em andamento, para um artigo e para o mestrado. Tudo o que está nesta seção
 > vem de execuções registradas em [`results/pesquisa/`](results/pesquisa), com manifesto e hash
-> dos dados. Os resultados dos métodos principais são de **pilotos em instâncias de validação**;
-> o teste fechado ainda não foi executado.
-> Relatório completo: [`docs/pesquisa/09-relatorio-geral.md`](docs/pesquisa/09-relatorio-geral.md).
-> Manuscrito: [`paper/`](paper).
+> dos dados. Os números abaixo são de **pilotos em instâncias de validação** e estão rotulados
+> como pilotos.
+>
+> **Estado em 04/10/2026:** o teste fechado (139 instâncias de teste, corredor, escala, Holmberg
+> e Olist) foi [pré-registrado](docs/pesquisa/10-preregistro-teste-fechado.md) com métodos,
+> orçamentos e quatro hipóteses, e está em execução. Nenhum resultado dele aparece aqui ainda.
+>
+> Relatório completo: [`docs/pesquisa/09-relatorio-geral.md`](docs/pesquisa/09-relatorio-geral.md) ·
+> Manuscrito: [`paper/`](paper) ·
+> Curadoria de artigos da área: [ML-for-Location-and-Routing-Optimization-Papers](https://github.com/EstevezCodando/ML-for-Location-and-Routing-Optimization-Papers)
 
 ### A pergunta
 
@@ -444,7 +462,15 @@ de 80% dos centros.*
 
 ### Piloto 2: o híbrido contra os demais
 
-16 instâncias de validação (30 × 150), 60 s por execução, três sementes, 432 execuções.
+16 instâncias de validação (30 × 150), 60 s por execução, três sementes, 432 execuções. Duas
+hipóteses foram registradas antes: (H-a) o híbrido com seletor GNN tem integral primal menor que
+a expansão adaptativa sozinha; (H-b) dentro do híbrido, o seletor guiado pela GNN supera rotação
+e aprendido.
+
+**Como ler a integral primal.** É a área sob a curva do gap à melhor solução conhecida ao longo
+do orçamento, dividida pelo orçamento. Vale 0 quando a melhor solução está disponível desde o
+início e 1 quando nenhuma solução aparece. Premia achar boas soluções cedo; o desvio final mede
+só onde o método termina.
 
 ![Piloto 2](docs/pesquisa/img/p2_barras.png)
 
@@ -477,9 +503,18 @@ híbrido melhora é o fim da execução.
 
 ### Piloto 3: o aprendizado é necessário?
 
-**Piloto 3:** as mesmas 16 instâncias de validação, 60 s, três sementes, 352 execuções, já com
-o código do CLNS corrigido pela segunda auditoria. Repete SCIP, expansão com GNN, CLNS e híbrido
-com rotação, e acrescenta os controles sem aprendizado e a memória.
+As mesmas 16 instâncias de validação, 60 s, três sementes, 352 execuções, já com o código do
+CLNS corrigido pela segunda auditoria. Repete SCIP, expansão com GNN, CLNS e híbrido com rotação,
+e acrescenta três controles **sem nenhum componente treinado** e uma memória de subproblemas:
+
+- **Kernel Search** (Guastaroba e Speranza, 2014): núcleo com os centros de `y > 0` no PL; os
+  demais entram em baldes por custo reduzido crescente.
+- **Expansão adaptativa ordenada pelo PL**: o mesmo algoritmo, com o valor de abertura da
+  relaxação linear no lugar da nota da GNN.
+- **Híbrido PL**: expansão ordenada pelo PL seguida de CLNS com rotação.
+- **Memória de subproblemas**: uma tabela, indexada por um hash do conjunto livre, dos centros
+  atuais desses clientes e da carga fixa por centro, que marca os subproblemas que já falharam. É
+  a tabela de transposição da busca em árvore aplicada a vizinhanças.
 
 ![Piloto 3, barras](docs/pesquisa/img/p3_barras.png)
 
@@ -593,12 +628,45 @@ uv run python paper/figuras/gerar_figuras.py     # figuras do manuscrito
 | `results/pesquisa/` | resultados brutos, agregados e manifestos |
 | `data/processed/pesquisa/` | instâncias, rótulos e modelos congelados |
 
+### O teste fechado (pré-registrado, em execução)
+
+Os pilotos têm 16 instâncias e não separam estatisticamente os métodos. O teste fechado usa
+instâncias que nenhum piloto tocou, com o método congelado antes da execução
+([pré-registro](docs/pesquisa/10-preregistro-teste-fechado.md)):
+
+| Conjunto | Instâncias | Tamanho | Orçamento | O que mede |
+|---|---:|---|---:|---|
+| `teste` | 32 | 30 × 150 | 60 s | mesma distribuição do treino |
+| `gen_corredor` | 16 | 30 × 150 | 60 s | família espacial nunca vista |
+| `gen_escala` | 16 | 50 × 200 | 120 s | tamanho maior que o do treino |
+| `holmberg` | 71 | 10–30 × 50–200 | 30 s | desvio contra o ótimo publicado |
+| `olist` | 4 | 30 × 150 a 150 × 850 | 120 s | dados reais |
+
+Seis métodos: SCIP completo, Kernel Search, expansão adaptativa (PL e GNN) e híbrido (PL e GNN).
+Quatro hipóteses, com teste de Wilcoxon pareado e correção de Holm: a restrição ajuda (H1), a
+GNN difere do PL (H2), a fase de CLNS difere da expansão sozinha (H3) e a expansão difere do
+Kernel Search (H4). Um resultado não significativo em H2 será relatado como "sem evidência de
+diferença", e não como equivalência. A análise já está escrita em
+[`scripts/analisar_fechado.py`](scripts/analisar_fechado.py).
+
 ### Limites desta parte
 
-- Resultados de pilotos em 16 instâncias de validação; o teste fechado está pendente.
+- Resultados de pilotos em 16 instâncias de validação; nenhuma diferença entre variantes com e
+  sem aprendizado é estatisticamente significativa. O teste fechado está em execução.
 - Instâncias em maioria sintéticas. Fora de Holmberg, a qualidade é medida contra a melhor
   solução conhecida, não contra o ótimo.
 - As reconstruções são metodológicas, não reproduções do código original dos artigos.
+- O Kernel Search implementado omite a restrição "abrir ao menos um centro do balde" e o corte
+  de objetivo do artigo original; a solução atual, passada como partida, faz o papel do corte.
+- O piloto 2 rodou antes da segunda auditoria do CLNS; o piloto 3 repete os métodos principais
+  com o código corrigido e o quadro não muda.
+- Uma única máquina, três execuções concorrentes fixadas em núcleos. No piloto 3, 7 de 352
+  execuções ficaram marcadas por suspeita de contenção.
+- O código de `pesquisa/` ainda não passa em `ruff` (84 avisos, quase todos de nomes de
+  variáveis matemáticas como `X` e `Q`) nem foi posto sob `mypy --strict`; o restante de `src/`
+  passa nos dois.
+- O manuscrito é um rascunho: a versão curta é só o esqueleto, e as seções que dependem do teste
+  fechado estão marcadas como pendentes.
 
 ---
 
@@ -607,10 +675,16 @@ uv run python paper/figuras/gerar_figuras.py     # figuras do manuscrito
 Requisitos: Python 3.12 e [uv](https://docs.astral.sh/uv/).
 
 ```bash
-uv sync
-uv run pytest                                              # 139 testes (os da pesquisa exigem `uv sync --group pesquisa`)
-uv run ruff check src && uv run mypy src                   # lint e tipos (strict)
+uv sync                                                    # estudo aplicado (sem PyTorch nem PySCIPOpt)
+uv run pytest --ignore=tests/test_clns.py --ignore=tests/test_pesquisa_g0.py \
+              --ignore=tests/test_pesquisa_regressoes.py   # 91 testes do estudo aplicado
+uv run ruff check src --exclude src/alocacao_capacitada/pesquisa   # lint
+
+uv sync --group pesquisa                                   # acrescenta PySCIPOpt, PyTorch, LightGBM, psutil
+uv run pytest                                              # os 139 testes (91 + 48 da pesquisa)
 ```
+
+A linha de pesquisa tem os próprios comandos, em [Como reproduzir a pesquisa](#como-reproduzir-a-pesquisa).
 
 ### Otimização sobre o Olist
 
@@ -669,7 +743,7 @@ uv run python -m alocacao_capacitada.analysis.study --out results/uma_pasta_nova
 uv run python scripts/render_study.py --data results/uma_pasta_nova --out docs/estudo_integrado
 ```
 
-> O `Dockerfile` existe, mas **não foi testado**. A coleta de páginas usa o Cavuca, que é opcional e não vem com o projeto: instale-o à parte ou passe outra função de busca ao `PoliteCollector`. Os brutos grandes (`data/raw`, `data/bronze/ibge`, os PBF e os shapefiles) ficam fora do git; as tabelas de `data/reference/` e os resultados de `results/` são versionados.
+> O `Dockerfile` existe, mas **não foi testado**, e cobre só o comando `alocacao-capacitada` do estudo aplicado (não instala o grupo `pesquisa`). A coleta de páginas usa o Cavuca, que é opcional e não vem com o projeto: instale-o à parte ou passe outra função de busca ao `PoliteCollector`. Os brutos grandes (`data/raw`, `data/bronze/ibge`, os PBF e os shapefiles) ficam fora do git; as tabelas de `data/reference/` e os resultados de `results/` são versionados.
 
 ---
 
@@ -690,26 +764,30 @@ src/alocacao_capacitada/
 │                 Kernel Search, CLNS, memória de subproblemas, medição, reconstruções
 └── benchmark.py · stage2.py
 examples/         exemplo didático (3 × 5)
-scripts/          geração do site e das figuras do estudo
+scripts/          geração do site e das figuras do estudo; agregados, análise e figuras da pesquisa
 site/             template, mapa (MapLibre) e seções do site
-docs/             página de resultados, estudo integrado e docs/pesquisa (relatórios e figuras)
+docs/             página de resultados, estudo integrado e docs/pesquisa (pré-registros, relatórios,
+                  auditorias e figuras)
 paper/            manuscrito (inglês, ABNT e versão curta) e figuras em PDF
 data/bronze/      brutos com proveniência (hash, URL, data)
 data/reference/   tabelas tratadas (municípios, painel, OSM por município, aluguel, ANTT)
 data/processed/pesquisa/  instâncias, rótulos e modelos da pesquisa, congelados por data/frozen/LOCK.json
-results/          saídas versionadas dos experimentos (results/foco/ para o recorte)
-tests/            139 testes
+results/          saídas versionadas dos experimentos (results/foco/ para o recorte,
+                  results/pesquisa/ para a linha de pesquisa)
+data/frozen/      LOCK.json com o hash SHA-256 de cada instância e modelo da pesquisa
+tests/            139 testes (91 do estudo aplicado, 48 da pesquisa)
 ```
 
 ---
 
 ## Qualidade e reprodutibilidade
 
-- **Tipos e lint:** `mypy --strict` e `ruff` em `src`.
-- **Testes:** cobrem contratos do domínio, solvers, validação de benchmarks, coleta (com cache, retry e escrita atômica), geometria, previsão, score, sensibilidade e o protocolo estocástico.
+- **Tipos e lint:** `mypy --strict` e `ruff` em `src`, com exceção de `pesquisa/`, que ainda tem avisos de lint pendentes (ver [limites da pesquisa](#limites-desta-parte)).
+- **Testes:** cobrem contratos do domínio, solvers, validação de benchmarks, coleta (com cache, retry e escrita atômica), geometria, previsão, score, sensibilidade e o protocolo estocástico. Na pesquisa: validador independente, gerador, SCIP contra enumeração completa em instâncias pequenas, viabilidade de todo movimento do CLNS, chave de subproblema, Kernel Search e regressões das duas auditorias.
 - **Proveniência:** cada coleta grava hash SHA-256, URL, data e status. O estudo integrado grava ainda um `manifest.json` (commit, versões, parâmetros e hashes do código), com os resultados novos separados dos históricos.
 - **Sementes explícitas** em todo experimento com aleatoriedade; resultados com mais de uma semente reportam média e dispersão.
 - **Avaliação independente:** custo, viabilidade e pedido não atendido são sempre calculados pelo mesmo código, não pelo método que produziu a solução.
+- **Na pesquisa, além disso:** hipóteses registradas antes de cada rodada ([`00`](docs/pesquisa/00-pre-registro.md), [`07`](docs/pesquisa/07-preregistro-clns.md), [`08`](docs/pesquisa/08-adendo-hibrido-e-tempo-v3.md), [`10`](docs/pesquisa/10-preregistro-teste-fechado.md)); dados e modelos congelados por hash e conferidos antes de rodar; um núcleo físico por execução, com relógios de parede e de CPU; cada execução gravada em SQLite com manifesto, o que permite retomar sem duplicar; duas auditorias do próprio código, com os erros encontrados descritos em [`docs/pesquisa/`](docs/pesquisa).
 - **Limites de tempo e iterações.** O LNS usa orçamento por iterações quando a comparação precisa ser independente da carga da máquina; os resultados por tempo dependem do hardware.
 
 ---
@@ -729,6 +807,8 @@ tests/            139 testes
 - **Resultados negativos foram mantidos**: VSS negativo atribuído a gap do solver, filtro de candidatos que não se transfere entre instâncias, previsão de população que melhora o erro mas não a decisão.
 - Diferenças de custo de poucos décimos de ponto percentual entre projetos ou filtros (por exemplo, entre previsões de população) ficam **dentro do ruído do LNS**; não sustentam conclusões.
 - Não testei o mapa em navegadores de uso comum além do navegador embutido do Claude.
+- **Linha de pesquisa:** resultados de pilotos, sem significância estatística entre variantes; ver os [limites próprios](#limites-desta-parte).
+- O repositório ainda não tem arquivo `LICENSE`.
 
 ---
 
@@ -737,9 +817,25 @@ tests/            139 testes
 | Trabalho | Relação |
 |---|---|
 | Holmberg, Rönnqvist & Yuan (1999), *An exact algorithm for the CFLP with single sourcing*, EJOR 113(3) | Origem das 71 instâncias |
-| Guastaroba & Speranza (2014), *A heuristic for BILP problems: the SSCFLP*, EJOR 238(2) | Valores ótimos publicados e conjuntos de instâncias ([OR-Brescia](https://or-brescia.unibs.it/instances/instances_sscflp)) |
+| Guastaroba & Speranza (2014), *A heuristic for BILP problems: the SSCFLP*, EJOR 238(2) | Valores ótimos publicados e conjuntos de instâncias ([OR-Brescia](https://or-brescia.unibs.it/instances/instances_sscflp)); é o Kernel Search usado como baseline clássico na pesquisa |
 | Kong (2021), [*A matheuristic for the SSCFLP and its variants*](https://arxiv.org/abs/2112.12974) | LNS com subproblemas exatos, da mesma família do usado aqui. O resumo reporta 191 ótimos entre 272 instâncias de benchmark e gaps médios de 0,07% a 0,22% em **dois conjuntos geográficos adicionais gerados pelo autor**, que não são os mesmos dados |
 | Ajide (2026), [*Two-Stage Stochastic Optimization for Capacitated Facility Location*](https://optimization-online.org/2026/09/two-stage-stochastic-optimization-for-capacitated-facility-location-under-demand-uncertainty/) | Mesmo arcabouço de VSS e EVPI; reporta VSS alto, aqui ≈ 0 |
+
+Referências da linha de pesquisa (lista completa e verificada em [`paper/refs.bib`](paper/refs.bib)):
+
+| Trabalho | Relação |
+|---|---|
+| Bengio, Lodi & Prouvost (2021), *Machine learning for combinatorial optimization: a methodological tour d'horizon*, EJOR 290(2) | Taxonomia usada para classificar cada frente |
+| Gasse et al. (2019), [*Exact combinatorial optimization with graph convolutional neural networks*](https://arxiv.org/abs/1906.01629); Gupta et al. (2020), [*Hybrid models for learning to branch*](https://arxiv.org/abs/2006.15212) | Branching aprendido; reconstruído em SCIP 10 |
+| Li, Yan & Wu (2021), [*Learning to delegate for large-scale vehicle routing*](https://arxiv.org/abs/2107.04139) | Seleção aprendida de subproblemas; modelo do seletor aprendido do CLNS |
+| Ropke & Pisinger (2006), *An adaptive large neighborhood search heuristic…*, Transportation Science 40(4) | ALNS, baseline clássico de seleção de vizinhança |
+| Qian et al. (2026), [*Learning to approximate uniform facility location via graph neural networks*](https://arxiv.org/abs/2602.13155) | Reconstruído; generaliza na escala |
+| Kaleem et al. (2024), [*Neural embedded mixed-integer optimization for location-routing problems*](https://arxiv.org/abs/2412.05665) | Reconstruído; o MIP neural não otimiza bem em solver aberto |
+| Gjergji, Kletzander & Musliu (2026), [*Large neighborhood search and hyper-heuristics for the capacitated p-median problem*](https://doi.org/10.1007/s10732-025-09580-3), Journal of Heuristics 32(1) | Trabalho mais próximo: LNS com solver exato no reparo e hiper-heurísticas; sem custos fixos |
+| Berthold (2013), *Measuring the impact of primal heuristics*, Operations Research Letters 41(6) | Integral primal, a métrica principal |
+
+Curadoria comentada de artigos da área, feita para esta pesquisa:
+[ML-for-Location-and-Routing-Optimization-Papers](https://github.com/EstevezCodando/ML-for-Location-and-Routing-Optimization-Papers).
 
 ---
 
@@ -752,3 +848,13 @@ tests/            139 testes
 - **Olist:** [dataset público no Kaggle](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce); confira os termos da licença antes de redistribuir os dados.
 - **OSRM:** [Project OSRM](https://project-osrm.org/), servidor de demonstração; respeite a política de uso.
 - **OpenFreeMap:** base cartográfica do mapa, dados © OpenStreetMap.
+
+---
+
+## Autor
+
+**Jean Michael Estevez Alvarez** — físico, engenheiro de software e pesquisador.
+[estevezalvarez.com](https://estevezalvarez.com) · estevezcodando@gmail.com
+
+A linha de pesquisa é aberta e faz parte da preparação para o mestrado. Dúvidas, erros
+encontrados e sugestões são bem-vindos por e-mail ou em *issues*.

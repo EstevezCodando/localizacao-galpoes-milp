@@ -1,7 +1,7 @@
 [project]
 name = "alocacao-capacitada"
 version = "0.1.0"
-description = "Add your description here"
+description = "Localização capacitada com fonte única (SSCFLP): estudo aplicado sobre dados abertos do Brasil e linha de pesquisa sobre redução do espaço de busca"
 readme = "README.md"
 authors = [
     { name = "J Estevez", email = "jean.alvarez@al.infnet.edu.br" }
