@@ -1,0 +1,56 @@
+\section{Related work}\label{sec:related}
+
+\paragraph{Exact methods and matheuristics for the SSCFLP.}
+\citet{holmberg1999} proposed an exact algorithm and the 71-instance benchmark with published
+optima that we use as an external anchor. \citet{ahuja2004} introduced a very large-scale
+neighborhood search based on multi-exchange (cycles and paths of reassignments) that respects
+capacity and single sourcing. \citet{guastaroba2014} applied kernel search: variables are ranked
+by the LP relaxation and a sequence of restricted MILPs over a growing kernel is solved, which is
+the classical counterpart of the learned expansion studied here. \citet{kong2021} proposed an
+LNS matheuristic with exact subproblems, reporting optimal solutions for 191 of 272 benchmark
+instances and average gaps of 0.04--0.22\% across problem variants.
+\todo{check the full texts for numbers before citing them; add recent SSCFLP Lagrangian and
+Benders references after a systematic search}.
+
+\paragraph{Learning inside solvers.}
+\citet{bengio2021} organize the ways learning and optimization can be combined. Imitation of
+strong branching with a graph convolutional network over the variable--constraint graph
+\citep{gasse2019} and its CPU-oriented hybrid \citep{gupta2020} are the reference approaches for
+learned branching; \citet{chen2025gnnbranching} characterize when message-passing GNNs can
+represent strong branching, and \citet{zhou2025subgraph} show that more expressive subgraph GNNs
+did not translate into faster solving. Neural diving and neural branching scaled these ideas to
+large industrial MIPs \citep{nair2020}. Predict-and-search uses GNN marginals to define a trust
+region instead of irreversible fixings \citep{han2023}.
+
+\paragraph{Learned large neighborhood search and delegation.}
+LNS policies can be learned by imitation or reinforcement learning \citep{song2020},
+from expensive experts \citep{sonnerat2021}, by contrastive learning \citep{huang2023}, with
+sampling-enhanced proposals \citep{feng2025spl} or with adaptive neighborhood sizes
+\citep{xu2025hypaso}. Learning to delegate selects spatial subproblems of a vehicle routing
+problem and hands them to an existing solver, reporting 10--100$\times$ speedups from the
+decomposition and 1.5--2$\times$ from the learned selection \citep{li2021delegate}. GLOP
+partitions large routing problems before constructing routes \citep{ye2024glop}. Adaptive large
+neighborhood search with roulette-wheel operator weights \citep{ropke2006} is the classical
+operator-selection baseline. Closest to our setting, \citet{gjergji2026} study an LNS for the
+capacitated $p$-median problem with several destruction operators, an exact solver in the repair
+step and hyper-heuristics that select among the operators. Our work differs in three respects:
+the problem has fixed costs and a free number of facilities, so that neighborhoods must be able
+to open and close facilities without double-counting their cost
+(Proposition~\ref{prop:feasible}); the search starts from a restricted exact solve with an
+optimality certificate rather than from a constructive solution; and every learned component is
+compared with a learning-free counterpart of the same function. To our knowledge, learned
+subproblem selection has not been studied for capacitated facility location with single
+sourcing, where capacity couples the subproblems; the closest classical idea is kernel search
+\citep{guastaroba2014}, which we include as a baseline.
+
+\paragraph{Learning for facility location.}
+Recent work learns swap policies for $p$-median and facility relocation \citep{guo2023swap},
+knowledge-informed swap selection for urban facility location \citep{su2024urban}, Pareto-set
+prediction for multi-objective location \citep{liu2022pareto}, and message-passing networks with
+approximation guarantees for uniform facility location \citep{qian2026unifl}. These address
+uncapacitated or accessibility-based variants; none handles single-source capacity.
+
+\paragraph{Evaluation of learned optimization methods.}
+The primal integral \citep{berthold2013} measures solution quality over time. Instance space
+analysis \citep{smithmiles2023} studies where algorithms succeed. We follow both and add timing
+controls motivated by an audit of our own implementation (Section~\ref{sec:protocol}).

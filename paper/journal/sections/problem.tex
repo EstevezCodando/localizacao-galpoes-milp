@@ -1,0 +1,126 @@
+\section{Problem}\label{sec:problem}
+
+\subsection{Formulation}
+Let $I=\{1,\dots,m\}$ be the set of candidate facilities and $J=\{1,\dots,n\}$ the set of
+customers. Table~\ref{tab:notation} lists the notation. Opening facility $i$ costs $f_i\ge 0$ and
+provides capacity $Q_i>0$; customer $j$ has demand $d_j>0$; serving \emph{all} of $j$'s demand
+from $i$ costs $c_{ij}\ge 0$. We stress that $c_{ij}$ is a total cost per pair, not a cost per
+unit: in our instances $c_{ij}=\kappa\,\mathrm{dist}_{ij}\,d_j$, and the per-unit cost
+$u_{ij}=c_{ij}/d_j$ is used only to compare customers of different sizes. With $y_i=1$ if
+facility $i$ opens and $x_{ij}=1$ if $i$ serves $j$, the strict single-source capacitated
+facility location problem (SSCFLP) is
+\begin{align}
+z^\ast=\min\ & \sum_{i\in I} f_i y_i + \sum_{i\in I}\sum_{j\in J} c_{ij} x_{ij} \label{eq:obj}\\
+\text{s.t.}\ & \sum_{i\in I} x_{ij} = 1 && j\in J, \label{eq:assign}\\
+& \sum_{j\in J} d_j x_{ij} \le Q_i y_i && i\in I, \label{eq:cap}\\
+& x_{ij} \le y_i && i\in I,\ j\in J, \label{eq:link}\\
+& x_{ij}\in\{0,1\},\quad y_i \in \{0,1\} && i\in I,\ j\in J. \label{eq:int}
+\end{align}
+The objective \eqref{eq:obj} adds the fixed cost of the open facilities to the cost of the chosen
+pairs. Constraints \eqref{eq:assign} assign each customer to exactly one facility; together with
+$x_{ij}\in\{0,1\}$ this is the \emph{single-source} requirement, which forbids splitting a demand
+among facilities. Constraints \eqref{eq:cap} limit the load of an open facility to its capacity
+and force the load of a closed facility to zero. Constraints \eqref{eq:link} are implied by
+\eqref{eq:cap} for integer solutions, but they are not implied in the linear relaxation, where
+they remove fractional solutions that open a small fraction of a facility and still assign whole
+customers to it. Every customer must be served: there is no penalty variable for unmet demand,
+which is why we call the problem \emph{strict}.
+
+Because of \eqref{eq:assign} and \eqref{eq:int}, a solution is fully described by an
+\emph{assignment} $a:J\to I$, with $x_{ij}=1$ iff $a(j)=i$ and $y_i=1$ iff $i\in a(J)$. Writing
+$\ell_i(a)=\sum_{j:\,a(j)=i} d_j$ for the load of facility $i$, the assignment is feasible iff
+$\ell_i(a)\le Q_i$ for all $i$, and its cost is
+\begin{equation}\label{eq:za}
+z(a)=\sum_{i\in a(J)} f_i+\sum_{j\in J} c_{a(j)j}.
+\end{equation}
+All algorithms in this paper manipulate assignments, and every reported cost is $z(a)$ recomputed
+from the original data.
+
+\begin{table}[t]\centering\small
+\caption{Notation.}\label{tab:notation}
+\begin{tabular}{ll}
+\toprule
+Symbol & Meaning \\
+\midrule
+$I$, $J$; $m$, $n$ & candidate facilities and customers; their numbers \\
+$f_i$, $Q_i$ & fixed cost and capacity of facility $i$ \\
+$d_j$ & demand of customer $j$ \\
+$c_{ij}$, $u_{ij}=c_{ij}/d_j$ & total and per-unit cost of serving $j$ from $i$ \\
+$y_i$, $x_{ij}$ & opening and assignment variables \\
+$a$, $\ell_i(a)$, $z(a)$ & assignment, load of $i$ under $a$, cost \eqref{eq:za} \\
+$z^\ast$, $z_{\mathrm{BKS}}$ & optimal and best known cost \\
+$L$ & optimal value of the strong LP relaxation \\
+$v_j$, $w_i$, $s_{ij}$ & duals of \eqref{eq:assign}, \eqref{eq:cap}, \eqref{eq:link} \\
+$r_i$, $\bar c_{ij}$ & reduced costs of $y_i$ and $x_{ij}$ in the strong LP \\
+$U$ & cost of the incumbent (upper bound) \\
+$K\subseteq I$ & set of facilities kept in a restricted problem \\
+$F\subseteq J$ & set of free customers of a subproblem \\
+$p_i$ & score of facility $i$ (GNN probability or LP value) \\
+$T$, $\alpha$ & time budget; share of $T$ given to the expansion \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{The strong linear relaxation and its dual}\label{sec:lp}
+Replacing \eqref{eq:int} by $0\le x_{ij}$, $0\le y_i\le 1$ gives the \emph{strong LP}, whose
+optimal value we denote $L\le z^\ast$. Associate multipliers $v_j$ (free) with \eqref{eq:assign},
+$w_i\ge 0$ with \eqref{eq:cap}, $s_{ij}\ge 0$ with \eqref{eq:link}, and $t_i\ge 0$ with
+$y_i\le 1$. The dual is
+\begin{align}
+L=\max\ & \sum_{j\in J} v_j-\sum_{i\in I} t_i \label{eq:dual}\\
+\text{s.t.}\ & v_j - d_j w_i - s_{ij} \le c_{ij} && i\in I,\ j\in J, \label{eq:dualx}\\
+& Q_i w_i + \sum_{j\in J} s_{ij} - t_i \le f_i && i\in I, \label{eq:dualy}\\
+& w_i,\ s_{ij},\ t_i \ge 0. \nonumber
+\end{align}
+The slacks of \eqref{eq:dualx} and \eqref{eq:dualy} at an optimal dual solution are the
+\emph{reduced costs}
+\begin{equation}\label{eq:rc}
+\bar c_{ij} = c_{ij} - v_j + d_j w_i + s_{ij}\ \ge 0,
+\qquad
+r_i = f_i - Q_i w_i - \sum_{j\in J} s_{ij} + t_i\ \ge 0 .
+\end{equation}
+They have a direct reading. $v_j$ is the marginal cost of serving customer $j$; $w_i$ is the price
+of one unit of capacity of facility $i$; $s_{ij}$ is the part of the fixed cost of $i$ that the
+relaxation charges to the pair $(i,j)$. Thus $\bar c_{ij}$ is how much more expensive the pair
+$(i,j)$ is than what the relaxation is willing to pay for serving $j$, once capacity and the
+share of the fixed cost are priced in, and $r_i$ is the part of the fixed cost of $i$ that the
+customers' willingness to pay does not cover. By complementary slackness, $\bar c_{ij}=0$ for
+every pair used by the LP solution and $r_i=0$ for every facility with $0<y_i<1$.
+Two uses of \eqref{eq:rc} recur in the paper: $r_i$ certifies that a pruned facility cannot
+improve an incumbent (Proposition~\ref{prop:rc}), and $\bar c_{ij}$ measures how badly the
+current assignment of a customer disagrees with the relaxation (the regret of
+Section~\ref{sec:clns}).
+
+A remark on a tempting shortcut: the quantity $c_{ij}-v_j$, built from the assignment duals
+alone, is \emph{not} a usable regret. Since $v_j$ already embeds the capacity price and the
+fixed-cost share of the facility serving $j$ in the LP, $c_{ij}-v_j=\bar c_{ij}-d_jw_i-s_{ij}$ is
+non-positive on all LP-used pairs and carries no ranking information; in our first implementation
+it was negative for every customer. The full reduced cost $\bar c_{ij}$ is the correct quantity.
+
+\subsection{Why the problem is hard in practice}
+The SSCFLP contains the generalized assignment problem (fix $y$) and bin packing (equal costs), so
+even deciding whether a set of open facilities admits a feasible assignment is NP-complete. This
+has a practical consequence for any method that reduces the set of facilities: a restricted
+problem can be infeasible although total capacity exceeds total demand.
+
+On the instance families used here (Section~\ref{sec:data}), SCIP~10 with one thread does not
+prove optimality within 60~s for $m=30$ and $n=150$; the certified gap $(U-L_{\mathrm{B\&B}})/U$
+after 60~s was 1.8--3.6\%, and the strong LP left $(z_{\mathrm{BKS}}-L)/z_{\mathrm{BKS}}$ of
+1.6--4.4\% when fixed costs dominate. For $m=50$, $n=200$ the certified gap reached 15.6\% on one
+instance.
+
+\subsection{Capacity coupling}\label{sec:coupling}
+Let $J=J_1\cup J_2$ be a partition of the customers and let $a_1$, $a_2$ be optimal assignments
+of the two subproblems solved independently, each with the full capacities $Q_i$. The combined
+assignment $a=a_1\cup a_2$ can fail in two ways:
+\begin{align}
+\text{(capacity)}\quad & \ell_i(a)=\ell_i(a_1)+\ell_i(a_2) > Q_i \quad\text{with }\ell_i(a_1),\,\ell_i(a_2)\le Q_i, \label{eq:overload}\\
+\text{(fixed cost)}\quad & z(a_1)+z(a_2)-z(a)=\sum_{i\in a_1(J_1)\cap a_2(J_2)} f_i\ \ge 0.
+\label{eq:double}
+\end{align}
+For instance, two groups that each send 60 units to a facility of capacity 100 are feasible
+separately and infeasible together \eqref{eq:overload}, and the fixed cost of the shared facility
+is counted twice in the sum of the subproblem objectives \eqref{eq:double}, so the subproblems
+systematically overestimate the cost of sharing and under-use shared facilities. The
+coordinated decomposition of Section~\ref{sec:clns} removes both effects by construction, and
+Section~\ref{sec:res-decomp} measures what happens without it.

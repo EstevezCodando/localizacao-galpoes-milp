@@ -1,0 +1,78 @@
+\section{Introduction}\label{sec:intro}
+
+Deciding where to open distribution centers and which center serves each demand region is a
+recurring strategic decision in logistics. When each region must be served by exactly one
+center and centers have limited capacity, the decision is the single-source capacitated
+facility location problem (SSCFLP). It is NP-hard, and the single-sourcing requirement makes it
+markedly harder than its splittable counterpart: once the open set is fixed, the remaining
+assignment is still a generalized assignment problem.
+
+Two lines of work address large SSCFLP instances. Matheuristics restrict the problem and solve
+the restriction exactly: kernel search ranks variables by the linear relaxation and solves a
+sequence of restricted MILPs \citep{guastaroba2014}, and large neighborhood search (LNS)
+repeatedly frees part of the solution and re-optimizes it \citep{kong2021}. More recently,
+machine learning has been proposed to accelerate exact and heuristic solvers, either by
+learning decisions inside branch-and-bound \citep{gasse2019,gupta2020}, by predicting which
+variables to fix or explore \citep{nair2020,han2023}, by learning which neighborhood an LNS
+should destroy \citep{song2020,sonnerat2021,huang2023}, or by learning which subproblem a local
+search should delegate to an existing solver \citep{li2021delegate}.
+
+Our starting point was the most direct of these ideas for facility location: let a graph neural
+network rank candidate facilities and solve the problem restricted to the top-ranked ones. Two
+observations changed the direction of the study. First, ranking quality did not translate into
+safe pruning. On validation instances, the GNN ranked facilities well (AUC 0.95), yet keeping
+the best known solution inside the restricted problem in 80\% of the instances required
+retaining about 80\% of the candidates; the LP relaxation alone did almost as well, without
+training (Section~\ref{sec:res-pruning}). Capacity forces slack to be kept, and under single
+sourcing the slack is spread over many facilities. Second, decomposing the customers into
+clusters and solving each cluster independently was fast but wrong: the union of the cluster
+solutions violated capacity in every instance we examined and, after repair, was 19--29\% more
+expensive than the reference.
+
+These observations redirected the study in two ways. First, we use the ranking to \emph{guide} a
+search that never leaves the feasible region, rather than to remove parts of the problem.
+Second, since the LP relaxation ranked facilities as safely as the GNN, we ask of every learned
+component whether a learning-free counterpart with the same function does as well. We study two
+mechanisms, each in a learned and a learning-free variant:
+\begin{enumerate}
+\item an \textbf{adaptive domain expansion} that solves restricted problems over 20, 40, 60 and
+100\% of the ranked facilities and stops early when LP reduced costs certify that no excluded
+facility can enter a solution better than the incumbent. The ranking is given by a GNN or by the
+LP relaxation; kernel search \citep{guastaroba2014} is the classical baseline; and
+\item a \textbf{cluster-oriented LNS (CLNS)} that re-optimizes one subproblem at a time (a
+cluster, the boundary between two clusters, the customers of an expensive facility, or the
+customers with the largest LP regret) with the rest of the solution fixed and the capacities
+reduced by the fixed load. Every accepted move is feasible for the full problem and each fixed
+cost is charged once. The subproblem is chosen by rotation, by adaptive operator weights, by a
+learned regressor or by disagreement with the GNN, and a memory of failed subproblems measures
+and avoids repetitions.
+\end{enumerate}
+
+\paragraph{Contributions.}
+\begin{itemize}
+\item A controlled comparison of learned and learning-free search-space reduction for the SSCFLP,
+in which the LP-based ranking was at least as good as the GNN and learned subproblem selection
+did not separate from rotation (Sections~\ref{sec:res-pilot} and~\ref{sec:res-controls}).
+\item A coordinated decomposition for single-source capacity, with a proof that accepted moves
+are globally feasible and fixed costs are charged once, and a reduced-cost certificate that lets
+a restricted solve prove global optimality (Section~\ref{sec:method}).
+\item A subproblem memory for LNS and the measurement that more than half of the selected
+subproblems were repetitions of failed ones (Sections~\ref{sec:memory}
+and~\ref{sec:res-controls}).
+\item Evidence, with quantified failure modes, of why pruning and uncoordinated decomposition
+are inadequate under capacity coupling (Sections~\ref{sec:res-pruning} and~\ref{sec:res-decomp}).
+\item An evaluation protocol for learned optimization methods that controls the sources of
+timing error we encountered: one pinned physical core per run, single-threaded numerical
+libraries, wall-clock and CPU time with a contention flag, primal integral with cumulative best
+incumbent, frozen data with content hashes, and pre-registered hypotheses
+(Section~\ref{sec:experiments}).
+\item An account of what did not transfer when reconstructing five recent learning-for-optimization
+approaches in an open-source stack (Appendix~\ref{app:reconstructions}).
+\end{itemize}
+
+\todo{final paragraph summarizing the closed-test findings in two sentences, after the run}.
+Section~\ref{sec:related} reviews related work; Section~\ref{sec:problem} states the problem, its
+relaxation and the capacity coupling; Section~\ref{sec:method} describes the mechanisms;
+Section~\ref{sec:experiments} gives the experimental design; Section~\ref{sec:results} reports
+the results; Section~\ref{sec:discussion} discusses them and Section~\ref{sec:conclusion}
+concludes.

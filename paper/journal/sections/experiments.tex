@@ -1,0 +1,117 @@
+\section{Experimental design}\label{sec:experiments}
+
+\subsection{Instances}\label{sec:data}
+\paragraph{Synthetic families.} We adapt the generator of \citet{cornuejols1991}, also used for
+the \texttt{facilities} family of \citet{gasse2019}, to single sourcing:
+\begin{itemize}
+\item demand $d_j\sim U(5,35)$;
+\item raw capacities $U(10,160)$, rescaled to a total-capacity-to-demand ratio
+$r\in\{1.5, 3.0\}$;
+\item fixed cost $f_i = (U(0,90) + U(100,110)\sqrt{Q_i})$;
+\item service cost $c_{ij} = 10\, \mathrm{dist}_{ij}\, d_j$.
+\end{itemize}
+Customer locations follow three spatial families: uniform, clustered (Gaussian mixture) and
+corridor (points along a few segments). Instances infeasible under single sourcing are rejected
+by a first-fit-decreasing test followed, if needed, by a feasibility MILP. Splits are disjoint in
+generator seeds; the corridor family never appears in training or validation.
+
+\paragraph{External and real instances.} The 71 instances of \citet{holmberg1999}, with
+published optima, use non-Euclidean costs and 10--30 facilities by 50--200 customers. The case
+study uses delivered orders from the Olist public dataset aggregated by three-digit postal-code
+prefix (up to 850 regions and 150 candidate facilities), with freight from the minimum road
+freight tariff of the Brazilian regulator (ANTT); capacities and fixed costs are declared
+modeling assumptions.
+
+\begin{table}[t]\centering\small
+\caption{Data sets. All files are frozen with SHA-256 hashes before any run.}\label{tab:data}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llrll}
+\toprule
+Set & Size ($|I|\times|J|$) & Instances & Reference & Use \\
+\midrule
+Train & $30\times150$ & 160 & SCIP 60 s + LNS 30 s pool & GNN and selector training \\
+Validation & $30\times150$ & 32 & same & parameter choices \\
+Test & $30\times150$ & 32 & same & closed test \\
+Corridor & $30\times150$ & 16 & same & unseen spatial family \\
+Scale & $50\times200$ & 16 & SCIP 120 s + LNS 60 s & larger size \\
+Holmberg & $10$--$30\times50$--$200$ & 71 & published optimum & external anchor \\
+Olist & $30\times150$ to $150\times850$ & 4 & SCIP 300 s + LNS 120 s & real data \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{Methods compared}
+\begin{itemize}
+\item \textbf{SCIP} 10.0 on the full model, one thread, default settings.
+\item \textbf{Warm SCIP}: the LNS below for 10\% of the budget, then SCIP from its solution.
+\item \textbf{LNS}: a matheuristic that frees customers with similar cost profiles or the
+customers of one or two facilities and re-optimizes them with SCIP, with adaptive neighborhood
+size.
+\item \textbf{Adaptive expansion} alone (Section~\ref{sec:expansion}) over the full budget, with
+the GNN score and, as a learning-free control, with the LP score \eqref{eq:lpscore}.
+\item \textbf{Kernel search} \citep{guastaroba2014} over facilities (Section~\ref{sec:kernel}),
+the classical counterpart of the expansion, with the same budget and solver.
+\item \textbf{CLNS} from the LP-rounded start with each selector (rotation, ALNS, learned, GNN).
+\item \textbf{Hybrid} (Algorithm~\ref{alg:hybrid}) with the GNN-guided, rotation and learned
+selectors; \textbf{LP hybrid}, the same algorithm with the LP score in place of the GNN and the
+rotation selector, in which no component is learned.
+\item \textbf{Memory} variants (suffix \emph{+mem}) of CLNS and of both hybrids, with the
+subproblem memory of Section~\ref{sec:memory}.
+\item \textbf{Naive decomposition}: clusters solved independently with full capacities, then
+greedily repaired.
+\end{itemize}
+
+\subsection{Protocol}\label{sec:protocol}
+An audit of an earlier version of our harness found that solver set-up time was counted twice in
+incumbent trajectories, that the primal integral did not use the cumulative best incumbent across
+stages, and that there was no global deadline. The corrected protocol, frozen before the runs
+reported here, is:
+\begin{itemize}
+\item \textbf{Equal wall-clock budget} per method (60~s for $30\times150$ and corridor, 120~s for
+$50\times200$, 30~s for Holmberg), including feature computation, inference, LP, repair, model
+building, solving and validation, under one monotonic clock.
+\item \textbf{Isolation}: each run on a dedicated physical core (CPU affinity), with one core left
+for the operating system, all numerical libraries limited to one thread, and imports and models
+warmed up outside the timed region.
+\item \textbf{Two clocks}: wall-clock and process CPU time. The ratio CPU/wall flags runs that
+waited for the CPU; runs below 0.9 are marked as suspected contention.
+\item \textbf{Frozen data}: instances and models are hashed in a versioned lock file; every run
+verifies the lock and records the aggregate hash in its manifest.
+\item \textbf{Seeds}: three solver seeds for stochastic methods, one for deterministic ones; seeds
+are averaged within an instance before any statistics across instances.
+\item \textbf{Independent validation}: every returned solution is re-evaluated from the original
+data (assignment, capacity, objective).
+\end{itemize}
+
+\subsection{Metrics and statistics}\label{sec:metrics}
+Let $z_k(t)$ be the cost of the best solution that run $k$ has found by wall-clock time $t$
+(the cumulative minimum over all stages of the method; $z_k(t)=\infty$ before the first
+solution), and $z_{\mathrm{BKS}}$ the best known cost of the instance: the minimum over all runs
+of all methods and the reference label of Table~\ref{tab:data} (the published optimum for
+Holmberg). The \emph{primal gap} and the \emph{primal integral} \citep{berthold2013} are
+\begin{equation}\label{eq:pi}
+g_k(t)=\min\Bigl\{1,\ \frac{z_k(t)-z_{\mathrm{BKS}}}{z_{\mathrm{BKS}}}\Bigr\},
+\qquad
+P_k=\frac{1}{T}\int_0^T g_k(t)\,dt\ \in[0,1].
+\end{equation}
+$g_k$ is a non-increasing step function, so the integral is an exact sum over the incumbent
+updates. $P_k=0$ means that the best known solution was available from time zero and $P_k=1$
+that no solution was found within the budget; a method that finds its first solution, with a
+1\% gap, at $t=6$~s and stays there has $P = 0.1\times 1+0.9\times0.01=0.109$ for $T=60$~s. The
+primal integral is the primary metric because it rewards finding good solutions \emph{early},
+which is the purpose of restricting the search space; the final gap alone does not distinguish a
+method that is good after 5~s from one that is good after 55~s.
+
+Secondary metrics are the \emph{final deviation} $g_k(T)$; the shares of instances with
+$g(T)\le1\%$ and $g(T)\le0.1\%$; the time to reach $1\%$ (censored at $T$); for CLNS variants,
+the \emph{repetition rate}, i.e., the fraction of selected subproblems whose key \eqref{eq:key}
+had already failed with at least the same time limit; and the CPU/wall ratio of the run.
+
+\paragraph{Aggregation and tests.} Seeds are averaged within an instance \emph{before} any
+statistic across instances, so that the unit of analysis is the instance and stochastic methods
+do not receive more weight than deterministic ones. Reported means carry 95\% bootstrap
+confidence intervals over instances (4{,}000 resamples). Methods are compared with the paired
+Wilcoxon signed-rank test on per-instance differences, with Holm's correction over the family of
+comparisons of each hypothesis; we also report wins, ties and losses with a tolerance of
+$10^{-4}$ on the deviation. Hypotheses, metrics and the choice $\alpha=0.5$ were pre-registered
+before the corresponding runs.

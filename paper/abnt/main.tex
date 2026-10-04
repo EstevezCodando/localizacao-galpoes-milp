@@ -1,0 +1,56 @@
+% Versão ABNT (dissertação de mestrado / veículos brasileiros).
+% Mesmo texto e mesma bibliografia da versão de periódico (../journal/sections, ../refs.bib),
+% com citações no sistema autor-data da NBR 10520 e referências conforme a NBR 6023
+% (pacote abntex2cite, estilo abntex2-alf). Compilar: texify --pdf main.tex
+\documentclass[12pt,a4paper,article,oneside,english,brazil]{abntex2}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs,multirow}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{siunitx}
+\usepackage[alf,abnt-emphasize=bf]{abntex2cite}
+
+% Compatibilidade com os comandos natbib usados nas seções:
+% \citet{x} -> "Autor (ano)" (citação na sentença, NBR 10520)
+% \citep{x} -> "(AUTOR, ano)" (citação entre parênteses, NBR 10520)
+\newcommand{\citet}[1]{\citeonline{#1}}
+\newcommand{\citep}[1]{\cite{#1}}
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+\newcommand{\pending}[1]{\textcolor{orange}{[pending: #1]}}
+\newtheorem{proposition}{Proposition}
+\graphicspath{{../journal/}}
+
+\titulo{Is learning necessary to reduce the search space? A controlled study of ranking,
+restriction and coordinated decomposition for single-source capacitated facility location}
+\tituloestrangeiro{O aprendizado é necessário para reduzir o espaço de busca? Um estudo controlado de
+ranqueamento, restrição e decomposição coordenada na localização capacitada de fonte única}
+\autor{Jean Michael Estevez Alvarez}
+\data{2026}
+
+\begin{document}
+\selectlanguage{english}
+\maketitle
+
+\input{../journal/sections/abstract}
+
+\input{../journal/sections/introduction}
+\input{../journal/sections/related}
+\input{../journal/sections/problem}
+\input{../journal/sections/method}
+\input{../journal/sections/experiments}
+\input{../journal/sections/results}
+\input{../journal/sections/discussion}
+\input{../journal/sections/conclusion}
+
+\bibliography{refs}
+
+\appendix
+\input{../journal/sections/appendix_reconstructions}
+
+\end{document}

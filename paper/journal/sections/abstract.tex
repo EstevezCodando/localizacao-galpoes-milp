@@ -1,0 +1,35 @@
+\begin{abstract}
+The single-source capacitated facility location problem (SSCFLP) asks which facilities to
+open and which single facility serves each customer, under capacity limits. Even instances
+with 30 candidate facilities and 150 customers are not solved to optimality by a modern
+open-source MILP solver within a minute, because the linear relaxation leaves a gap of
+1.6--4.4\% when fixed costs dominate. Machine learning has been proposed to reduce the search
+space of such problems, by pruning variables, ranking them, or choosing which part of a solution
+to re-optimize. We ask how much of the reported benefit is due to learning and how much to the
+underlying search-space reduction, by pairing every learned component with a learning-free
+counterpart of the same function under equal wall-clock budgets.
+
+We study three mechanisms. (i) \emph{Pruning} by a facility ranking is unsafe under capacity
+coupling: keeping the best known solution reachable in 80\% of the instances required retaining
+about 80\% of the facilities, for a graph neural network (GNN) and for the linear relaxation
+alike. (ii) An \emph{adaptive expansion} solves nested restricted problems over the ranked
+facilities and stops when reduced costs certify that no excluded facility can improve the
+incumbent, which yields a proven optimum without solving the full model. (iii) A
+\emph{cluster-oriented large neighborhood search} re-optimizes one group of customers at a time
+with the rest fixed and capacities discounted; we prove that every accepted move is globally
+feasible and charges each fixed cost once, whereas independently solved clusters violated
+capacity in every examined instance. A transposition-style memory identifies subproblems that
+have already failed.
+
+In validation pilots, all restriction-based methods had a primal integral two to four times lower
+than the solver on the full model, and the hybrid of (ii) and (iii) finished 0.5--0.9\% from the
+best known solution against 2.4--2.7\%. Learning, however, was not the source of the gain:
+ranking facilities by the linear relaxation was numerically at least as good as the GNN in every
+method (differences not significant on 16 instances), and
+neither a learned nor a GNN-guided subproblem selector separated from a plain rotation. More
+than half of the subproblems selected by the neighborhood search were repetitions of already
+failed ones. \todo{one sentence with the closed-test result and its significance}. The
+experiments use pinned cores, two clocks, frozen data and pre-registered hypotheses, and we also
+report what did not transfer when we reconstructed five recent learning-for-optimization
+approaches in an open-source stack.
+\end{abstract}

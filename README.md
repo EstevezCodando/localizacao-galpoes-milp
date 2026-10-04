@@ -8,9 +8,9 @@ Localização capacitada com fonte única (SSCFLP) sobre pedidos reais do Brasil
 matheurística (LNS) e programação inteira mista, com frete oficial da ANTT, aluguel de galpões coletado,
 dados abertos do IBGE e do OpenStreetMap, previsão de demanda e validação contra ótimos publicados.
 
-`Python 3.12` · `OR-Tools (SCIP, GLOP)` · `scikit-learn` · `uv` · `mypy --strict` · `ruff` · `pytest (91 testes)`
+`Python 3.12` · `OR-Tools (SCIP, GLOP)` · `scikit-learn` · `uv` · `mypy --strict` · `ruff` · `pytest (139 testes)`
 
-[Mapa e resultados](docs/index.html) · [Estudo integrado](docs/estudo_integrado/index.html) · [Problema](#o-problema) · [Resultados](#resultados) · [Dados](#dados-e-fontes) · [Como executar](#como-executar) · [Limitações](#limitações-e-honestidade-dos-números)
+[Mapa e resultados](docs/index.html) · [Estudo integrado](docs/estudo_integrado/index.html) · [Linha de pesquisa](#linha-de-pesquisa-aprender-o-espaço-de-busca) · [Problema](#o-problema) · [Resultados](#resultados) · [Dados](#dados-e-fontes) · [Como executar](#como-executar) · [Limitações](#limitações-e-honestidade-dos-números)
 
 </div>
 
@@ -28,12 +28,13 @@ dados abertos do IBGE e do OpenStreetMap, previsão de demanda e validação con
 8. [Foco no Sul, Sudeste e Centro-Oeste, com vias do OpenStreetMap](#foco-no-sul-sudeste-e-centro-oeste-com-vias-do-openstreetmap)
 9. [Resultados](#resultados)
 10. [Validação externa](#validação-externa)
-11. [Como executar](#como-executar)
-12. [Estrutura do repositório](#estrutura-do-repositório)
-13. [Qualidade e reprodutibilidade](#qualidade-e-reprodutibilidade)
-14. [Limitações e honestidade dos números](#limitações-e-honestidade-dos-números)
-15. [Trabalhos relacionados](#trabalhos-relacionados)
-16. [Licenças e atribuições](#licenças-e-atribuições)
+11. [Linha de pesquisa: aprender o espaço de busca](#linha-de-pesquisa-aprender-o-espaço-de-busca)
+12. [Como executar](#como-executar)
+13. [Estrutura do repositório](#estrutura-do-repositório)
+14. [Qualidade e reprodutibilidade](#qualidade-e-reprodutibilidade)
+15. [Limitações e honestidade dos números](#limitações-e-honestidade-dos-números)
+16. [Trabalhos relacionados](#trabalhos-relacionados)
+17. [Licenças e atribuições](#licenças-e-atribuições)
 
 ---
 
@@ -48,6 +49,7 @@ dados abertos do IBGE e do OpenStreetMap, previsão de demanda e validação con
 | **Validação** | OR-Library: 7 de 7 ótimos reproduzidos. Holmberg et al. (1999): 71 instâncias de fonte única com ótimo publicado |
 | **Aprendizado de máquina** | Demanda por município (Poisson e gradient boosting), previsão de população contra o Censo 2022, clusterização e score de candidatos, todos com validação espacial |
 | **Achado central** | Com capacidade folgada (recortes do Olist) o LNS chega ao nível do MILP ou melhor; com capacidade apertada (Holmberg) o MILP domina. Uma rede projetada só para 2025 custa +25% a +47% em 2030 base e +206% a +209% no cenário alto |
+| **Linha de pesquisa** | Aprender o espaço de busca no SSCFLP estrito: poda por GNN, expansão adaptativa com certificado de custo reduzido, LNS por clusters com capacidade residual, Kernel Search e memória de subproblemas. Nos pilotos, restringir o espaço de busca dá integral primal cerca de 3 vezes menor que o SCIP completo, e o ranking da relaxação linear, sem treino, é numericamente igual ou melhor que a GNN. [Detalhes](#linha-de-pesquisa-aprender-o-espaço-de-busca) |
 | **Resultado negativo mantido** | Variáveis do OpenStreetMap (densidade viária, galpões) **não** melhoraram o modelo de demanda nem o score de candidatos |
 
 > Projeto de portfólio. Capacidades, penalidade de não atendimento, pedidos por veículo e densidade de pedidos por m² são **premissas declaradas**. Nada aqui é ganho medido em operação real.
@@ -366,13 +368,247 @@ Antes de confiar nos números, o modelo foi confrontado com resultados publicado
 
 ---
 
+## Linha de pesquisa: aprender o espaço de busca
+
+> Pesquisa aberta, em andamento, para um artigo e para o mestrado. Tudo o que está nesta seção
+> vem de execuções registradas em [`results/pesquisa/`](results/pesquisa), com manifesto e hash
+> dos dados. Os resultados dos métodos principais são de **pilotos em instâncias de validação**;
+> o teste fechado ainda não foi executado.
+> Relatório completo: [`docs/pesquisa/09-relatorio-geral.md`](docs/pesquisa/09-relatorio-geral.md).
+> Manuscrito: [`paper/`](paper).
+
+### A pergunta
+
+O problema desta parte é o **SSCFLP estrito**: o mesmo modelo de localização capacitada com fonte
+única, mas **sem** a variável de demanda não atendida (todo cliente tem de ser alocado). Com 30
+centros e 150 clientes, o SCIP 10 não prova o ótimo em 60 s (gap certificado de 1,8% a 3,6%).
+
+A literatura recente propõe usar aprendizado de máquina para **reduzir o espaço de busca**:
+podar centros, escolher vizinhanças, imitar regras de branching. A pergunta da pesquisa é quanto
+desse ganho se sustenta quando (a) a capacidade acopla os subproblemas e (b) cada método
+aprendido é comparado com o **equivalente clássico de mesma função**, no mesmo tempo de parede.
+
+### O caminho percorrido
+
+![Caminho percorrido](docs/pesquisa/img/01_caminho.png)
+
+*Cada caixa traz o que foi feito, o que foi medido e a decisão que levou à etapa seguinte.
+Vermelho marca caminhos descartados com base em medição; verde, resultado positivo; azul, a
+etapa mais recente.*
+
+| Etapa | O que foi feito | O que foi medido | Decisão |
+|---|---|---|---|
+| 1. Reconstruções | Cinco frentes da literatura refeitas em SCIP 10 e PyTorch em CPU | A heurística clássica de mesma função captura a maior parte do ganho em todas | Aprendizado só entra se vencer o clássico equivalente |
+| 2. Poda por ranking | GNN bipartida ordena os centros; resolve-se só com os melhores | Para manter a melhor solução em 80% das instâncias é preciso ficar com ~80% dos centros; o PL sem treino é igual ou melhor | Orientar a busca em vez de podar |
+| 3. Clusters, versão ingênua | Clusters de clientes resolvidos em separado | União inviável em todas as instâncias examinadas; +19% a +29% depois do reparo | Subproblema com o restante fixo e capacidade residual (CLNS) |
+| 4. CLNS com seletores | LNS por clusters com seletor por rotação, ALNS, dual, aprendido e guiado pela GNN | Bom cedo (integral primal 0,029 a 0,042 contra 0,080 do SCIP), mas estaciona a ~2% | Partir de uma solução melhor |
+| 5. Híbrido | Expansão adaptativa em metade do tempo, CLNS na outra metade | Desvio final de 0,57% a 0,63%, contra 0,81% da expansão e 2,66% do SCIP | Testar se a GNN é necessária |
+| 6. Controles e memória | Kernel Search, híbrido só com PL, memória de subproblemas | Nenhuma diferença significativa a favor da GNN; 54% a 58% dos subproblemas do CLNS eram repetições | O ranking do PL passa a ser a referência; o gargalo do CLNS é o alcance das vizinhanças |
+
+### Por que a capacidade muda tudo
+
+![Acoplamento de capacidade](docs/pesquisa/img/02_acoplamento.png)
+
+*À esquerda, dois grupos resolvidos em separado enviam 60 unidades cada um ao mesmo centro de
+capacidade 100: cada subproblema é viável, a união não é, e o custo fixo aparece duas vezes. À
+direita, o que o CLNS faz: o grupo fixo mantém suas 60 unidades, o grupo livre enxerga só as 40
+restantes e não paga de novo o custo fixo. Por construção, toda solução aceita é viável no
+problema inteiro.*
+
+### Poda por ranking não é segura
+
+![Poda por ranking](docs/pesquisa/img/04_poda.png)
+
+*Eixo horizontal: fração de centros mantida antes do reparo de viabilidade. Eixo vertical:
+percentual das 32 instâncias de validação em que todos os centros da melhor solução conhecida
+continuam disponíveis depois da poda. A linha tracejada é a meta registrada antes do experimento.
+A GNN ordena melhor que a heurística clássica (AUC 0,95 contra 0,905), mas o ranking da relaxação
+linear, sem treino, fica acima dela entre ρ = 0,2 e 0,7, e ambos só atingem a meta mantendo cerca
+de 80% dos centros.*
+
+### O método híbrido
+
+![Pipeline do híbrido](docs/pesquisa/img/03_pipeline.png)
+
+1. **Relaxação linear forte**, resolvida uma vez (HiGHS). Dela saem o limite inferior `L`, o
+   custo reduzido `r_i` de cada centro e o custo reduzido `c̄_ij` de cada par.
+2. **Ranking de centros**: pela GNN ou pelo valor de abertura no PL (controle sem aprendizado).
+3. **Expansão adaptativa**: resolve o problema restrito aos 20%, 40%, 60% e 100% melhores
+   centros, reaproveitando a solução anterior. Se um estágio fecha no ótimo com custo `U` e
+   `L + r_i ≥ U` para todo centro deixado de fora, `U` é o **ótimo global provado** e a expansão
+   para ali.
+4. **CLNS**: reotimiza um subconjunto de clientes por vez (um cluster, dois clusters vizinhos, os
+   clientes de um centro caro, os vizinhos do cliente com maior regret), com o restante fixo e a
+   capacidade residual.
+5. **Validação**: atribuição, capacidade e custo recalculados a partir dos dados originais.
+
+### Piloto 2: o híbrido contra os demais
+
+16 instâncias de validação (30 × 150), 60 s por execução, três sementes, 432 execuções.
+
+![Piloto 2](docs/pesquisa/img/p2_barras.png)
+
+*Esquerda: integral primal média (área sob a curva do gap ao longo do orçamento, de 0 a 1; menor
+é melhor); o traço é o intervalo de confiança de 95% por bootstrap sobre instâncias. Direita:
+desvio final mediano em relação à melhor solução conhecida. Azul marca os métodos com algum
+componente aprendido.*
+
+![Piloto 2, curva ao longo do tempo](docs/pesquisa/img/p2_anytime.png)
+
+*Para cada segundo, a mediana entre instâncias do gap à melhor solução conhecida, em escala
+logarítmica. Híbrido e expansão coincidem até os 30 s porque o híbrido gasta metade do orçamento
+na expansão; depois disso a expansão estaciona e a fase de CLNS continua melhorando.*
+
+![Piloto 2, até 1% e comparação pareada](docs/pesquisa/img/p2_ate1_vitorias.png)
+
+| Método | Integral primal (IC 95%) | Desvio final | Instâncias a até 1% |
+|---|---|---:|---:|
+| Expansão adaptativa (GNN) | 0,0257 (0,019–0,035) | 0,81% | 62,5% |
+| Híbrido, seletor aprendido | 0,0270 (0,020–0,036) | 0,57% | 87,5% |
+| Híbrido, rotação | 0,0274 (0,021–0,035) | 0,63% | 62,5% |
+| Híbrido, guiado pela GNN | 0,0296 (0,022–0,040) | 0,62% | 68,8% |
+| CLNS, seletor aprendido | 0,0292 (0,023–0,036) | 2,12% | 12,5% |
+| LNS | 0,0700 (0,059–0,082) | 1,82% | 12,5% |
+| SCIP (modelo completo) | 0,0795 (0,067–0,091) | 2,66% | 18,8% |
+
+As duas hipóteses registradas antes do piloto **não se confirmaram**: o híbrido não tem integral
+primal menor que a expansão sozinha, e o seletor guiado pela GNN não supera a rotação. O que o
+híbrido melhora é o fim da execução.
+
+### Piloto 3: o aprendizado é necessário?
+
+**Piloto 3:** as mesmas 16 instâncias de validação, 60 s, três sementes, 352 execuções, já com
+o código do CLNS corrigido pela segunda auditoria. Repete SCIP, expansão com GNN, CLNS e híbrido
+com rotação, e acrescenta os controles sem aprendizado e a memória.
+
+![Piloto 3, barras](docs/pesquisa/img/p3_barras.png)
+
+*Esquerda: integral primal média com intervalo de confiança de 95%. Direita: desvio final
+mediano. Azul marca os métodos que usam a GNN; cinza, os que não usam nenhum componente
+treinado. "PL" é o ranking tirado da relaxação linear.*
+
+| Método | Aprende? | Integral primal (IC 95%) | Desvio final | Até 1% | Até 0,1% |
+|---|:---:|---|---:|---:|---:|
+| Expansão adaptativa (PL) | não | 0,0192 (0,015–0,024) | 0,17% | 56,3% | 43,8% |
+| Híbrido PL, rotação | não | 0,0215 (0,017–0,026) | 0,53% | 75,0% | 18,8% |
+| Híbrido PL, rotação + memória | não | 0,0217 (0,017–0,027) | 0,59% | 87,5% | 18,8% |
+| Híbrido GNN, rotação | sim | 0,0236 (0,019–0,028) | 0,87% | 68,8% | 12,5% |
+| Híbrido GNN, rotação + memória | sim | 0,0238 (0,019–0,029) | 0,87% | 68,8% | 12,5% |
+| Expansão adaptativa (GNN) | sim | 0,0240 (0,018–0,030) | 0,93% | 50,0% | 12,5% |
+| Kernel Search | não | 0,0258 (0,019–0,033) | 0,99% | 56,3% | 12,5% |
+| CLNS, rotação + memória | não | 0,0347 (0,031–0,039) | 2,36% | 0,0% | 0,0% |
+| CLNS, rotação | não | 0,0372 (0,032–0,043) | 2,80% | 0,0% | 0,0% |
+| SCIP (modelo completo) | não | 0,0706 (0,060–0,081) | 2,44% | 18,8% | 6,3% |
+
+![Piloto 3, curva ao longo do tempo](docs/pesquisa/img/p3_anytime.png)
+
+*Gap mediano à melhor solução conhecida a cada segundo, em escala logarítmica. Linhas
+tracejadas são as variantes ordenadas pelo PL; contínuas, pela GNN.*
+
+**A GNN não foi necessária.** Trocar a GNN pelo ranking do PL, que não precisa de dados de
+treino, não piorou nenhum método e melhorou numericamente todos:
+
+- expansão adaptativa: integral 0,0192 com PL contra 0,0240 com GNN; desvio final 0,17% contra
+  0,93%; o PL tem a menor integral em 11 das 16 instâncias (Wilcoxon pareado, p = 0,13);
+- híbrido: 0,0215 contra 0,0236; menor em 10 de 16 (p = 0,43).
+
+Com 16 instâncias nenhuma dessas diferenças é significativa. A afirmação que se sustenta é a
+mais fraca: **não há evidência de que o ranking aprendido ajude**, e as estimativas pontuais
+favorecem o ranking sem aprendizado. O Kernel Search, o método clássico estabelecido, fica no
+nível da expansão com GNN e vence o SCIP completo em 14 de 16 instâncias. O certificado de custo
+reduzido fechou 1 das 16 instâncias antes do último estágio, com os dois rankings.
+
+**O que a fase de CLNS acrescenta.** Com o ranking do PL, o híbrido não melhora a integral da
+expansão sozinha (0,0215 contra 0,0192; p = 0,40). No fim da execução o efeito é misto: mais
+instâncias terminam a até 1% (75,0% contra 56,3%), mas menos chegam a 0,1% (18,8% contra 43,8%).
+A expansão com o orçamento inteiro fecha ou quase fecha as instâncias mais fáceis; o híbrido,
+que interrompe a expansão na metade, troca isso por resultados mais estáveis nas difíceis. A
+fração α passa a ser uma ablação necessária.
+
+![Piloto 3, memória](docs/pesquisa/img/p3_memoria.png)
+
+*Esquerda: percentual das iterações em que o subproblema escolhido já tinha falhado a partir do
+mesmo estado local com limite de tempo igual ou maior. Direita: subproblemas resolvidos por
+execução. Verde marca as variantes com memória.*
+
+**Repetição e memória.** Sem memória, **54% a 58% dos subproblemas escolhidos pelo CLNS eram
+repetições**: mais da metade das iterações resolveu de novo um modelo cuja resposta já era
+conhecida. A memória elimina cerca de metade delas; os 25% a 27% restantes são iterações em que
+**todos** os candidatos estavam esgotados, isto é, a solução era um ótimo local das cinco
+vizinhanças naquele limite de tempo. O tempo liberado não virou ganho mensurável: no CLNS
+sozinho a integral foi de 0,0372 para 0,0347 (p = 0,18) e o desvio de 2,80% para 2,36%
+(p = 0,12); dentro dos híbridos, nenhuma mudança.
+
+**Leitura conjunta.** O CLNS é limitado pelo **alcance** das vizinhanças, não pela ordem em que
+são tentadas. Isso explica por que nenhum seletor, aprendido ou não, se separou da rotação nos
+pilotos anteriores. O ganho sobre o SCIP completo vem dos mecanismos (restrição aninhada com
+certificado e subproblemas coordenados), e não do aprendizado.
+
+**Medição.** Mediana da razão CPU ÷ parede de 0,999; 7 das 352 execuções (2,0%) abaixo de 0,9,
+todas no mesmo núcleo, que dividiu tempo com outras tarefas da máquina durante a rodada; estouro
+de orçamento com percentil 95 de 0,04 s.
+
+![Piloto 3, até 1% e comparação pareada](docs/pesquisa/img/p3_ate1_vitorias.png)
+
+
+### As reconstruções da literatura
+
+![Reconstruções](docs/pesquisa/img/10_reconstrucoes.png)
+
+| Frente | Resultado nesta reconstrução |
+|---|---|
+| Branching aprendido (Gasse et al. 2019; Gupta et al. 2020) | 91,7 s contra 100,1 s do padrão do SCIP, mas indistinguível de `pscost` (93,2 s), que não usa aprendizado |
+| Trocas guiadas (Guo et al. 2023; Su et al. 2024) | O filtro clássico sozinho dá 47× de aceleração com 6,6% de perda; a aceleração vem do filtro |
+| Localização uniforme (Qian et al. 2026) | A MPNN generaliza na escala (1,03 contra 1,19 em n = 1000), é instável no treino e empata com o clássico depois da busca local |
+| Rede neural dentro do MIP (Kaleem et al. 2024) | O MIP com Deep Sets não otimiza bem em solver aberto; a aproximação contínua clássica empata ou vence |
+
+### Como o tempo é medido
+
+![Qualidade da medição](docs/pesquisa/img/p2_medicao.png)
+
+A comparação é por tempo de parede, então cada execução roda fixada em um núcleo físico, com uma
+thread, e grava dois relógios (parede e CPU). A razão CPU ÷ parede abaixo de 0,9 marca suspeita
+de contenção; a execução é mantida e sinalizada. Instâncias e modelos são congelados com hash
+SHA-256 em [`data/frozen/LOCK.json`](data/frozen/LOCK.json), e o executor confere a trava antes
+de cada rodada.
+
+### Como reproduzir a pesquisa
+
+```bash
+uv sync --group pesquisa            # PySCIPOpt, PyTorch (CPU), LightGBM, psutil, matplotlib
+uv run pytest tests/test_pesquisa_g0.py tests/test_clns.py tests/test_pesquisa_regressoes.py
+
+# avaliação no mesmo orçamento, com registro versionado (manifesto + SQLite)
+uv run python -m alocacao_capacitada.pesquisa.exp_clns avaliar --split validacao --tempo 60 --workers 3 --limite 16
+uv run python scripts/agregados_clns.py results/pesquisa/clns/<run_id> --horizonte 60
+uv run python scripts/figuras_pesquisa.py        # figuras desta seção
+uv run python paper/figuras/gerar_figuras.py     # figuras do manuscrito
+```
+
+| Onde | O quê |
+|---|---|
+| `src/alocacao_capacitada/pesquisa/` | modelo estrito, PL com duais, gerador, GNN, expansão adaptativa, Kernel Search, CLNS, memória de subproblemas, medição, congelamento, reconstruções |
+| `docs/pesquisa/` | pré-registros, relatórios por frente, auditorias e relatório geral |
+| `paper/` | manuscrito em inglês (`journal/`, elsarticle), versão nas normas ABNT (`abnt/`) e versão curta (`short/`, LNCS) |
+| `results/pesquisa/` | resultados brutos, agregados e manifestos |
+| `data/processed/pesquisa/` | instâncias, rótulos e modelos congelados |
+
+### Limites desta parte
+
+- Resultados de pilotos em 16 instâncias de validação; o teste fechado está pendente.
+- Instâncias em maioria sintéticas. Fora de Holmberg, a qualidade é medida contra a melhor
+  solução conhecida, não contra o ótimo.
+- As reconstruções são metodológicas, não reproduções do código original dos artigos.
+
+---
+
 ## Como executar
 
 Requisitos: Python 3.12 e [uv](https://docs.astral.sh/uv/).
 
 ```bash
 uv sync
-uv run pytest                                              # 91 testes
+uv run pytest                                              # 139 testes (os da pesquisa exigem `uv sync --group pesquisa`)
 uv run ruff check src && uv run mypy src                   # lint e tipos (strict)
 ```
 
@@ -450,15 +686,19 @@ src/alocacao_capacitada/
 ├── network/      rede nacional, cenários, arrependimento, score, mapa
 ├── analysis/     sensibilidade, demanda incerta, aluguel real, estudo integrado
 ├── validation/   OR-Library e Holmberg
+├── pesquisa/     linha de pesquisa: SSCFLP estrito em SCIP, PL com duais, GNN, expansão adaptativa,
+│                 Kernel Search, CLNS, memória de subproblemas, medição, reconstruções
 └── benchmark.py · stage2.py
 examples/         exemplo didático (3 × 5)
 scripts/          geração do site e das figuras do estudo
 site/             template, mapa (MapLibre) e seções do site
-docs/             página de resultados e estudo integrado
+docs/             página de resultados, estudo integrado e docs/pesquisa (relatórios e figuras)
+paper/            manuscrito (inglês, ABNT e versão curta) e figuras em PDF
 data/bronze/      brutos com proveniência (hash, URL, data)
 data/reference/   tabelas tratadas (municípios, painel, OSM por município, aluguel, ANTT)
+data/processed/pesquisa/  instâncias, rótulos e modelos da pesquisa, congelados por data/frozen/LOCK.json
 results/          saídas versionadas dos experimentos (results/foco/ para o recorte)
-tests/            91 testes
+tests/            139 testes
 ```
 
 ---

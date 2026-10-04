@@ -1,0 +1,42 @@
+% Short version for CPAIOR or LION (Springer LNCS, ~15 pages + references).
+% Reuses the journal sections in condensed form; the journal version is the master text.
+\documentclass[runningheads]{llncs}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,citecolor=blue!45!black,linkcolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+
+\begin{document}
+\title{Is Learning Necessary to Reduce the Search Space? A Controlled Study on Single-Source
+Capacitated Facility Location}
+\author{Jean Michael Estevez Alvarez}
+\authorrunning{J. M. Estevez Alvarez}
+\institute{\todo{affiliation} \email{estevezcodando@gmail.com}}
+\maketitle
+
+\begin{abstract}
+\todo{150-word condensation of the journal abstract, centered on the hybrid and the closed-test
+result.}
+\keywords{Facility location \and Large neighborhood search \and Graph neural networks}
+\end{abstract}
+
+% Planned structure (page budget):
+% 1 Introduction and contributions ............................................ 1.5 p
+% 2 Problem and capacity coupling (proposition on coordinated moves) ............ 1.5 p
+% 3 Method: ranking, adaptive expansion with reduced-cost certificate, CLNS,
+%   GNN-guided selector (algorithm box) ......................................... 3.5 p
+% 4 Protocol: equal wall-clock with pinned cores, CPU/wall check, frozen data .... 1 p
+% 5 Results: closed test (one table + one anytime figure), Holmberg, Olist ....... 4 p
+% 6 Lessons: pruning vs guidance; what did not transfer (one table) .............. 1.5 p
+% 7 Conclusion .................................................................. 0.5 p
+
+\section{Introduction}
+\todo{condense journal Section 1}
+
+\bibliographystyle{splncs04}
+\bibliography{refs}
+\end{document}

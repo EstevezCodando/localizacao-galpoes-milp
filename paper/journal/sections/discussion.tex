@@ -1,0 +1,48 @@
+\section{Discussion}\label{sec:discussion}
+
+\paragraph{Guide, do not prune.}
+Under capacity coupling, the information a ranking carries is better spent deciding \emph{where
+to search} than \emph{what to remove}. Pruning is irreversible and has to keep slack for every
+capacity constraint; guidance keeps the full domain reachable and only changes the order in which
+the search visits it. This matches the trend from learned pruning towards trust regions
+\citep{han2023}, learned neighborhoods \citep{huang2023} and learned delegation
+\citep{li2021delegate}. \todo{confirm or revise with the closed-test result}.
+
+\paragraph{The mechanism, not the learning.}
+In the pilots the gain over the full solver came from the two restriction mechanisms, and
+replacing each learned component by a learning-free one did not reduce it: the LP score in place
+of the GNN, rotation in place of the learned selector. We see two reasons. The strong LP already
+encodes most of what the GNN can learn about which facilities are worth opening, and it does so
+for the instance at hand rather than for a training distribution. And the selector operates on a
+set of neighborhoods whose joint local optimum is reached quickly: once every candidate has
+failed, no ordering helps. The repetition rate we measured (54--58\% without memory, 25--27\% of
+iterations fully exhausted with it) is a direct, inexpensive diagnostic of this situation, and we
+suggest reporting it for any LNS before investing in a learned selector.
+
+\paragraph{The classical counterpart is the baseline that matters.}
+In every line of work we reconstructed, a classical rule with the same function captured most of
+the gain: the LP ranking for pruning, the add-gain filter for swaps, Mettu--Plaxton with local
+search for uniform facility location, and a linear continuous approximation for location-routing
+(Appendix~\ref{app:reconstructions}). Reporting a learned method only against the raw solver
+overstates its contribution.
+
+\paragraph{Low prediction error is not decision quality.}
+A routing-cost surrogate with 7.5\% mean absolute percentage error ranked competing
+configurations poorly (Kendall $\tau=0.34$), and the optimizer gravitated to configurations where
+the surrogate was relatively optimistic.
+
+\paragraph{Timing is the fragile part.}
+Two of the errors found by the audit of our own harness affected only timing metrics, yet would
+have changed the comparison of anytime behavior. Pinning cores, limiting threads and recording CPU
+time next to wall time are cheap and make contention visible.
+
+\paragraph{Limitations.}
+\begin{itemize}
+\item Most instances are synthetic. Holmberg provides proven optima but small sizes, and the
+Olist case relies on assumed capacities and fixed costs.
+\item Outside Holmberg, quality is measured against the best known solution.
+\item All experiments use one machine with three concurrent pinned runs.
+\item The reconstructions in the appendix are methodological reconstructions, not reproductions
+of the original code.
+\end{itemize}
+\todo{add any limitation revealed by the closed test}.

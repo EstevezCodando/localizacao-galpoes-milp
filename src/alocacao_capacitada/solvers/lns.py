@@ -66,7 +66,9 @@ class LnsSolver:
         ):
             free = self._destroy(instance, current, rng, iteration, size)
             iteration += 1
-            budget = min(self._sub_time_limit_s, max(deadline - time.perf_counter(), 0.05))
+            budget = min(self._sub_time_limit_s, deadline - time.perf_counter())
+            if budget <= 0:
+                break
             candidate = _resolve(instance, current, free, budget)
             cost = None if candidate is None else evaluate(instance, Solution(candidate)).total_cost
             if candidate is not None and cost is not None and cost < best_cost - _EPS:

@@ -1,0 +1,7 @@
+{
+  "n_rotulos_treino": 2400,
+  "n_rotulos_val": 480,
+  "t_rotulos_s": 1402.2971878999997,
+  "t_treino_s": 197.72553419999986,
+  "mape_val": 0.07525379955768585
+}

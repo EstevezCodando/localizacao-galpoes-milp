@@ -1,0 +1,340 @@
+\section{Method}\label{sec:method}
+
+All mechanisms studied here reduce the search space of \eqref{eq:obj}--\eqref{eq:int} in one of
+two ways. \emph{Facility restriction} keeps a subset $K\subseteq I$ and solves the problem with
+$y_i=0$ for $i\notin K$ (Sections~\ref{sec:gnn}--\ref{sec:kernel}). \emph{Customer restriction}
+keeps the current assignment of all customers outside a subset $F\subseteq J$ and re-optimizes
+only $F$ (Sections~\ref{sec:clns}--\ref{sec:memory}). The hybrid (Section~\ref{sec:hybrid})
+applies the first and then the second. For each mechanism we give a learned and a learning-free
+variant, so that the contribution of learning can be isolated.
+
+\subsection{Facility scores}\label{sec:gnn}
+A \emph{score} is a vector $p\in\mathbb{R}^m$; facilities are ranked by decreasing $p_i$.
+
+\paragraph{LP score (no learning).} With $(y^{\mathrm{LP}},r)$ the opening values and reduced
+costs of the strong LP (Section~\ref{sec:lp}),
+\begin{equation}\label{eq:lpscore}
+p^{\mathrm{LP}}_i = y^{\mathrm{LP}}_i - \epsilon\,\frac{r_i}{\max_{k\in I}|r_k|},\qquad
+\epsilon=10^{-3},
+\end{equation}
+so that facilities are ordered by their LP opening value and ties among facilities closed in the
+LP ($y^{\mathrm{LP}}_i=0$) are broken by increasing reduced cost, i.e., by how little the LP bound
+would deteriorate if they were forced open.
+
+\paragraph{Classical score (no learning, no LP).} The service ratio of the greedy \emph{add}
+heuristic: let $j_1,j_2,\dots$ be the customers sorted by increasing $u_{ij}$ and $q$ the largest
+index with $\sum_{k\le q} d_{j_k}\le Q_i$; then
+\begin{equation}
+p^{\mathrm{cl}}_i=-\frac{f_i+\sum_{k\le q}c_{ij_k}}{\sum_{k\le q}d_{j_k}},
+\end{equation}
+the negative of
+the average cost per unit of demand when $i$ serves its cheapest customers up to capacity.
+
+\paragraph{GNN score (learned).} Each instance is a bipartite graph $G=(I\cup J,E)$, where $E$
+contains the pair $(i,j)$ if $i$ is among the $k=10$ cheapest facilities of $j$ or $j$ is among
+the $k=10$ cheapest customers of $i$ (by $u_{ij}$). Node and edge features are normalized by
+statistics of the instance itself, so that one model applies across sizes: for facilities,
+capacity and fixed cost relative to the instance means, the classical score, local demand
+density and a profile-based competition count; for customers, demand, cheapest unit cost and
+regret; for edges, the unit cost $u_{ij}$ and its rank from both endpoints.
+Initial embeddings are $h^{0}_i=\phi_I(\mathbf{x}_i)$, $h^{0}_j=\phi_J(\mathbf{x}_j)$,
+$e_{ij}=\phi_E(\mathbf{x}_{ij})$ in $\mathbb{R}^{64}$. Each of $R=3$ rounds updates customers
+from facilities and then facilities from customers:
+{\small
+\begin{align}
+\mu^{t}_{ij} &= \psi^{t}_{IJ}\bigl([h^{t}_i,e_{ij}]\bigr), &
+m^{t}_{j} &= \Bigl[\tfrac{1}{|N(j)|}\textstyle\sum_{i\in N(j)}\mu^{t}_{ij},\
+\tfrac{1}{\Delta_J}\sum_{i\in N(j)}\mu^{t}_{ij}\Bigr], \nonumber\\
+&& h^{t+1}_j &= \mathrm{LN}\bigl(h^{t}_j+\gamma^{t}_{J}([h^{t}_j,m^{t}_j])\bigr), \label{eq:mpj}\\
+\nu^{t}_{ji} &= \psi^{t}_{JI}\bigl([h^{t+1}_j,e_{ij}]\bigr), &
+m^{t}_{i} &= \Bigl[\tfrac{1}{|N(i)|}\textstyle\sum_{j\in N(i)}\nu^{t}_{ji},\
+\tfrac{1}{\Delta_I}\sum_{j\in N(i)}\nu^{t}_{ji}\Bigr], \nonumber\\
+&& h^{t+1}_i &= \mathrm{LN}\bigl(h^{t}_i+\gamma^{t}_{I}([h^{t}_i,m^{t}_i])\bigr), \label{eq:mpi}
+\end{align}}
+where $N(\cdot)$ is the neighborhood in $G$, $\Delta_J$ and $\Delta_I$ are the maximum degrees
+(so the second aggregate is a sum normalized to $[0,1]$, which keeps degree information that the
+mean discards), $\psi$, $\gamma$ and $\phi$ are two-layer perceptrons, $[\cdot,\cdot]$ is
+concatenation and $\mathrm{LN}$ is layer normalization. The output is one logit per facility,
+$p^{\mathrm{GNN}}_i=\eta(h^{R}_i)$. Conditioning messages on $e_{ij}$ matters because the
+relevant information (how expensive $i$ is for $j$ relative to $j$'s alternatives) lives on the
+edges.
+
+The target is a \emph{soft} label that tolerates alternative optima. Let $\mathcal{P}$ be the
+pool of solutions found for a training instance by SCIP (60~s) and LNS (30~s), and
+$\mathcal{P}_{\tau}=\{a\in\mathcal{P}: z(a)\le(1+\tau)\min_{a'\in\mathcal{P}}z(a')\}$ with
+$\tau=1\%$. The label of facility $i$ is the frequency with which it is open in near-best
+solutions,
+\begin{equation}\label{eq:label}
+q_i=\frac{1}{|\mathcal{P}_{\tau}|}\sum_{a\in\mathcal{P}_{\tau}}\mathbf{1}[\,i\in a(J)\,]\in[0,1],
+\end{equation}
+and the loss is the class-balanced binary cross-entropy
+\begin{equation}\label{eq:loss}
+\mathcal{L}=-\frac{1}{m}\sum_{i\in I}\omega_i\Bigl[q_i\log\sigma(p_i)+(1-q_i)\log\bigl(1-\sigma(p_i)\bigr)\Bigr],
+\qquad
+\omega_i=\begin{cases}\dfrac{1}{2\pi} & q_i>\tfrac12,\\[2mm] \dfrac{1}{2(1-\pi)} & \text{otherwise,}\end{cases}
+\end{equation}
+with $\sigma$ the logistic function and $\pi=\min\{0.98,\max\{0.02,\frac1m\sum_i q_i\}\}$ the
+mean label of the instance; the weights $\omega_i$ give open and closed facilities the same total
+weight, since typically fewer than half of the facilities are open. We train three seeds with
+early stopping on validation instances.
+
+\subsection{Restricted problems and feasibility repair}\label{sec:repair}
+For $K\subseteq I$, the restricted problem $\mathrm{P}(K)$ is \eqref{eq:obj}--\eqref{eq:int} with
+$y_i=0$ for $i\notin K$; its optimal value satisfies $z^\ast(K)\ge z^\ast$, with equality iff
+some optimal solution opens only facilities of $K$. Given a ranking and a target fraction
+$\rho\in(0,1]$, we take the $\lceil\rho m\rceil$ best facilities and \emph{repair} the set in two
+steps, adding facilities in ranking order:
+\begin{enumerate}
+\item \emph{Packing.} Add facilities until the first-fit-decreasing heuristic (customers by
+decreasing demand, each placed in the first kept facility with enough residual capacity) packs
+all demands. This is a sufficient condition for $\mathrm{P}(K)$ to be feasible; the necessary
+condition $\sum_{i\in K}Q_i\ge\sum_j d_j$ is not sufficient under single sourcing.
+\item \emph{Coverage.} For every customer with none of its five cheapest facilities in $K$, add
+the best-ranked of those five.
+\end{enumerate}
+We denote the result $\mathrm{rep}(\rho)$. On our instances the repair alone keeps at least 41\%
+of the facilities, so a nominal $\rho=0.2$ does not yield a problem five times smaller; this
+lower bound on the kept fraction is a property of capacitated instances, not of the ranking.
+
+\subsection{Adaptive expansion with a reduced-cost certificate}\label{sec:expansion}
+Let $\rho_1<\rho_2<\rho_3<\rho_4$ be $0.2,0.4,0.6,1$ and $K_s=\mathrm{rep}(\rho_s)\cup a^{s-1}(J)$,
+where $a^{s-1}$ is the incumbent after stage $s-1$ (so the incumbent is always feasible for the
+next stage) and $K_4=I$. Stage $s$ solves $\mathrm{P}(K_s)$ with SCIP, warm-started with
+$a^{s-1}$, for a quarter of the remaining budget (the last stage receives all of it).
+
+\begin{proposition}[Reduced-cost exclusion]\label{prop:rc}
+Let $L$ be the optimal value of the strong LP and $r_i\ge0$ the reduced cost \eqref{eq:rc} of
+$y_i$ at an optimal dual solution. Every feasible solution of
+\eqref{eq:obj}--\eqref{eq:int} with $y_i=1$ has cost at least $L+r_i$. Consequently, if
+$L+r_i\ge U$ for an incumbent of cost $U$, no solution that opens $i$ is better than the
+incumbent.
+\end{proposition}
+\begin{proof}
+Let $(v,w,s,t)$ be an optimal dual solution and $(x,y)$ any LP-feasible point. Substituting
+$f_k=r_k+Q_kw_k+\sum_j s_{kj}-t_k$ and $c_{kj}=\bar c_{kj}+v_j-d_jw_k-s_{kj}$ from \eqref{eq:rc}
+into the objective and regrouping by multiplier,
+\begin{align*}
+\sum_{k} f_k y_k+\sum_{k,j} c_{kj}x_{kj}
+={}& \sum_k r_ky_k+\sum_{k,j}\bar c_{kj}x_{kj}+\sum_j v_j\underbrace{\sum_k x_{kj}}_{=1}
++\sum_k w_k\underbrace{\Bigl(Q_ky_k-\sum_j d_jx_{kj}\Bigr)}_{\ge0}\\
+&+\sum_{k,j}s_{kj}\underbrace{(y_k-x_{kj})}_{\ge0}-\sum_k t_k\underbrace{y_k}_{\le1}\\
+\ge{}& \Bigl(\sum_j v_j-\sum_k t_k\Bigr)+\sum_k r_ky_k+\sum_{k,j}\bar c_{kj}x_{kj}
+\ \ge\ L+r_iy_i ,
+\end{align*}
+where the last step uses strong duality \eqref{eq:dual} and $r_k,\bar c_{kj}\ge0$. Every integer
+solution is LP-feasible, so $y_i=1$ gives cost at least $L+r_i$.
+\end{proof}
+
+\noindent\emph{Certificate.} If stage $s$ solves $\mathrm{P}(K_s)$ to optimality with value $U$
+and
+\begin{equation}\label{eq:cert}
+L+r_i\ \ge\ U\qquad\text{for all } i\in I\setminus K_s,
+\end{equation}
+then $U=z^\ast$: a better solution would have to open some pruned facility, which
+Proposition~\ref{prop:rc} excludes. The expansion then stops with a \emph{proven} global optimum
+although only a fraction of the facilities entered the solver. \emph{Guided expansion.} When
+\eqref{eq:cert} fails, the set $\{i\notin K_{s}: L+r_i<U\}$ of facilities that the certificate
+cannot exclude is added to the next stage, provided the stage does not exceed $1.5\,\rho_{s+1}m$
+facilities. The LP is solved once (HiGHS) and its duals are reused by every later component.
+
+With $p=p^{\mathrm{GNN}}$ this is the learned expansion; with $p=p^{\mathrm{LP}}$
+\eqref{eq:lpscore} nothing is learned and the method becomes a variant of kernel search with
+nested kernels, which is the natural control for the value of the GNN.
+
+\subsection{Kernel search}\label{sec:kernel}
+As the classical counterpart we implement kernel search \citep{guastaroba2014} over facilities.
+The initial kernel is $\Lambda_0=\mathrm{rep}$ of $\{i: y^{\mathrm{LP}}_i>0\}$. The remaining
+facilities, sorted by increasing reduced cost $r_i$, are cut into buckets
+$B_1,\dots,B_q$ of size $|\Lambda_0|$. The method solves $\mathrm{P}(\Lambda_0)$ and then, for
+$b=1,\dots,q$, the problem $\mathrm{P}(\Lambda_{b-1}\cup B_b)$ warm-started with the incumbent
+$a$, and updates
+\begin{equation}
+\Lambda_b=\Lambda_{b-1}\cup\bigl(B_b\cap a(J)\bigr),
+\end{equation}
+i.e., a bucket facility joins the kernel only if the new incumbent uses it. The kernel problem
+receives 25\% of the remaining time and each bucket an equal share of what is left. Unlike the
+original, we do not add the constraint $\sum_{i\in B_b}y_i\ge1$ nor an objective cutoff; the
+warm start plays the role of the cutoff. The difference from the adaptive expansion is
+structural: kernel search visits \emph{disjoint} buckets around a small kernel and never solves
+the full problem, whereas the expansion solves \emph{nested} sets and ends with $K=I$.
+
+\subsection{Cluster-oriented large neighborhood search}\label{sec:clns}
+\paragraph{Clusters.} Customers are clustered once by $k$-means on the log-scaled unit-cost
+profile $\xi_j=\bigl(\log(1+u_{ij}/\tilde u)\bigr)_{i\in I}\in\mathbb{R}^m$, with $\tilde u$ the
+median of all $u_{ij}$ and $k=\mathrm{round}(n/15)$:
+\begin{equation}
+\min_{G_1,\dots,G_k}\ \sum_{g=1}^{k}\sum_{j\in G_g}\lVert \xi_j-\mu_g\rVert_2^2,\qquad
+\mu_g=\frac{1}{|G_g|}\sum_{j\in G_g}\xi_j .
+\end{equation}
+Two customers are close when they see the facilities at similar prices, which is the relevant
+notion of proximity for exchanging them between facilities and does not require coordinates
+(the Holmberg instances have none). The distance between clusters $g$ and $h$ is the
+$\ell_1$ distance between their mean unit-cost profiles.
+
+\paragraph{Subproblem.} Given a feasible assignment $a$ and a set $F\subseteq J$ of \emph{free}
+customers, let $\bar F=J\setminus F$,
+\begin{equation}\label{eq:resid}
+\ell^{\bar F}_i=\sum_{j\in\bar F:\ a(j)=i}d_j,\qquad
+\tilde Q_i=Q_i-\ell^{\bar F}_i,\qquad
+I^{\mathrm{paid}}=a(\bar F),
+\end{equation}
+be the load of the fixed customers, the residual capacity, and the facilities whose fixed cost is
+already paid by a fixed customer. Each free customer $j$ may use the set $C_j$ of its ten cheapest
+facilities plus its current one $a(j)$. The subproblem $\mathrm{S}(a,F)$ is
+\begin{align}
+\min\ & \sum_{i\notin I^{\mathrm{paid}}} f_i y_i+\sum_{j\in F}\sum_{i\in C_j} c_{ij}x_{ij}
+\label{eq:subobj}\\
+\text{s.t.}\ & \sum_{i\in C_j}x_{ij}=1 && j\in F, \nonumber\\
+& \sum_{j\in F:\ i\in C_j} d_jx_{ij}\le \tilde Q_i\,y_i && i\notin I^{\mathrm{paid}}, \nonumber\\
+& \sum_{j\in F:\ i\in C_j} d_jx_{ij}\le \tilde Q_i && i\in I^{\mathrm{paid}}, \nonumber\\
+& x_{ij}\le y_i && i\notin I^{\mathrm{paid}},\ j\in F,\ i\in C_j, \nonumber\\
+& x_{ij},y_i\in\{0,1\}. \nonumber
+\end{align}
+SCIP solves it starting from $a|_F$ (always feasible, since $a(j)\in C_j$) with a short time limit
+$\theta$: $\theta=0.5$~s, multiplied by $1+0.5\min\{\phi,4\}$ after $\phi$ consecutive failures.
+The move is accepted only if it strictly improves the full objective \eqref{eq:za}.
+
+\begin{proposition}[Coordination]\label{prop:feasible}
+Let $a$ be feasible and $a'$ be obtained from $a$ by replacing $a|_F$ with a feasible solution of
+$\mathrm{S}(a,F)$ of value $\zeta'$. Then $a'$ is feasible for
+\eqref{eq:obj}--\eqref{eq:int} and
+\begin{equation}\label{eq:delta}
+z(a')=\zeta'+\underbrace{\sum_{i\in I^{\mathrm{paid}}}f_i+\sum_{j\in\bar F}c_{a(j)j}}_{\text{constant in }F},
+\qquad\text{so}\qquad z(a)-z(a')=\zeta-\zeta',
+\end{equation}
+where $\zeta$ is the value of $a|_F$ in $\mathrm{S}(a,F)$.
+\end{proposition}
+\begin{proof}
+Single sourcing holds because each free customer receives exactly one facility and fixed
+customers keep theirs. For capacity, $\ell_i(a')=\ell^{\bar F}_i+\sum_{j\in F}d_jx_{ij}\le
+\ell^{\bar F}_i+\tilde Q_i=Q_i$. For the cost, a facility in $I^{\mathrm{paid}}$ is open in both
+$a$ and $a'$ and contributes $f_i$ once to the constant; a facility outside
+$I^{\mathrm{paid}}$ is open in $a'$ iff some free customer uses it, i.e., iff $y_i=1$ in an
+optimal completion of the subproblem, so its fixed cost is counted exactly once, in $\zeta'$.
+\end{proof}
+\noindent Proposition~\ref{prop:feasible} is what separates the CLNS from the naive
+decomposition of Section~\ref{sec:coupling}: residual capacities rule out the overload
+\eqref{eq:overload} and the set $I^{\mathrm{paid}}$ rules out the double counting
+\eqref{eq:double}. It also shows that the improvement of the full objective equals the
+improvement of the subproblem, so no global evaluation is needed to decide acceptance.
+
+\paragraph{Candidate subproblems.} At each iteration a set $\mathcal{F}(a)$ of candidate free
+sets is built from the incumbent:
+\begin{itemize}
+\item \emph{interior}: $F=G_g$ for each cluster $g$;
+\item \emph{boundary}: $F=G_g\cup G_h$ for each cluster $g$ and its nearest cluster $h$, which
+allows transfers between clusters;
+\item \emph{release}: for the six open facilities with the largest fixed cost per unit of load
+$f_i/\ell_i(a)$, the customers of $i$ and of the two open facilities with the closest unit-cost
+profiles (subsampled to the customers of $i$ plus 30 others when the set exceeds 45
+customers). This is the move that can \emph{close} a facility whose customers are spread over
+several clusters, which interior and boundary moves cannot;
+\item \emph{regret}: for the four customers with the largest LP regret
+\begin{equation}\label{eq:regret}
+\varrho_j(a)=\bar c_{a(j)j}-\min_{i\in I}\bar c_{ij}\ \ge 0,
+\end{equation}
+the 15 customers closest to $j$ in unit-cost profile. $\varrho_j$ is zero when $j$ is assigned as
+in the LP and grows with the price the relaxation attaches to the current choice;
+\item \emph{opening} (only when a GNN score is available): for the four closed facilities with the
+highest $p_i$, their 15 cheapest customers.
+\end{itemize}
+
+\subsection{Choosing the subproblem}\label{sec:selectors}
+A \emph{selector} maps $\mathcal{F}(a)$ and the search history to one candidate.
+\emph{Rotation} cycles through the types and draws a candidate uniformly within the type.
+\emph{ALNS} \citep{ropke2006} draws a type $\tau$ with probability
+$\pi_\tau=\omega_\tau/\sum_{\tau'}\omega_{\tau'}$ and updates the weights every ten iterations,
+\begin{equation}
+\omega_\tau\leftarrow\max\bigl\{0.05,\ (1-\lambda)\,\omega_\tau+\lambda\,\bar s_\tau\bigr\},
+\qquad \lambda=0.2,
+\end{equation}
+where $\bar s_\tau$ is the fraction of improving moves of type $\tau$ in the segment.
+\emph{Dual} picks the candidate with the largest mean regret
+$\frac{1}{|F|}\sum_{j\in F}\varrho_j(a)$, halved for each previous failure of that candidate.
+\emph{Learned} follows learning-to-delegate \citep{li2021delegate}: a gradient-boosted regressor
+$\hat g$ predicts the improvement per second of a candidate from 16 features of $(a,F)$ and the
+selector takes $\arg\max_{F\in\mathcal{F}(a)}\hat g(a,F)$ (Section~\ref{sec:training}).
+\emph{GNN-guided} needs no additional training and picks the candidate whose current
+configuration most disagrees with the facility scores. With
+$\hat p_i=\sigma(p^{\mathrm{GNN}}_i)$,
+\begin{equation}\label{eq:delta-gnn}
+\delta(F)=\frac{\sum_{i\in O(F)}(1-\hat p_i)+\sum_{i\in C(F)}\hat p_i}{|O(F)|+|C(F)|},
+\qquad
+F^\ast=\arg\max_{F\in\mathcal{F}(a)}\ \delta(F)\,2^{-\varphi(F)},
+\end{equation}
+where $O(F)=a(F)$ are the open facilities serving $F$, $C(F)$ are the closed facilities among the
+three cheapest of each customer in $F$, and $\varphi(F)$ counts the failures of $F$ since the
+last improvement. The first sum is large when $F$ is served by facilities the model considers
+unlikely; the second when likely facilities nearby are closed.
+
+\subsection{Subproblem memory}\label{sec:memory}
+An LNS that accepts only improvements can select the same subproblem repeatedly from an
+unchanged neighborhood. By \eqref{eq:resid}--\eqref{eq:subobj}, $\mathrm{S}(a,F)$ depends on $a$
+only through $a|_F$ (which fixes the sets $C_j$ and the starting solution) and through the fixed
+loads $(\ell^{\bar F}_i)_{i\in I}$ (which fix $\tilde Q$ and $I^{\mathrm{paid}}=\{i:\ell^{\bar F}_i>0\}$).
+We therefore define the key
+\begin{equation}\label{eq:key}
+\kappa(a,F)=H\bigl(F,\ a|_F,\ (\ell^{\bar F}_i)_{i\in I}\bigr),
+\end{equation}
+with $H$ a 96-bit hash, and keep a table $M:\kappa\mapsto\theta_{\max}$ of the largest time limit
+with which the subproblem failed to improve.
+
+\begin{proposition}\label{prop:key}
+If $\bigl(F,a|_F,\ell^{\bar F}\bigr)=\bigl(F,b|_F,\ell'^{\bar F}\bigr)$ for two feasible assignments
+$a$ and $b$, then $\mathrm{S}(a,F)$ and $\mathrm{S}(b,F)$ are the same mixed-integer program with
+the same starting solution.
+\end{proposition}
+\noindent The proof is by inspection of \eqref{eq:resid}--\eqref{eq:subobj}. Note that the key is
+\emph{coarser} than the full assignment: two assignments that differ in how fixed customers are
+distributed, but produce the same fixed loads, share the key. With memory enabled, candidates
+with $M[\kappa(a,F)]\ge\theta$ are removed from $\mathcal{F}(a)$ before selection (unless all are
+removed); a failure with a larger limit $\theta$ is still allowed, since the solver may improve
+with more time. This is the transposition table of game-tree search applied to neighborhoods:
+it does not change which solutions are reachable, only avoids paying twice for the same negative
+answer. With memory disabled we still compute the key of the selected candidate to
+\emph{measure} the repetition rate, reported in Section~\ref{sec:res-controls}.
+
+\subsection{The hybrid}\label{sec:hybrid}
+Algorithm~\ref{alg:hybrid} runs the adaptive expansion for a share $\alpha$ of the budget
+($\alpha=0.5$, fixed before the experiments) and the CLNS for the rest, from the expansion's
+solution, reusing the LP duals and, for the GNN-guided selector, the facility scores.
+
+\begin{algorithm}[t]
+\caption{Hybrid: adaptive expansion followed by CLNS}\label{alg:hybrid}
+\begin{algorithmic}[1]
+\Require instance, budget $T$, share $\alpha$, score type (GNN or LP), selector, memory flag
+\State $p \gets$ facility scores; solve strong LP $\to (L, r, \bar c)$
+\State $a \gets$ \textsc{AdaptiveExpansion}$(p, L, r)$ with budget $\alpha T$
+\Comment{Section~\ref{sec:expansion}}
+\State clusters $\gets$ $k$-means on unit-cost profiles; $M\gets\emptyset$; $\phi\gets0$
+\While{time remains}
+  \State $\theta\gets0.5\,(1+0.5\min\{\phi,4\})$
+  \State $\mathcal{F} \gets$ candidate subproblems of $a$ (five types)
+  \If{memory} $\mathcal{F}\gets\{F\in\mathcal{F}: M[\kappa(a,F)]<\theta\}$ (if non-empty) \EndIf
+  \State $F \gets$ \textsc{Select}$(\mathcal{F})$ \Comment{Section~\ref{sec:selectors}}
+  \State $a' \gets$ solve $\mathrm{S}(a,F)$ for at most $\theta$ seconds
+  \If{$z(a') < z(a)$} $a \gets a'$; $\phi\gets0$
+  \Else\ $M[\kappa(a,F)]\gets\max\{M[\kappa(a,F)],\theta\}$; $\phi\gets\phi+1$ \EndIf
+\EndWhile
+\State \Return $a$ (validated against the original data)
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Training the learned selector}\label{sec:training}
+Labels are collected \emph{off-policy}: at states visited by a reasonable search on 60 training
+instances, eight candidates drawn uniformly from $\mathcal{F}(a)$ are solved from the \emph{same}
+state and, for each, the features, the improvement $\Delta_F=z(a)-z(a'_F)\ge0$ and the time
+$\tau_F$ are recorded; the search then continues from the best of the eight. Solving several
+candidates from the same state gives counterfactual labels that an on-policy trace (one candidate
+per state) cannot provide. The regression target is the normalized improvement per second,
+\begin{equation}
+g(a,F)=\frac{\Delta_F/\tilde c}{\max\{\tau_F,\,0.05\}},
+\end{equation}
+with $\tilde c$ the median pair cost of the instance, so that targets are comparable across
+instances. The 16 features are: share of customers and of demand in $F$; mean cost of $F$; mean
+and maximum regret \eqref{eq:regret}; number of facilities involved; capacity slack and fixed
+cost per unit of load of those facilities; attempts, cumulative gain and age of the candidate;
+the capacity ratio of the instance; and the candidate type. This yielded 23{,}840 training and
+6{,}256 validation labels (11.7\% with $\Delta_F>0$), split by instance. The regressor reached
+AUC 0.76 for predicting $\Delta_F>0$ on held-out instances; the most important features were
+capacity slack and fixed cost per unit of load.

@@ -1,0 +1,28 @@
+{
+  "amostras_treino": 23840,
+  "amostras_val": 6256,
+  "frac_positiva": 0.11711409395973155,
+  "auc_melhora_val": 0.7599728796844182,
+  "spearman_val": 0.2887187072999202,
+  "t_treino_s": 0.8159995000023628,
+  "t_coleta_h": 1.0115978238611125,
+  "importancia": {
+    "frac_n": 593,
+    "frac_demanda": 1186,
+    "custo_medio": 1233,
+    "regret_medio": 925,
+    "regret_max": 863,
+    "n_centros": 286,
+    "folga": 2521,
+    "fixo_por_carga": 2442,
+    "tentativas": 883,
+    "ganho_hist": 260,
+    "idade": 290,
+    "razao": 181,
+    "tipo_interior": 103,
+    "tipo_fronteira": 59,
+    "tipo_liberacao": 130,
+    "tipo_regret": 45
+  },
+  "auc_regret_medio_val": 0.5251332156263917
+}

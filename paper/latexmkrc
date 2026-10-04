@@ -1,0 +1,7 @@
+# O refs.bib fica na raiz de paper/ e é compartilhado pelas três versões (journal, abnt, short).
+# O BibTeX não abre caminhos com "../" em instalações restritas (Overleaf), então a raiz entra
+# no caminho de busca. Este arquivo é lido antes do -cd do latexmk, logo getcwd() é a raiz.
+use Cwd;
+my $raiz = getcwd();
+my $sep = ($^O eq 'MSWin32') ? ';' : ':';
+$ENV{'BIBINPUTS'} = $raiz . $sep . ($ENV{'BIBINPUTS'} // '');

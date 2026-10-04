@@ -1,0 +1,21 @@
+\section{Conclusion}\label{sec:conclusion}
+
+We studied how reducing the search space helps solve the single-source capacitated facility
+location problem and how much of that help comes from learning. On our data, safe pruning
+required keeping about 80\% of the candidate facilities, and decomposition without coordination
+produced infeasible unions. Two mechanisms worked: an adaptive expansion over ranked facilities
+with a reduced-cost optimality certificate, and a cluster-oriented LNS that re-optimizes one
+subproblem at a time over residual capacities. In validation pilots both were clearly better than
+the solver on the full model. The learned components were not: the linear-relaxation ranking was
+at least as good as the GNN, and learned subproblem selection did not separate from rotation.
+Measuring the repetition of subproblems showed why selection matters little: the neighborhood
+search spends more than half of its iterations on subproblems already known to fail and is
+limited by the reach of its neighborhoods. \todo{closed-test conclusion in one or two sentences}.
+
+The practical recommendation is to report, for any learned search-space reduction, the
+learning-free method with the same function and the same budget. Future work includes
+neighborhoods that open and close several facilities at once, an online estimate of the opening
+distribution from the solutions visited during the search in place of an offline-trained ranker,
+larger real instances where the full model no longer fits and decomposition becomes mandatory,
+and extending the coordinated decomposition to location-routing, where our reconstruction
+indicates that the classical continuous approximation is the level to beat.

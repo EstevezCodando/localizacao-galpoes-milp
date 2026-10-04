@@ -1,0 +1,9 @@
+{
+  "aleatorio": 1.0,
+  "classico": 1.0,
+  "pl": 0.8,
+  "lgbm": 0.8,
+  "mlp": 0.8,
+  "gnn": 0.8,
+  "gnn_pl": 0.8
+}

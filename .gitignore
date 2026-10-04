@@ -6,7 +6,8 @@ __pycache__/
 .ruff_cache/
 .coverage
 data/raw/
-data/processed/
+data/processed/*
+!data/processed/pesquisa/
 !data/reference/
 !data/bronze/
 data/bronze/ibge/*.json
@@ -18,3 +19,16 @@ data/bronze/osm/*.json
 data/bronze/osm_regional/*.pbf
 data/bronze/osm_regional/*.md5
 data/bronze/osm_regional/shp/
+
+# LaTeX (artefatos de compilação; os PDFs finais são gerados sob demanda)
+paper/**/*.aux
+paper/**/*.bbl
+paper/**/*.blg
+paper/**/*.log
+paper/**/*.out
+paper/**/*.toc
+paper/**/*.spl
+paper/**/*.fls
+paper/**/*.fdb_latexmk
+paper/**/*.synctex.gz
+paper/**/main.pdf
