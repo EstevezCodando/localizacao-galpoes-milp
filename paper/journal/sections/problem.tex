@@ -26,7 +26,9 @@ they remove fractional solutions that open a small fraction of a facility and st
 customers to it. Every customer must be served: there is no penalty variable for unmet demand,
 which is why we call the problem \emph{strict}.
 
-Because of \eqref{eq:assign} and \eqref{eq:int}, a solution is fully described by an
+The MILP also admits solutions that open a facility serving no customer. Since $f_i\ge0$,
+closing such a facility never increases the cost, so we work with the \emph{canonical} solutions,
+in which a facility is open iff it serves a customer. A canonical solution is described by an
 \emph{assignment} $a:J\to I$, with $x_{ij}=1$ iff $a(j)=i$ and $y_i=1$ iff $i\in a(J)$. Writing
 $\ell_i(a)=\sum_{j:\,a(j)=i} d_j$ for the load of facility $i$, the assignment is feasible iff
 $\ell_i(a)\le Q_i$ for all $i$, and its cost is
@@ -62,8 +64,9 @@ $T$, $\alpha$ & time budget; share of $T$ given to the expansion \\
 \end{table}
 
 \subsection{The strong linear relaxation and its dual}\label{sec:lp}
-Replacing \eqref{eq:int} by $0\le x_{ij}$, $0\le y_i\le 1$ gives the \emph{strong LP}, whose
-optimal value we denote $L\le z^\ast$. Associate multipliers $v_j$ (free) with \eqref{eq:assign},
+Replacing \eqref{eq:int} by $0\le x_{ij}$, $0\le y_i\le 1$ gives the relaxation that we call the
+\emph{strong LP} (strengthened by \eqref{eq:link}; it is not the strongest relaxation known for
+the problem), whose optimal value we denote $L\le z^\ast$. Associate multipliers $v_j$ (free) with \eqref{eq:assign},
 $w_i\ge 0$ with \eqref{eq:cap}, $s_{ij}\ge 0$ with \eqref{eq:link}, and $t_i\ge 0$ with
 $y_i\le 1$. The dual is
 \begin{align}
@@ -86,16 +89,33 @@ $(i,j)$ is than what the relaxation is willing to pay for serving $j$, once capa
 share of the fixed cost are priced in, and $r_i$ is the part of the fixed cost of $i$ that the
 customers' willingness to pay does not cover. By complementary slackness, $\bar c_{ij}=0$ for
 every pair used by the LP solution and $r_i=0$ for every facility with $0<y_i<1$.
+\paragraph{Mathematical and solver conventions.} In \eqref{eq:rc} the multiplier $t_i$ of the
+bound $y_i\le1$ is written explicitly, so that $r_i\ge0$ always. An LP solver instead reports a
+\emph{signed} reduced cost $\tilde r_i=f_i-Q_iw_i-\sum_j s_{ij}=r_i-t_i$, which is negative for
+a variable at its upper bound; the same holds for $x_{ij}$, which our implementation bounds by 1.
+The implementation uses the signed values. The two coincide whenever $y_i^{\mathrm{LP}}<1$, since then $t_i=0$ by complementary
+slackness; in general $\tilde r_i\le r_i$, so a test of the form $L+\tilde r_i\ge U$ is at most
+\emph{more conservative} than $L+r_i\ge U$ and remains valid.
+
+\paragraph{Mathematical and solver conventions.} In \eqref{eq:rc} the multiplier $t_i$ of the
+bound $y_i\le1$ is written explicitly, so that $r_i\ge0$ always. An LP solver instead reports a
+\emph{signed} reduced cost $\tilde r_i=f_i-Q_iw_i-\sum_j s_{ij}=r_i-t_i$, which is negative for
+a variable at its upper bound; the same holds for $x_{ij}$, which our implementation bounds by 1.
+The implementation uses the signed values. The two coincide whenever $y_i^{\mathrm{LP}}<1$, since then $t_i=0$ by complementary
+slackness; in general $\tilde r_i\le r_i$, so a test of the form $L+\tilde r_i\ge U$ is at most
+\emph{more conservative} than $L+r_i\ge U$ and remains valid.
+
 Two uses of \eqref{eq:rc} recur in the paper: $r_i$ certifies that a pruned facility cannot
 improve an incumbent (Proposition~\ref{prop:rc}), and $\bar c_{ij}$ measures how badly the
 current assignment of a customer disagrees with the relaxation (the regret of
 Section~\ref{sec:clns}).
 
 A remark on a tempting shortcut: the quantity $c_{ij}-v_j$, built from the assignment duals
-alone, is \emph{not} a usable regret. Since $v_j$ already embeds the capacity price and the
-fixed-cost share of the facility serving $j$ in the LP, $c_{ij}-v_j=\bar c_{ij}-d_jw_i-s_{ij}$ is
-non-positive on all LP-used pairs and carries no ranking information; in our first implementation
-it was negative for every customer. The full reduced cost $\bar c_{ij}$ is the correct quantity.
+alone, omits the capacity price and the fixed-cost share: $c_{ij}-v_j=\bar c_{ij}-d_jw_i-s_{ij}$,
+which is non-positive on all LP-used pairs. In our first implementation it was negative for
+every customer and gave a regret that did not discriminate between customers; we therefore use
+the full reduced cost $\bar c_{ij}$. We report this as an observed failure, not as a proof that
+$c_{ij}-v_j$ carries no information in general.
 
 \subsection{Why the problem is hard in practice}
 The SSCFLP contains the generalized assignment problem (fix $y$) and bin packing (equal costs), so
@@ -106,7 +126,9 @@ problem can be infeasible although total capacity exceeds total demand.
 On the instance families used here (Section~\ref{sec:data}), SCIP~10 with one thread does not
 prove optimality within 60~s for $m=30$ and $n=150$; the certified gap $(U-L_{\mathrm{B\&B}})/U$
 after 60~s was 1.8--3.6\%, and the strong LP left $(z_{\mathrm{BKS}}-L)/z_{\mathrm{BKS}}$ of
-1.6--4.4\% when fixed costs dominate. For $m=50$, $n=200$ the certified gap reached 15.6\% on one
+1.6--4.4\% when fixed costs dominate. These figures describe the families and settings tested;
+they are not a statement about the size alone. These figures describe the families and settings tested;
+they are not a statement about the size alone. For $m=50$, $n=200$ the certified gap reached 15.6\% on one
 instance.
 
 \subsection{Capacity coupling}\label{sec:coupling}
@@ -120,7 +142,7 @@ assignment $a=a_1\cup a_2$ can fail in two ways:
 \end{align}
 For instance, two groups that each send 60 units to a facility of capacity 100 are feasible
 separately and infeasible together \eqref{eq:overload}, and the fixed cost of the shared facility
-is counted twice in the sum of the subproblem objectives \eqref{eq:double}, so the subproblems
-systematically overestimate the cost of sharing and under-use shared facilities. The
+is counted twice in the sum of the subproblem objectives \eqref{eq:double}, which gives each subproblem an
+incentive against sharing a facility with another group. The
 coordinated decomposition of Section~\ref{sec:clns} removes both effects by construction, and
 Section~\ref{sec:res-decomp} measures what happens without it.

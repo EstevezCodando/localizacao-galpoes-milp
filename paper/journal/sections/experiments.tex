@@ -78,7 +78,11 @@ waited for the CPU; runs below 0.9 are marked as suspected contention.
 \item \textbf{Frozen data}: instances and models are hashed in a versioned lock file; every run
 verifies the lock and records the aggregate hash in its manifest.
 \item \textbf{Seeds}: three solver seeds for stochastic methods, one for deterministic ones; seeds
-are averaged within an instance before any statistics across instances.
+are averaged within an instance before any statistics across instances. Three GNN checkpoints
+were trained, but all optimization runs use the checkpoint of training seed 0; conclusions about
+the learned ranking are limited to that checkpoint. Three GNN checkpoints
+were trained, but all optimization runs use the checkpoint of training seed 0; conclusions about
+the learned ranking are limited to that checkpoint.
 \item \textbf{Independent validation}: every returned solution is re-evaluated from the original
 data (assignment, capacity, objective).
 \end{itemize}
@@ -88,21 +92,27 @@ Let $z_k(t)$ be the cost of the best solution that run $k$ has found by wall-clo
 (the cumulative minimum over all stages of the method; $z_k(t)=\infty$ before the first
 solution), and $z_{\mathrm{BKS}}$ the best known cost of the instance: the minimum over all runs
 of all methods and the reference label of Table~\ref{tab:data} (the published optimum for
-Holmberg). The \emph{primal gap} and the \emph{primal integral} \citep{berthold2013} are
+Holmberg). We assume $z_{\mathrm{BKS}}>0$. Following the idea of the primal integral of
+\citet{berthold2013}, with a gap function relative to the reference rather than to the larger of
+the two objectives, we define the \emph{primal gap} and the normalized \emph{primal integral} as
 \begin{equation}\label{eq:pi}
 g_k(t)=\min\Bigl\{1,\ \frac{z_k(t)-z_{\mathrm{BKS}}}{z_{\mathrm{BKS}}}\Bigr\},
 \qquad
 P_k=\frac{1}{T}\int_0^T g_k(t)\,dt\ \in[0,1].
 \end{equation}
 $g_k$ is a non-increasing step function, so the integral is an exact sum over the incumbent
-updates. $P_k=0$ means that the best known solution was available from time zero and $P_k=1$
-that no solution was found within the budget; a method that finds its first solution, with a
+updates. $P_k=0$ means that the best known solution was available from time zero. A run with no solution
+within the budget has $P_k=1$; the converse does not hold, since a solution more than 100\% above
+the reference also has gap 1. The reference is computed within each run set and is not an
+optimum; a method that finds its first solution, with a
 1\% gap, at $t=6$~s and stays there has $P = 0.1\times 1+0.9\times0.01=0.109$ for $T=60$~s. The
 primal integral is the primary metric because it rewards finding good solutions \emph{early},
 which is the purpose of restricting the search space; the final gap alone does not distinguish a
 method that is good after 5~s from one that is good after 55~s.
 
-Secondary metrics are the \emph{final deviation} $g_k(T)$; the shares of instances with
+Secondary metrics are the \emph{final deviation} $g_k(T)$, computed from the best incumbent
+with time stamp at most $T$ (a run without a solution by $T$ has deviation 1 and stays in the
+denominator); the shares of instances with
 $g(T)\le1\%$ and $g(T)\le0.1\%$; the time to reach $1\%$ (censored at $T$); for CLNS variants,
 the \emph{repetition rate}, i.e., the fraction of selected subproblems whose key \eqref{eq:key}
 had already failed with at least the same time limit; and the CPU/wall ratio of the run.
@@ -110,8 +120,9 @@ had already failed with at least the same time limit; and the CPU/wall ratio of 
 \paragraph{Aggregation and tests.} Seeds are averaged within an instance \emph{before} any
 statistic across instances, so that the unit of analysis is the instance and stochastic methods
 do not receive more weight than deterministic ones. Reported means carry 95\% bootstrap
-confidence intervals over instances (4{,}000 resamples). Methods are compared with the paired
-Wilcoxon signed-rank test on per-instance differences, with Holm's correction over the family of
+confidence intervals over instances (4{,}000 resamples). Methods are compared with the two-sided paired
+Wilcoxon signed-rank test on per-instance differences (zero differences discarded), reported
+together with the mean difference and its bootstrap interval, with Holm's correction over the family of
 comparisons of each hypothesis; we also report wins, ties and losses with a tolerance of
 $10^{-4}$ on the deviation. Hypotheses, metrics and the choice $\alpha=0.5$ were pre-registered
 before the corresponding runs.

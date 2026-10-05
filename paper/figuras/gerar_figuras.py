@@ -241,9 +241,71 @@ def fig_piloto3() -> None:
     salvar(fig, "piloto3_repeticao")
 
 
+def fig_fechado() -> None:
+    """Closed test: per-set bars and hypothesis intervals (results/pesquisa/fechado/analise.json)."""
+    arq = RES / "fechado" / "analise.json"
+    if not arq.exists():
+        print("sem teste fechado")
+        return
+    an = json.loads(arq.read_text(encoding="utf-8"))
+    conjuntos = [("teste", "Test (32)"), ("gen_corredor", "Corridor (16)"),
+                 ("gen_escala", "Scale (16)"), ("holmberg", "Holmberg (71)")]
+    metodos = ["completo", "kernel", "adaptativa:pl", "hibridopl:rotacao", "adaptativa:gnn",
+               "hibrido:rotacao"]
+    nomes = {"completo": "SCIP (full model)", "kernel": "Kernel search",
+             "adaptativa:pl": "Adaptive expansion (LP)", "hibridopl:rotacao": "LP hybrid",
+             "adaptativa:gnn": "Adaptive expansion (GNN)", "hibrido:rotacao": "Hybrid (GNN)"}
+    cores = {"completo": "black", "kernel": "#d98e04", "adaptativa:pl": CINZA,
+             "hibridopl:rotacao": VERDE, "adaptativa:gnn": "#8fb1ea", "hibrido:rotacao": AZUL}
+    fig, axs = plt.subplots(1, 2, figsize=(7.6, 2.9))
+    larg = 0.13
+    for ax, (campo, rot, k) in zip(axs, (("integral", "mean primal integral", 1),
+                                         ("desvio_medio", "mean final deviation (%)", 100))):
+        for j, m in enumerate(metodos):
+            linhas = [next(x for x in an[c]["tabela"] if x["metodo"] == m) for c, _ in conjuntos]
+            v = [k * r[campo] for r in linhas]
+            err = None
+            if campo == "integral":
+                err = [[r[campo] - r["integral_lo"] for r in linhas],
+                       [r["integral_hi"] - r[campo] for r in linhas]]
+            ax.bar(np.arange(len(conjuntos)) + (j - 2.5) * larg, v, larg * 0.92, color=cores[m],
+                   label=nomes[m], yerr=err, error_kw={"lw": 0.6, "capsize": 1, "ecolor": CINZA})
+        ax.set_xticks(np.arange(len(conjuntos)), [r for _, r in conjuntos], fontsize=7.5)
+        ax.set_ylabel(rot)
+    axs[0].legend(fontsize=6.5, ncol=2, loc="upper left")
+    fig.tight_layout()
+    salvar(fig, "fechado_conjuntos")
+
+    ag = an["agregado"]
+    rot = {"H1": "H1: LP expansion $-$ SCIP", "H2": "H2: GNN expansion $-$ LP expansion",
+           "H3": "H3: LP hybrid $-$ LP expansion", "H4": "H4: LP expansion $-$ kernel search"}
+    fig, axs = plt.subplots(1, 2, figsize=(7.6, 2.3))
+    for ax, (chave, k, titulo) in zip(axs, (("hipoteses_integral", 1.0, "primal integral"),
+                                           ("hipoteses_desvio", 100.0, "final deviation (p.p.)"))):
+        hs = ag[chave]
+        y = np.arange(len(hs))[::-1]
+        for yi, h in zip(y, hs):
+            sig = h["p_holm"] < 0.05
+            cor = (VERDE if h["dif_media"] < 0 else "#c0392b") if sig else CINZA
+            ax.plot([k * h["dif_lo"], k * h["dif_hi"]], [yi, yi], color=cor, lw=1.8)
+            ax.plot(k * h["dif_media"], yi, "o", color=cor, ms=4.5)
+            pv = "$p<0.001$" if h["p_holm"] < 0.001 else f"$p={h['p_holm']:.3f}$"
+            ax.text(1.02, yi, pv, fontsize=7.5, color=cor, va="center",
+                    transform=ax.get_yaxis_transform())
+        ax.axvline(0, color="black", lw=0.7)
+        ax.locator_params(axis="x", nbins=5)
+        ax.set_ylim(-0.6, len(hs) - 0.4)
+        ax.set_yticks(y, [rot[h["hipotese"]] for h in hs] if ax is axs[0] else [""] * len(hs),
+                      fontsize=7.5)
+        ax.set_xlabel(f"mean difference A $-$ B, {titulo}", fontsize=8)
+    fig.tight_layout()
+    salvar(fig, "fechado_hipoteses")
+
+
 if __name__ == "__main__":
     fig_rho()
     fig_unifl()
     fig_trocas()
     fig_pilotos()
     fig_piloto3()
+    fig_fechado()

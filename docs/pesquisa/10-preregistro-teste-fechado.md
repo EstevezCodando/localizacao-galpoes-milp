@@ -75,3 +75,41 @@ agregado `teste` + `gen_corredor` + `gen_escala` (64 instâncias). Holmberg e Ol
 - Nenhuma troca de método principal em função do resultado: se a GNN vencer o PL no teste, isso
   é relatado como contradição dos pilotos.
 - A ablação de α e as vizinhanças de maior alcance são trabalho posterior, em validação.
+
+## 7. Desvios registrados durante a execução
+
+- **04/10/2026, conjunto `teste`.** A máquina entrou em suspensão por ociosidade por cerca de
+  4 h no meio da rodada. As três execuções que estavam em curso ficaram com tempo de parede de
+  mais de 15.000 s e razão CPU ÷ parede de 0,002. Foram descartadas e refeitas. Critério,
+  definido sem olhar para custos: estouro de orçamento acima de 60 s **e** razão CPU ÷ parede
+  abaixo de 0,1, o que só ocorre com o processo parado. As linhas descartadas ficam em
+  `results/pesquisa/fechado/descartadas_suspensao.csv`. As demais 165 execuções já gravadas
+  terminaram antes da suspensão e foram mantidas. A partir daqui o executor é lançado por
+  `scripts/rodar_acordado.py`, que impede a suspensão por ociosidade enquanto roda; o código
+  dos métodos não mudou.
+- **04/10/2026, conjunto `teste`, retomada.** Uma segunda suspensão, de cerca de 10 minutos,
+  atingiu outras três execuções (tempo de parede de 646 a 654 s, razão CPU ÷ parede de 0,06 a
+  0,07). O mesmo critério foi aplicado por `scripts/descartar_suspensas.py`, que passa a ser
+  executado ao fim de cada conjunto, antes de qualquer análise. Três execuções com razão entre
+  0,80 e 0,85 (contenção, sem suspensão) foram **mantidas** e ficam marcadas.
+
+## 8. Emenda da análise, feita depois de ver os resultados (05/10/2026)
+
+O parecer acadêmico de 04/10/2026 (`parecer-academico-previa-20261004.md`, seção 3.3) apontou
+que o desvio final era calculado pelo objetivo devolvido ao fim da execução, e não por `g(T)`,
+como o manuscrito define. Uma solução encontrada durante um estouro de orçamento entrava no
+desvio final sem estar disponível em `T`. A correção foi aplicada **depois** de a primeira
+análise ter sido vista, e por isso fica registrada como emenda, com as duas versões guardadas:
+
+- `scripts/analisar_fechado.py` passa a reconstruir o desvio final pelo melhor incumbente com
+  instante ≤ `T`; execução sem solução até `T` conta como desvio 1 e permanece no denominador.
+- Efeito medido: 4 das 1.390 execuções tinham melhorado depois de `T` (1 em `teste`, 2 em
+  `gen_corredor`, 1 em `gen_escala`); 2 execuções do Olist não têm solução até `T`.
+- As tabelas das 64 instâncias sintéticas não mudam em duas casas decimais. Nos testes do desvio
+  final, H3 passa de p (Holm) = 0,0496 para 0,0495 e H4 de 0,0499 para 0,0495. Integral primal,
+  H1 e H2 não mudam. No Olist, o desvio médio da expansão passa a incluir a instância sem
+  solução (desvio 1).
+- Versão anterior: `results/pesquisa/fechado/analise_v1_objetivo_de_retorno.json` e
+  `tabelas_v1_objetivo_de_retorno.md`.
+
+Nenhuma hipótese, método, conjunto ou teste estatístico foi alterado.

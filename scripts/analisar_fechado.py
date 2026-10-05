@@ -2,7 +2,8 @@
 
 Entrada: pares conjunto=diretório de execução (results/pesquisa/clns/<run_id>). O horizonte de
 cada conjunto vem da coluna `orcamento`. Sementes são agregadas por instância antes de qualquer
-estatística. Saída: results/pesquisa/fechado/analise.json e tabelas.md.
+estatística. O desvio final é g(T), reconstruído da trajetória; execução sem solução até T conta
+como desvio 1 (emenda de 05/10/2026, seção 7 do pré-registro). Saída: results/pesquisa/fechado/analise.json e tabelas.md.
 
 uv run python scripts/analisar_fechado.py teste=<run> gen_corredor=<run> gen_escala=<run> \
     holmberg=<run> olist=<run>
@@ -35,7 +36,14 @@ def carregar(conjunto: str, run: Path) -> pd.DataFrame:
     bks = d[d["valida"]].groupby("instancia")["objetivo"].min()
     bks = pd.concat([bks, d.groupby("instancia")["rotulo_melhor"].first()], axis=1).min(axis=1)
     d["bks"] = d["instancia"].map(bks)
-    d["desvio"] = np.where(d["valida"], d["objetivo"] / d["bks"] - 1, np.nan)
+    # Desvio final = g(T): melhor incumbente com instante <= T (não o objetivo devolvido, que pode
+    # ter melhorado durante um estouro). Sem solução até T => g(T) = 1, como na integral; a
+    # execução permanece no denominador. O desvio pelo objetivo de retorno fica em outra coluna.
+    d["obj_T"] = [min((o for t, o in tr if t <= h + 1e-9), default=np.inf)
+                  for tr, h in zip(d["traj"], d["orcamento"])]
+    d["desvio"] = np.minimum(1.0, d["obj_T"] / d["bks"] - 1)
+    d["desvio_retorno"] = np.where(d["valida"], d["objetivo"] / d["bks"] - 1, np.nan)
+    d["mudou_apos_T"] = d["valida"] & (d["objetivo"] < d["obj_T"] - 1e-9)
     d["integral"] = [integral_primal(t, b, h) for t, b, h in zip(d["traj"], d["bks"], d["orcamento"])]
     return d
 
@@ -96,7 +104,9 @@ def medicao(d: pd.DataFrame) -> dict[str, object]:
             "razao_p05": float(d["razao_cpu"].quantile(0.05)),
             "marcadas": int((d["razao_cpu"] < 0.9).sum()),
             "estouro_p95_s": float(d["estouro_s"].quantile(0.95)),
-            "estouro_max_s": float(d["estouro_s"].max()), "invalidas": int((~d["valida"]).sum())}
+            "estouro_max_s": float(d["estouro_s"].max()), "invalidas": int((~d["valida"]).sum()),
+            "sem_solucao_ate_T": int((~np.isfinite(d["obj_T"])).sum()),
+            "melhoraram_apos_T": int(d["mudou_apos_T"].sum())}
 
 
 def fmt_tabela(linhas: list[dict[str, object]]) -> str:

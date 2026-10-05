@@ -1,0 +1,794 @@
+{
+ "runs": {
+  "teste": "results/pesquisa/clns/f87a27db44006f4d588c",
+  "gen_corredor": "results/pesquisa/clns/6f389ea6622c682ead73",
+  "gen_escala": "results/pesquisa/clns/ee805af6ffcb60d0f39c",
+  "holmberg": "results/pesquisa/clns/3882eca9dc70b2d799f0",
+  "olist": "results/pesquisa/clns/6fb102a566458da78987"
+ },
+ "teste": {
+  "tabela": [
+   {
+    "metodo": "kernel",
+    "n": 32,
+    "integral": 0.03643824497470134,
+    "integral_lo": 0.02296297438205942,
+    "integral_hi": 0.058426196628330644,
+    "desvio_mediano": 0.008142785881347203,
+    "desvio_medio": 0.014582130752986942,
+    "ate_1pct": 0.5625,
+    "ate_01pct": 0.375,
+    "vitorias": 22,
+    "empates": 4,
+    "derrotas": 6
+   },
+   {
+    "metodo": "hibridopl:rotacao",
+    "n": 32,
+    "integral": 0.03851477664514293,
+    "integral_lo": 0.024716589782222544,
+    "integral_hi": 0.05684232892526288,
+    "desvio_mediano": 0.0034695326263246935,
+    "desvio_medio": 0.006655365730465039,
+    "ate_1pct": 0.65625,
+    "ate_01pct": 0.28125,
+    "vitorias": 27,
+    "empates": 2,
+    "derrotas": 3
+   },
+   {
+    "metodo": "adaptativa:pl",
+    "n": 32,
+    "integral": 0.04122811343053123,
+    "integral_lo": 0.020329397718584673,
+    "integral_hi": 0.07535378413746574,
+    "desvio_mediano": 0.002932801586050693,
+    "desvio_medio": 0.008197850916205153,
+    "ate_1pct": 0.65625,
+    "ate_01pct": 0.4375,
+    "vitorias": 25,
+    "empates": 4,
+    "derrotas": 3
+   },
+   {
+    "metodo": "hibrido:rotacao",
+    "n": 32,
+    "integral": 0.050601485558843154,
+    "integral_lo": 0.032244286421444335,
+    "integral_hi": 0.07361650081947911,
+    "desvio_mediano": 0.00552605209320208,
+    "desvio_medio": 0.008433328304854677,
+    "ate_1pct": 0.6875,
+    "ate_01pct": 0.25,
+    "vitorias": 27,
+    "empates": 2,
+    "derrotas": 3
+   },
+   {
+    "metodo": "adaptativa:gnn",
+    "n": 32,
+    "integral": 0.06591820717045185,
+    "integral_lo": 0.03411736068626892,
+    "integral_hi": 0.10660612745109606,
+    "desvio_mediano": 0.009000962616059427,
+    "desvio_medio": 0.014316469852955191,
+    "ate_1pct": 0.53125,
+    "ate_01pct": 0.21875,
+    "vitorias": 21,
+    "empates": 4,
+    "derrotas": 7
+   },
+   {
+    "metodo": "completo",
+    "n": 32,
+    "integral": 0.0794022533101606,
+    "integral_lo": 0.06619214898908901,
+    "integral_hi": 0.09447072203827696,
+    "desvio_mediano": 0.032135523447528014,
+    "desvio_medio": 0.030239342587435936,
+    "ate_1pct": 0.25,
+    "ate_01pct": 0.15625
+   }
+  ],
+  "medicao": {
+   "execucoes": 320,
+   "razao_mediana": 0.9961218490574075,
+   "razao_p05": 0.9779986852585363,
+   "marcadas": 4,
+   "estouro_p95_s": 0.039857089999998534,
+   "estouro_max_s": 0.8683565999999985,
+   "invalidas": 0
+  },
+  "certificados": {
+   "adaptativa:gnn": 1,
+   "adaptativa:pl": 1
+  }
+ },
+ "gen_corredor": {
+  "tabela": [
+   {
+    "metodo": "hibridopl:rotacao",
+    "n": 16,
+    "integral": 0.02890543160962045,
+    "integral_lo": 0.019856039578450873,
+    "integral_hi": 0.04005401944288357,
+    "desvio_mediano": 0.0023298647123708065,
+    "desvio_medio": 0.004527504302627966,
+    "ate_1pct": 0.875,
+    "ate_01pct": 0.375,
+    "vitorias": 14,
+    "empates": 1,
+    "derrotas": 1
+   },
+   {
+    "metodo": "adaptativa:pl",
+    "n": 16,
+    "integral": 0.03106721736700397,
+    "integral_lo": 0.021762750331623178,
+    "integral_hi": 0.04311952681610632,
+    "desvio_mediano": 0.007292143511946181,
+    "desvio_medio": 0.011006452863560195,
+    "ate_1pct": 0.625,
+    "ate_01pct": 0.3125,
+    "vitorias": 11,
+    "empates": 3,
+    "derrotas": 2
+   },
+   {
+    "metodo": "kernel",
+    "n": 16,
+    "integral": 0.03413801120452127,
+    "integral_lo": 0.024127020526935796,
+    "integral_hi": 0.04668848412709092,
+    "desvio_mediano": 0.00852181177362743,
+    "desvio_medio": 0.010152760428517787,
+    "ate_1pct": 0.5625,
+    "ate_01pct": 0.1875,
+    "vitorias": 10,
+    "empates": 1,
+    "derrotas": 5
+   },
+   {
+    "metodo": "hibrido:rotacao",
+    "n": 16,
+    "integral": 0.04227496070019112,
+    "integral_lo": 0.02256986790214932,
+    "integral_hi": 0.07491963208390948,
+    "desvio_mediano": 0.001779120934262024,
+    "desvio_medio": 0.0035849203344370945,
+    "ate_1pct": 0.8125,
+    "ate_01pct": 0.4375,
+    "vitorias": 14,
+    "empates": 1,
+    "derrotas": 1
+   },
+   {
+    "metodo": "adaptativa:gnn",
+    "n": 16,
+    "integral": 0.05400863910545854,
+    "integral_lo": 0.022169267729457976,
+    "integral_hi": 0.11104097814342555,
+    "desvio_mediano": 0.001497472668682498,
+    "desvio_medio": 0.0053217754234001075,
+    "ate_1pct": 0.8125,
+    "ate_01pct": 0.375,
+    "vitorias": 12,
+    "empates": 1,
+    "derrotas": 3
+   },
+   {
+    "metodo": "completo",
+    "n": 16,
+    "integral": 0.105692592597732,
+    "integral_lo": 0.07988573321879183,
+    "integral_hi": 0.13373388123343433,
+    "desvio_mediano": 0.035852378974553845,
+    "desvio_medio": 0.047682297508767985,
+    "ate_1pct": 0.1875,
+    "ate_01pct": 0.1875
+   }
+  ],
+  "medicao": {
+   "execucoes": 160,
+   "razao_mediana": 0.8924638060614083,
+   "razao_p05": 0.8082051032201579,
+   "marcadas": 94,
+   "estouro_p95_s": 0.03175601499999799,
+   "estouro_max_s": 0.7542205000000024,
+   "invalidas": 0
+  },
+  "certificados": {
+   "adaptativa:gnn": 0,
+   "adaptativa:pl": 0
+  }
+ },
+ "gen_escala": {
+  "tabela": [
+   {
+    "metodo": "kernel",
+    "n": 16,
+    "integral": 0.061585890916854125,
+    "integral_lo": 0.0384792599379433,
+    "integral_hi": 0.08854556767069385,
+    "desvio_mediano": 0.0052437075016016355,
+    "desvio_medio": 0.021031512917468256,
+    "ate_1pct": 0.625,
+    "ate_01pct": 0.375,
+    "vitorias": 14,
+    "empates": 1,
+    "derrotas": 1
+   },
+   {
+    "metodo": "hibridopl:rotacao",
+    "n": 16,
+    "integral": 0.062073172994778734,
+    "integral_lo": 0.04108121550100607,
+    "integral_hi": 0.08617181435216185,
+    "desvio_mediano": 0.005849538998309903,
+    "desvio_medio": 0.008251089000897341,
+    "ate_1pct": 0.625,
+    "ate_01pct": 0.3125,
+    "vitorias": 13,
+    "empates": 0,
+    "derrotas": 3
+   },
+   {
+    "metodo": "adaptativa:pl",
+    "n": 16,
+    "integral": 0.08539891607305328,
+    "integral_lo": 0.047527664195848716,
+    "integral_hi": 0.13098669712264993,
+    "desvio_mediano": 0.00437683755703544,
+    "desvio_medio": 0.02018962212395213,
+    "ate_1pct": 0.6875,
+    "ate_01pct": 0.25,
+    "vitorias": 14,
+    "empates": 0,
+    "derrotas": 2
+   },
+   {
+    "metodo": "hibrido:rotacao",
+    "n": 16,
+    "integral": 0.12748169881202456,
+    "integral_lo": 0.0903819212073563,
+    "integral_hi": 0.17366003988586273,
+    "desvio_mediano": 0.021920222217674167,
+    "desvio_medio": 0.02176406656800447,
+    "ate_1pct": 0.1875,
+    "ate_01pct": 0.0,
+    "vitorias": 12,
+    "empates": 0,
+    "derrotas": 4
+   },
+   {
+    "metodo": "completo",
+    "n": 16,
+    "integral": 0.16875940796712957,
+    "integral_lo": 0.13681462952890477,
+    "integral_hi": 0.19905254704447112,
+    "desvio_mediano": 0.0699840599191186,
+    "desvio_medio": 0.06354435328225912,
+    "ate_1pct": 0.25,
+    "ate_01pct": 0.125
+   },
+   {
+    "metodo": "adaptativa:gnn",
+    "n": 16,
+    "integral": 0.16991662346899086,
+    "integral_lo": 0.09239244531185115,
+    "integral_hi": 0.26502198191958887,
+    "desvio_mediano": 0.020306497046161942,
+    "desvio_medio": 0.03652030951178502,
+    "ate_1pct": 0.375,
+    "ate_01pct": 0.1875,
+    "vitorias": 9,
+    "empates": 4,
+    "derrotas": 3
+   }
+  ],
+  "medicao": {
+   "execucoes": 160,
+   "razao_mediana": 0.8825650897151899,
+   "razao_p05": 0.7739184241484826,
+   "marcadas": 93,
+   "estouro_p95_s": 0.03868131999999769,
+   "estouro_max_s": 0.9435330999999962,
+   "invalidas": 0
+  },
+  "certificados": {
+   "adaptativa:gnn": 0,
+   "adaptativa:pl": 0
+  }
+ },
+ "holmberg": {
+  "tabela": [
+   {
+    "metodo": "hibridopl:rotacao",
+    "n": 71,
+    "integral": 0.014341613262083537,
+    "integral_lo": 0.010877622960306744,
+    "integral_hi": 0.018328951440240063,
+    "desvio_mediano": 0.0,
+    "desvio_medio": 0.001328083902440505,
+    "ate_1pct": 0.971830985915493,
+    "ate_01pct": 0.8450704225352113,
+    "vitorias": 7,
+    "empates": 57,
+    "derrotas": 7
+   },
+   {
+    "metodo": "adaptativa:pl",
+    "n": 71,
+    "integral": 0.014578733382335007,
+    "integral_lo": 0.01114399883039992,
+    "integral_hi": 0.018439570468860914,
+    "desvio_mediano": 0.0,
+    "desvio_medio": 0.001389041147812963,
+    "ate_1pct": 0.9436619718309859,
+    "ate_01pct": 0.8732394366197183,
+    "vitorias": 6,
+    "empates": 60,
+    "derrotas": 5
+   },
+   {
+    "metodo": "kernel",
+    "n": 71,
+    "integral": 0.01914962687541588,
+    "integral_lo": 0.01217740313734008,
+    "integral_hi": 0.027586013319652054,
+    "desvio_mediano": 0.0,
+    "desvio_medio": 0.0018083141897807845,
+    "ate_1pct": 0.9295774647887324,
+    "ate_01pct": 0.8591549295774648,
+    "vitorias": 3,
+    "empates": 63,
+    "derrotas": 5
+   },
+   {
+    "metodo": "completo",
+    "n": 71,
+    "integral": 0.028598291391324797,
+    "integral_lo": 0.02026631790525953,
+    "integral_hi": 0.038580423270381234,
+    "desvio_mediano": 0.0,
+    "desvio_medio": 0.001962588381561836,
+    "ate_1pct": 0.9436619718309859,
+    "ate_01pct": 0.8732394366197183
+   },
+   {
+    "metodo": "hibrido:rotacao",
+    "n": 71,
+    "integral": 0.04193437845651023,
+    "integral_lo": 0.03470165476700245,
+    "integral_hi": 0.04968617879340165,
+    "desvio_mediano": 0.0,
+    "desvio_medio": 0.0038698099301541122,
+    "ate_1pct": 0.8732394366197183,
+    "ate_01pct": 0.7605633802816901,
+    "vitorias": 3,
+    "empates": 53,
+    "derrotas": 15
+   },
+   {
+    "metodo": "adaptativa:gnn",
+    "n": 71,
+    "integral": 0.048139077300559954,
+    "integral_lo": 0.0390446571767739,
+    "integral_hi": 0.05818073605799036,
+    "desvio_mediano": 0.0,
+    "desvio_medio": 0.005709316827112791,
+    "ate_1pct": 0.9014084507042254,
+    "ate_01pct": 0.8450704225352113,
+    "vitorias": 1,
+    "empates": 60,
+    "derrotas": 10
+   }
+  ],
+  "medicao": {
+   "execucoes": 710,
+   "razao_mediana": 0.9559527724693491,
+   "razao_p05": 0.897249835089871,
+   "marcadas": 37,
+   "estouro_p95_s": 0.02805089999999904,
+   "estouro_max_s": 0.6546510999999988,
+   "invalidas": 0
+  },
+  "certificados": {
+   "adaptativa:gnn": 59,
+   "adaptativa:pl": 59
+  },
+  "otimo_atingido": [
+   {
+    "metodo": "adaptativa:gnn",
+    "todas": 59,
+    "alguma": 59
+   },
+   {
+    "metodo": "adaptativa:pl",
+    "todas": 61,
+    "alguma": 61
+   },
+   {
+    "metodo": "completo",
+    "todas": 61,
+    "alguma": 61
+   },
+   {
+    "metodo": "hibrido:rotacao",
+    "todas": 53,
+    "alguma": 57
+   },
+   {
+    "metodo": "hibridopl:rotacao",
+    "todas": 59,
+    "alguma": 62
+   },
+   {
+    "metodo": "kernel",
+    "todas": 60,
+    "alguma": 60
+   }
+  ]
+ },
+ "olist": {
+  "tabela": [
+   {
+    "metodo": "hibrido:rotacao",
+    "n": 4,
+    "integral": 0.2881793952819773,
+    "integral_lo": 0.08327658851605954,
+    "integral_hi": 0.49308220204789505,
+    "desvio_mediano": 0.0016602084961407173,
+    "desvio_medio": 0.002722307917215061,
+    "ate_1pct": 1.0,
+    "ate_01pct": 0.25,
+    "vitorias": 3,
+    "empates": 0,
+    "derrotas": 1
+   },
+   {
+    "metodo": "completo",
+    "n": 4,
+    "integral": 0.2922734541638986,
+    "integral_lo": 0.03294024253869146,
+    "integral_hi": 0.5516066657891058,
+    "desvio_mediano": 0.05865844734505754,
+    "desvio_medio": 0.052632195351027145,
+    "ate_1pct": 0.25,
+    "ate_01pct": 0.25
+   },
+   {
+    "metodo": "hibridopl:rotacao",
+    "n": 4,
+    "integral": 0.32081864576071145,
+    "integral_lo": 0.1493569904680744,
+    "integral_hi": 0.4922803010533485,
+    "desvio_mediano": 0.0018298976205551876,
+    "desvio_medio": 0.0035410004715941876,
+    "ate_1pct": 0.75,
+    "ate_01pct": 0.25,
+    "vitorias": 3,
+    "empates": 0,
+    "derrotas": 1
+   },
+   {
+    "metodo": "kernel",
+    "n": 4,
+    "integral": 0.3931617568481214,
+    "integral_lo": 0.020907612906006193,
+    "integral_hi": 0.7654159007902366,
+    "desvio_mediano": 0.047252982035201896,
+    "desvio_medio": 0.04692946269609932,
+    "ate_1pct": 0.5,
+    "ate_01pct": 0.25,
+    "vitorias": 1,
+    "empates": 3,
+    "derrotas": 0
+   },
+   {
+    "metodo": "adaptativa:pl",
+    "n": 4,
+    "integral": 0.4075919667447393,
+    "integral_lo": 0.13716894062891746,
+    "integral_hi": 0.7958505630622908,
+    "desvio_mediano": 0.030552741655766935,
+    "desvio_medio": 0.039306057763395984,
+    "ate_1pct": 0.25,
+    "ate_01pct": 0.25,
+    "vitorias": 0,
+    "empates": 3,
+    "derrotas": 0
+   },
+   {
+    "metodo": "adaptativa:gnn",
+    "n": 4,
+    "integral": 0.5307964211712661,
+    "integral_lo": 0.13251748896035906,
+    "integral_hi": 0.9290753533821732,
+    "desvio_mediano": 0.030552741655766935,
+    "desvio_medio": 0.039306057763395984,
+    "ate_1pct": 0.25,
+    "ate_01pct": 0.25,
+    "vitorias": 0,
+    "empates": 3,
+    "derrotas": 0
+   }
+  ],
+  "medicao": {
+   "execucoes": 40,
+   "razao_mediana": 0.9558683617697192,
+   "razao_p05": 0.9068810988531855,
+   "marcadas": 1,
+   "estouro_p95_s": 0.6735511499999964,
+   "estouro_max_s": 0.7321012999999965,
+   "invalidas": 2
+  },
+  "certificados": {
+   "adaptativa:gnn": 0,
+   "adaptativa:pl": 0
+  }
+ },
+ "agregado": {
+  "conjuntos": [
+   "teste",
+   "gen_corredor",
+   "gen_escala"
+  ],
+  "tabela": [
+   {
+    "metodo": "hibridopl:rotacao",
+    "n": 64,
+    "integral": 0.04200203947367126,
+    "integral_lo": 0.03195409253316201,
+    "integral_hi": 0.053360155639683764,
+    "desvio_mediano": 0.0034695326263246935,
+    "desvio_medio": 0.006522331191113846,
+    "ate_1pct": 0.703125,
+    "ate_01pct": 0.3125,
+    "vitorias": 54,
+    "empates": 3,
+    "derrotas": 7
+   },
+   {
+    "metodo": "kernel",
+    "n": 64,
+    "integral": 0.04215009801769452,
+    "integral_lo": 0.03162151115607894,
+    "integral_hi": 0.05519934911460059,
+    "desvio_mediano": 0.007358017669086392,
+    "desvio_medio": 0.015087133712989982,
+    "ate_1pct": 0.578125,
+    "ate_01pct": 0.328125,
+    "vitorias": 46,
+    "empates": 6,
+    "derrotas": 12
+   },
+   {
+    "metodo": "adaptativa:pl",
+    "n": 64,
+    "integral": 0.049730590075279926,
+    "integral_lo": 0.03296344216256327,
+    "integral_hi": 0.06996747049822419,
+    "desvio_mediano": 0.00504179573483976,
+    "desvio_medio": 0.011897944204980658,
+    "ate_1pct": 0.65625,
+    "ate_01pct": 0.359375,
+    "vitorias": 50,
+    "empates": 7,
+    "derrotas": 7
+   },
+   {
+    "metodo": "hibrido:rotacao",
+    "n": 64,
+    "integral": 0.0677399076574755,
+    "integral_lo": 0.05054305609156997,
+    "integral_hi": 0.08725641952409252,
+    "desvio_mediano": 0.006185633929346049,
+    "desvio_medio": 0.010553910878037727,
+    "ate_1pct": 0.59375,
+    "ate_01pct": 0.234375,
+    "vitorias": 53,
+    "empates": 3,
+    "derrotas": 8
+   },
+   {
+    "metodo": "adaptativa:gnn",
+    "n": 64,
+    "integral": 0.08894041922883827,
+    "integral_lo": 0.058336580830364214,
+    "integral_hi": 0.12385551794981355,
+    "desvio_mediano": 0.006439991688092062,
+    "desvio_medio": 0.017618756160273877,
+    "ate_1pct": 0.5625,
+    "ate_01pct": 0.25,
+    "vitorias": 42,
+    "empates": 9,
+    "derrotas": 13
+   },
+   {
+    "metodo": "completo",
+    "n": 64,
+    "integral": 0.10831412679629569,
+    "integral_lo": 0.09319174692335672,
+    "integral_hi": 0.12394913851030002,
+    "desvio_mediano": 0.03717286050608026,
+    "desvio_medio": 0.04292633399147475,
+    "ate_1pct": 0.234375,
+    "ate_01pct": 0.15625
+   }
+  ],
+  "hipoteses_integral": [
+   {
+    "hipotese": "H1",
+    "a": "adaptativa:pl",
+    "b": "completo",
+    "n": 64,
+    "dif_media": -0.058583536721015766,
+    "dif_lo": -0.08355052668300027,
+    "dif_hi": -0.031037461551923995,
+    "a_melhor": 55,
+    "b_melhor": 9,
+    "p": 2.266687078501716e-06,
+    "p_holm": 9.066748314006864e-06
+   },
+   {
+    "hipotese": "H2",
+    "a": "adaptativa:gnn",
+    "b": "adaptativa:pl",
+    "n": 64,
+    "dif_media": 0.03920982915355834,
+    "dif_lo": 0.013459400364971017,
+    "dif_hi": 0.07059716524795252,
+    "a_melhor": 22,
+    "b_melhor": 42,
+    "p": 0.0014230246101340823,
+    "p_holm": 0.004269073830402247
+   },
+   {
+    "hipotese": "H3",
+    "a": "hibridopl:rotacao",
+    "b": "adaptativa:pl",
+    "n": 64,
+    "dif_media": -0.007728550601608666,
+    "dif_lo": -0.01792183590240877,
+    "dif_hi": 0.0007004644776669653,
+    "a_melhor": 31,
+    "b_melhor": 33,
+    "p": 0.6589413132631801,
+    "p_holm": 0.6589413132631801
+   },
+   {
+    "hipotese": "H4",
+    "a": "adaptativa:pl",
+    "b": "kernel",
+    "n": 64,
+    "dif_media": 0.007580492057585407,
+    "dif_lo": -0.0011977990797409621,
+    "dif_hi": 0.01761780893711625,
+    "a_melhor": 36,
+    "b_melhor": 28,
+    "p": 0.3190372799501302,
+    "p_holm": 0.6380745599002604
+   }
+  ],
+  "hipoteses_desvio": [
+   {
+    "hipotese": "H1",
+    "a": "adaptativa:pl",
+    "b": "completo",
+    "n": 64,
+    "dif_media": -0.031028389786494085,
+    "dif_lo": -0.04067717479840092,
+    "dif_hi": -0.021825987222336186,
+    "a_melhor": 50,
+    "b_melhor": 7,
+    "p": 1.2130586782650348e-08,
+    "p_holm": 4.8522347130601394e-08
+   },
+   {
+    "hipotese": "H2",
+    "a": "adaptativa:gnn",
+    "b": "adaptativa:pl",
+    "n": 64,
+    "dif_media": 0.005720811955293219,
+    "dif_lo": 0.001378591521713261,
+    "dif_hi": 0.010465072242548884,
+    "a_melhor": 15,
+    "b_melhor": 32,
+    "p": 0.014301220341775426,
+    "p_holm": 0.04290366102532628
+   },
+   {
+    "hipotese": "H3",
+    "a": "hibridopl:rotacao",
+    "b": "adaptativa:pl",
+    "n": 64,
+    "dif_media": -0.005375613013866812,
+    "dif_lo": -0.010622242343484816,
+    "dif_hi": -0.00117141137748258,
+    "a_melhor": 38,
+    "b_melhor": 19,
+    "p": 0.024792704972604745,
+    "p_holm": 0.04958540994520949
+   },
+   {
+    "hipotese": "H4",
+    "a": "adaptativa:pl",
+    "b": "kernel",
+    "n": 64,
+    "dif_media": -0.003189189508009324,
+    "dif_lo": -0.0069117074979152355,
+    "dif_hi": 0.00034490598151148857,
+    "a_melhor": 33,
+    "b_melhor": 20,
+    "p": 0.04992800434882142,
+    "p_holm": 0.04992800434882142
+   }
+  ],
+  "sensibilidade_sem_marcadas": {
+   "hipoteses_integral": [
+    {
+     "hipotese": "H1",
+     "a": "adaptativa:pl",
+     "b": "completo",
+     "n": 39,
+     "dif_media": -0.04398670242600555,
+     "dif_lo": -0.07297052633222281,
+     "dif_hi": -0.009836851708202612,
+     "a_melhor": 35,
+     "b_melhor": 4,
+     "p": 0.00012861097275163047,
+     "p_holm": 0.0005144438910065219
+    },
+    {
+     "hipotese": "H2",
+     "a": "adaptativa:gnn",
+     "b": "adaptativa:pl",
+     "n": 38,
+     "dif_media": 0.04157262237461774,
+     "dif_lo": 0.010965403540742245,
+     "dif_hi": 0.0825916516687443,
+     "a_melhor": 12,
+     "b_melhor": 26,
+     "p": 0.002044867622316815,
+     "p_holm": 0.006134602866950445
+    },
+    {
+     "hipotese": "H3",
+     "a": "hibridopl:rotacao",
+     "b": "adaptativa:pl",
+     "n": 42,
+     "dif_media": -0.0053741587821921006,
+     "dif_lo": -0.019854973469670044,
+     "dif_hi": 0.0058896866530184335,
+     "a_melhor": 15,
+     "b_melhor": 27,
+     "p": 0.26883260216072813,
+     "p_holm": 0.5376652043214563
+    },
+    {
+     "hipotese": "H4",
+     "a": "adaptativa:pl",
+     "b": "kernel",
+     "n": 41,
+     "dif_media": 0.010318833560303126,
+     "dif_lo": -0.0020983724050602864,
+     "dif_hi": 0.025991058484077758,
+     "a_melhor": 23,
+     "b_melhor": 18,
+     "p": 0.4641733385296902,
+     "p_holm": 0.5376652043214563
+    }
+   ]
+  }
+ },
+ "medicao_total": {
+  "execucoes": 1390,
+  "razao_mediana": 0.9568295132501574,
+  "razao_p05": 0.8364445285606197,
+  "marcadas": 229,
+  "estouro_p95_s": 0.03951906999999964,
+  "estouro_max_s": 0.9435330999999962,
+  "invalidas": 2
+ }
+}

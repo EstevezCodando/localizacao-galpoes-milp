@@ -6,11 +6,22 @@ required keeping about 80\% of the candidate facilities, and decomposition witho
 produced infeasible unions. Two mechanisms worked: an adaptive expansion over ranked facilities
 with a reduced-cost optimality certificate, and a cluster-oriented LNS that re-optimizes one
 subproblem at a time over residual capacities. In validation pilots both were clearly better than
-the solver on the full model. The learned components were not: the linear-relaxation ranking was
-at least as good as the GNN, and learned subproblem selection did not separate from rotation.
-Measuring the repetition of subproblems showed why selection matters little: the neighborhood
-search spends more than half of its iterations on subproblems already known to fail and is
-limited by the reach of its neighborhoods. \todo{closed-test conclusion in one or two sentences}.
+the solver on the full model. For the learned components the pilots found no evidence of a benefit: the point estimates
+favored the linear-relaxation ranking over the GNN, and learned subproblem selection did not
+separate from rotation.
+More than half of the subproblems selected by the neighborhood search had already been tried
+without success from the same local state, which suggests, without proving it, that the search
+is limited by the reach of its neighborhoods more than by their order.
+
+The pre-registered closed test, on 139 instances that no pilot had used, sharpened these
+conclusions. Restricting the facilities by the LP ranking more than halved the primal integral
+of the full solver. Replacing the LP ranking by the GNN made the expansion significantly worse,
+increasingly so away from the training distribution, to the point of matching the full solver on
+larger instances. Kernel search, a learning-free method from 2014, was at the level of the nested
+expansion. The neighborhood-search phase did not change the primal integral, lowered the final
+deviation by about half a percentage point at the threshold of significance, and was the only
+component that came close to the best known solution on real instances with 600 and 850
+customers (four instances, reported descriptively).
 
 The practical recommendation is to report, for any learned search-space reduction, the
 learning-free method with the same function and the same budget. Future work includes

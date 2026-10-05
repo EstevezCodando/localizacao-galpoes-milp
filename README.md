@@ -53,7 +53,7 @@ Pesquisa: `PySCIPOpt (SCIP 10)` · `PyTorch (CPU)` · `LightGBM` · `psutil` · 
 | **Validação** | OR-Library: 7 de 7 ótimos reproduzidos. Holmberg et al. (1999): 71 instâncias de fonte única com ótimo publicado |
 | **Aprendizado de máquina** | Demanda por município (Poisson e gradient boosting), previsão de população contra o Censo 2022, clusterização e score de candidatos, todos com validação espacial |
 | **Achado central** | Com capacidade folgada (recortes do Olist) o LNS chega ao nível do MILP ou melhor; com capacidade apertada (Holmberg) o MILP domina. Uma rede projetada só para 2025 custa +25% a +47% em 2030 base e +206% a +209% no cenário alto |
-| **Linha de pesquisa** | No SSCFLP estrito, quanto do ganho de "aprender o espaço de busca" vem do aprendizado e quanto vem do mecanismo de restrição? Nos pilotos de validação, restringir o espaço de busca dá integral primal cerca de 3 vezes menor que o SCIP no modelo completo, e o ranking tirado da relaxação linear, sem treino, é numericamente igual ou melhor que a GNN (diferença não significativa em 16 instâncias). O teste fechado está pré-registrado e em execução. [Detalhes](#linha-de-pesquisa-aprender-o-espaço-de-busca) |
+| **Linha de pesquisa** | No SSCFLP estrito, quanto do ganho de "aprender o espaço de busca" vem do aprendizado e quanto vem do mecanismo de restrição? Em um teste fechado pré-registrado (139 instâncias), restringir os centros pelo ranking da relaxação linear reduziu a integral primal a menos da metade da do SCIP completo (0,050 contra 0,108; p < 0,001), e trocar esse ranking pelo de uma GNN piorou o resultado (0,089; p = 0,004). Em 59 das 71 instâncias de Holmberg, um certificado de custo reduzido provou o ótimo sem resolver o modelo completo. [Detalhes](#linha-de-pesquisa-aprender-o-espaço-de-busca) |
 | **Resultado negativo mantido** | Variáveis do OpenStreetMap (densidade viária, galpões) **não** melhoraram o modelo de demanda nem o score de candidatos |
 
 > Projeto de portfólio e de pesquisa aberta. Capacidades, penalidade de não atendimento, pedidos por veículo e densidade de pedidos por m² são **premissas declaradas**. Nada aqui é ganho medido em operação real.
@@ -384,12 +384,15 @@ Antes de confiar nos números, o modelo foi confrontado com resultados publicado
 
 > Pesquisa aberta, em andamento, para um artigo e para o mestrado. Tudo o que está nesta seção
 > vem de execuções registradas em [`results/pesquisa/`](results/pesquisa), com manifesto e hash
-> dos dados. Os números abaixo são de **pilotos em instâncias de validação** e estão rotulados
-> como pilotos.
+> dos dados. Há dois níveis de evidência, sempre rotulados: **pilotos** em 16 instâncias de
+> validação (exploratórios) e o **teste fechado** em 139 instâncias nunca usadas antes, com
+> métodos, orçamentos e hipóteses [pré-registrados](docs/pesquisa/10-preregistro-teste-fechado.md).
 >
-> **Estado em 04/10/2026:** o teste fechado (139 instâncias de teste, corredor, escala, Holmberg
-> e Olist) foi [pré-registrado](docs/pesquisa/10-preregistro-teste-fechado.md) com métodos,
-> orçamentos e quatro hipóteses, e está em execução. Nenhum resultado dele aparece aqui ainda.
+> **Resultado principal (teste fechado, 05/10/2026):** restringir os centros pelo ranking da
+> relaxação linear reduziu a integral primal a menos da metade da do SCIP no modelo completo
+> (p < 0,001). Trocar esse ranking pelo de uma GNN **piorou** o resultado de forma significativa
+> (p = 0,004 com correção de Holm). Vale para esta GNN e este orçamento de treino; parte do teste
+> rodou com a máquina ocupada. [Ir para os resultados](#o-teste-fechado).
 >
 > Relatório completo: [`docs/pesquisa/09-relatorio-geral.md`](docs/pesquisa/09-relatorio-geral.md) ·
 > Manuscrito: [`paper/`](paper) ·
@@ -410,7 +413,7 @@ aprendido é comparado com o **equivalente clássico de mesma função**, no mes
 
 ![Caminho percorrido](docs/pesquisa/img/01_caminho.png)
 
-*Cada caixa traz o que foi feito, o que foi medido e a decisão que levou à etapa seguinte.
+*A figura cobre as seis etapas de desenvolvimento; a sétima, o teste fechado, está na tabela abaixo e na [seção própria](#o-teste-fechado). Cada caixa traz o que foi feito, o que foi medido e a decisão que levou à etapa seguinte.
 Vermelho marca caminhos descartados com base em medição; verde, resultado positivo; azul, a
 etapa mais recente.*
 
@@ -421,7 +424,8 @@ etapa mais recente.*
 | 3. Clusters, versão ingênua | Clusters de clientes resolvidos em separado | União inviável em todas as instâncias examinadas; +19% a +29% depois do reparo | Subproblema com o restante fixo e capacidade residual (CLNS) |
 | 4. CLNS com seletores | LNS por clusters com seletor por rotação, ALNS, dual, aprendido e guiado pela GNN | Bom cedo (integral primal 0,029 a 0,042 contra 0,080 do SCIP), mas estaciona a ~2% | Partir de uma solução melhor |
 | 5. Híbrido | Expansão adaptativa em metade do tempo, CLNS na outra metade | Desvio final de 0,57% a 0,63%, contra 0,81% da expansão e 2,66% do SCIP | Testar se a GNN é necessária |
-| 6. Controles e memória | Kernel Search, híbrido só com PL, memória de subproblemas | Nenhuma diferença significativa a favor da GNN; 54% a 58% dos subproblemas do CLNS eram repetições | O ranking do PL passa a ser a referência; o gargalo do CLNS é o alcance das vizinhanças |
+| 6. Controles e memória | Kernel Search, híbrido só com PL, memória de subproblemas | Nenhuma diferença significativa a favor da GNN; 54% a 58% dos subproblemas do CLNS eram repetições | O ranking do PL passa a ser a referência; congelar o método e testar |
+| 7. Teste fechado | 1.390 execuções em 139 instâncias novas, com hipóteses pré-registradas | Expansão com PL tem menos da metade da integral do SCIP; com GNN, piora de forma significativa | Replicar dois conjuntos com a máquina ociosa; isolar o efeito do agrupamento |
 
 ### Por que a capacidade muda tudo
 
@@ -482,8 +486,9 @@ componente aprendido.*
 ![Piloto 2, curva ao longo do tempo](docs/pesquisa/img/p2_anytime.png)
 
 *Para cada segundo, a mediana entre instâncias do gap à melhor solução conhecida, em escala
-logarítmica. Híbrido e expansão coincidem até os 30 s porque o híbrido gasta metade do orçamento
-na expansão; depois disso a expansão estaciona e a fase de CLNS continua melhorando.*
+logarítmica. Depois dos 30 s a expansão estaciona e a fase de CLNS do híbrido continua melhorando. As duas
+curvas não têm de coincidir antes disso: a expansão sozinha reparte seus estágios a partir de
+60 s, e o híbrido, a partir de 30 s.*
 
 ![Piloto 2, até 1% e comparação pareada](docs/pesquisa/img/p2_ate1_vitorias.png)
 
@@ -514,7 +519,8 @@ e acrescenta três controles **sem nenhum componente treinado** e uma memória d
 - **Híbrido PL**: expansão ordenada pelo PL seguida de CLNS com rotação.
 - **Memória de subproblemas**: uma tabela, indexada por um hash do conjunto livre, dos centros
   atuais desses clientes e da carga fixa por centro, que marca os subproblemas que já falharam. É
-  a tabela de transposição da busca em árvore aplicada a vizinhanças.
+  uma heurística de alocação de esforço, com antecedentes em POPMUSIC e em *Learning to
+  Delegate*; não é certificado, porque os subproblemas são interrompidos por tempo.
 
 ![Piloto 3, barras](docs/pesquisa/img/p3_barras.png)
 
@@ -540,8 +546,8 @@ treinado. "PL" é o ranking tirado da relaxação linear.*
 *Gap mediano à melhor solução conhecida a cada segundo, em escala logarítmica. Linhas
 tracejadas são as variantes ordenadas pelo PL; contínuas, pela GNN.*
 
-**A GNN não foi necessária.** Trocar a GNN pelo ranking do PL, que não precisa de dados de
-treino, não piorou nenhum método e melhorou numericamente todos:
+**Sem evidência de benefício da GNN.** Trocar a GNN pelo ranking do PL, que não precisa de dados
+de treino, não piorou nenhum método; as estimativas pontuais favorecem o PL:
 
 - expansão adaptativa: integral 0,0192 com PL contra 0,0240 com GNN; desvio final 0,17% contra
   0,93%; o PL tem a menor integral em 11 das 16 instâncias (Wilcoxon pareado, p = 0,13);
@@ -567,17 +573,19 @@ mesmo estado local com limite de tempo igual ou maior. Direita: subproblemas res
 execução. Verde marca as variantes com memória.*
 
 **Repetição e memória.** Sem memória, **54% a 58% dos subproblemas escolhidos pelo CLNS eram
-repetições**: mais da metade das iterações resolveu de novo um modelo cuja resposta já era
-conhecida. A memória elimina cerca de metade delas; os 25% a 27% restantes são iterações em que
-**todos** os candidatos estavam esgotados, isto é, a solução era um ótimo local das cinco
-vizinhanças naquele limite de tempo. O tempo liberado não virou ganho mensurável: no CLNS
+repetições**: mais da metade das iterações rodou de novo um modelo que já tinha sido tentado sem
+sucesso com limite igual ou maior. A memória elimina cerca de metade delas; os 25% a 27% restantes são iterações em que
+**todos** os candidatos gerados já tinham falhado naquele limite. Isso **não** é certificado de
+ótimo local: os subproblemas foram interrompidos por tempo, não resolvidos, e a lista de
+candidatos é uma amostra das vizinhanças. O tempo liberado não virou ganho mensurável: no CLNS
 sozinho a integral foi de 0,0372 para 0,0347 (p = 0,18) e o desvio de 2,80% para 2,36%
 (p = 0,12); dentro dos híbridos, nenhuma mudança.
 
-**Leitura conjunta.** O CLNS é limitado pelo **alcance** das vizinhanças, não pela ordem em que
-são tentadas. Isso explica por que nenhum seletor, aprendido ou não, se separou da rotação nos
-pilotos anteriores. O ganho sobre o SCIP completo vem dos mecanismos (restrição aninhada com
-certificado e subproblemas coordenados), e não do aprendizado.
+**Leitura conjunta, como hipótese.** Uma explicação compatível com os dados, mas não
+demonstrada por eles, é que o CLNS seja limitado pelo **alcance** das vizinhanças (ou pelo corte
+de dez centros por cliente, ou pelos limites curtos de tempo) mais do que pela ordem em que são
+tentadas. Resolver de novo uma amostra de subproblemas repetidos com limite maior separaria
+essas explicações; fica como próximo passo.
 
 **Medição.** Mediana da razão CPU ÷ parede de 0,999; 7 das 352 execuções (2,0%) abaixo de 0,9,
 todas no mesmo núcleo, que dividiu tempo com outras tarefas da máquina durante a rodada; estouro
@@ -628,11 +636,11 @@ uv run python paper/figuras/gerar_figuras.py     # figuras do manuscrito
 | `results/pesquisa/` | resultados brutos, agregados e manifestos |
 | `data/processed/pesquisa/` | instâncias, rótulos e modelos congelados |
 
-### O teste fechado (pré-registrado, em execução)
+### O teste fechado
 
-Os pilotos têm 16 instâncias e não separam estatisticamente os métodos. O teste fechado usa
-instâncias que nenhum piloto tocou, com o método congelado antes da execução
-([pré-registro](docs/pesquisa/10-preregistro-teste-fechado.md)):
+O teste fechado foi [pré-registrado](docs/pesquisa/10-preregistro-teste-fechado.md) depois do piloto 3 e antes de qualquer execução nas
+instâncias abaixo: os seis métodos, os orçamentos, quatro hipóteses e o script de análise foram
+commitados primeiro. São **1.390 execuções em 139 instâncias** que nenhum piloto tinha usado.
 
 | Conjunto | Instâncias | Tamanho | Orçamento | O que mede |
 |---|---:|---|---:|---|
@@ -642,17 +650,125 @@ instâncias que nenhum piloto tocou, com o método congelado antes da execução
 | `holmberg` | 71 | 10–30 × 50–200 | 30 s | desvio contra o ótimo publicado |
 | `olist` | 4 | 30 × 150 a 150 × 850 | 120 s | dados reais |
 
-Seis métodos: SCIP completo, Kernel Search, expansão adaptativa (PL e GNN) e híbrido (PL e GNN).
-Quatro hipóteses, com teste de Wilcoxon pareado e correção de Holm: a restrição ajuda (H1), a
-GNN difere do PL (H2), a fase de CLNS difere da expansão sozinha (H3) e a expansão difere do
-Kernel Search (H4). Um resultado não significativo em H2 será relatado como "sem evidência de
-diferença", e não como equivalência. A análise já está escrita em
-[`scripts/analisar_fechado.py`](scripts/analisar_fechado.py).
+![Teste fechado por conjunto](docs/pesquisa/img/f1_fechado_conjuntos.png)
+
+*Esquerda: integral primal média por conjunto, com intervalo de confiança de 95%. Direita: desvio
+final médio (em Holmberg, contra o ótimo publicado). Preto é o SCIP no modelo completo; laranja,
+o Kernel Search; cinza e verde, a expansão e o híbrido ordenados pelo PL, sem aprendizado; azul
+claro e azul, os equivalentes ordenados pela GNN. Em cada conjunto, compare as barras azuis com
+a cinza e a verde: a diferença é o efeito de trocar o ranking do PL pelo aprendido.*
+
+**Resultado nas 64 instâncias sintéticas (teste + corredor + escala):**
+
+| Método | Aprende? | Integral primal (IC 95%) | Desvio mediano | Até 1% | Melhor / igual / pior que o SCIP |
+|---|:---:|---|---:|---:|---|
+| Híbrido PL | não | 0,0420 (0,032–0,053) | 0,35% | 70,3% | 54 / 3 / 7 |
+| Kernel Search | não | 0,0422 (0,032–0,055) | 0,74% | 57,8% | 46 / 6 / 12 |
+| Expansão adaptativa (PL) | não | 0,0497 (0,033–0,070) | 0,50% | 65,6% | 50 / 7 / 7 |
+| Híbrido GNN | sim | 0,0677 (0,051–0,087) | 0,62% | 59,4% | 53 / 3 / 8 |
+| Expansão adaptativa (GNN) | sim | 0,0889 (0,058–0,124) | 0,64% | 56,3% | 42 / 9 / 13 |
+| SCIP (modelo completo) | não | 0,1083 (0,093–0,124) | 3,72% | 23,4% | – |
+
+![Hipóteses do teste fechado](docs/pesquisa/img/f2_fechado_hipoteses.png)
+
+*Cada linha é uma comparação pareada A − B: o ponto é a diferença média por instância e o traço,
+o intervalo de confiança de 95%. Traço inteiro à esquerda do zero significa que A é melhor. À
+direita de cada linha, o valor-p de Wilcoxon corrigido por Holm e em quantas instâncias cada lado
+venceu. Verde: significativo a favor de A; vermelho: significativo a favor de B; cinza: não
+significativo.*
+
+| Hipótese | Integral primal | Desvio final | Leitura |
+|---|---|---|---|
+| **H1** expansão PL contra SCIP completo | −0,059; p < 0,001 | −3,10 p.p.; p < 0,001 | **Restringir ajuda.** Menos da metade da integral do SCIP; melhor em 55 de 64 instâncias |
+| **H2** expansão GNN contra expansão PL | +0,039; p = 0,004 | +0,57 p.p.; p = 0,043 | **O ranking aprendido é pior que o do PL.** O PL vence em 42 de 64 |
+| **H3** híbrido PL contra expansão PL | −0,008; p = 0,66 | −0,54 p.p.; p = 0,0495 | A fase de CLNS não muda a velocidade; melhora o fim, no limiar de significância |
+| **H4** expansão PL contra Kernel Search | +0,008; p = 0,64 | −0,32 p.p.; p = 0,0495 | Sem diferença que se possa afirmar |
+
+**O que muda em relação aos pilotos.**
+
+- Os pilotos só permitiam dizer que não havia evidência a favor da GNN. O teste fechado é mais
+  forte: **trocar o ranking do PL pelo da GNN piora a expansão de forma significativa**, e a
+  perda cresce longe da distribuição de treino. No conjunto de escala, com instâncias maiores
+  que as do treino, a expansão com GNN (0,170) não é melhor que o SCIP completo (0,169),
+  enquanto a com PL fica em 0,085.
+- Na família corredor, nunca vista no treino, as variantes com GNN terminam com os menores
+  desvios **medianos** (0,15% a 0,18%), mas com integral maior: o ranking aprendido não é
+  uniformemente pior no fim, é mais lento para chegar.
+- O Kernel Search, publicado em 2014 e sem aprendizado, fica no nível da expansão ordenada pelo
+  PL e tem integral numericamente menor que as duas variantes aprendidas.
+- Os dois valores-p de 0,0495 no desvio final estão no limiar. Não tiro conclusão deles.
+
+**Holmberg (71 instâncias com ótimo publicado, 30 s).**
+
+| Método | Integral primal (IC 95%) | Desvio médio | Ótimo atingido | Ótimo provado pelo certificado |
+|---|---|---:|---:|---:|
+| Híbrido PL | 0,0143 (0,011–0,018) | 0,13% | 59 | – |
+| Expansão adaptativa (PL) | 0,0146 (0,011–0,018) | 0,14% | 61 | 59 |
+| Kernel Search | 0,0191 (0,012–0,028) | 0,18% | 60 | – |
+| SCIP (modelo completo) | 0,0286 (0,020–0,039) | 0,20% | 61 | – |
+| Híbrido GNN | 0,0419 (0,035–0,050) | 0,39% | 53 | – |
+| Expansão adaptativa (GNN) | 0,0481 (0,039–0,058) | 0,57% | 59 | 59 |
+
+- **O certificado de custo reduzido funciona:** em 59 das 71 instâncias a expansão parou com o
+  ótimo global **provado** antes do último estágio, com os dois rankings. Com o PL, em mediana
+  de 0,9 s.
+- A expansão com PL atinge tantos ótimos quanto o SCIP completo (61), com metade da integral.
+- A GNN, treinada em instâncias euclidianas de 30 centros, transfere mal para estas: as
+  variantes com GNN têm integral **maior** que a do SCIP completo.
+
+**Olist (4 instâncias reais, 120 s), descritivo.** Desvio final em relação à melhor solução
+conhecida:
+
+| Método | 30 × 150 | 60 × 300 | 100 × 600 | 150 × 850 |
+|---|---:|---:|---:|---:|
+| Híbrido PL | 0,26% | 1,03% | 0,10% | 0,02% |
+| Híbrido GNN | 0,19% | 0,73% | 0,15% | 0,02% |
+| Kernel Search | 0,06% | 0,77% | 8,68% | 9,26% |
+| SCIP (modelo completo) | 0,06% | 3,06% | 8,68% | 9,26% |
+| Expansão adaptativa (PL) | 0,06% | 3,06% | 8,68% | sem solução |
+| Expansão adaptativa (GNN) | 0,06% | 3,06% | 8,68% | sem solução |
+
+Nas duas instâncias maiores, SCIP completo, Kernel Search e expansão terminam na mesma solução,
+8,7% a 9,3% acima da melhor conhecida, e na maior a expansão não devolve solução viável em 120 s.
+Os híbridos, cuja fase de CLNS parte do arredondamento do PL quando a expansão não devolve nada,
+terminam a 0,02% a 0,15%. Quando o modelo completo deixa de caber no orçamento, a decomposição
+coordenada é o único componente que chega perto. São quatro instâncias; isso não sustenta
+afirmação estatística.
+
+**Qualidade da medição: o teste fechado foi menos limpo que os pilotos.**
+
+- A máquina suspendeu duas vezes durante o conjunto `teste` e invalidou 6 execuções (tempo de
+  parede de 646 a 15.386 s). Elas foram descartadas por um critério só de tempo, registrado como
+  desvio antes da análise, e refeitas.
+- Durante os conjuntos corredor e escala havia outras cargas na máquina: a carga mediana do
+  sistema foi de 86% a 91% e 187 das 320 execuções desses dois conjuntos ficaram marcadas por
+  contenção. No total, 229 de 1.390 (16,5%).
+- As marcas se distribuem entre os métodos mais ou menos na proporção das execuções, e todas as
+  execuções ficam na análise principal, como pré-registrado. Refazendo os testes sem as marcadas
+  (38 a 42 instâncias por comparação), as conclusões da integral primal não mudam: H1
+  (p < 0,001) e H2 (p = 0,006) significativas, H3 e H4 não.
+- Os valores absolutos de integral nos conjuntos corredor e escala devem ser lidos como
+  estimativas por cima. **Vale replicar esses dois conjuntos com a máquina ociosa.**
+
+**Ressalvas da conclusão sobre aprendizado.** O resultado negativo vale para esta GNN, treinada
+em um tamanho de instância e duas famílias espaciais, com cerca de 4 horas de CPU de rótulos.
+Não é uma afirmação sobre ranking aprendido em geral.
 
 ### Limites desta parte
 
-- Resultados de pilotos em 16 instâncias de validação; nenhuma diferença entre variantes com e
-  sem aprendizado é estatisticamente significativa. O teste fechado está em execução.
+- O teste fechado rodou com a máquina ocupada em dois dos cinco conjuntos: 16,5% das execuções
+  estão marcadas por contenção. As conclusões da integral primal se mantêm sem elas; os valores
+  absolutos dos conjuntos corredor e escala são estimativas por cima e pedem replicação.
+- O resultado negativo sobre aprendizado vale para **esta** GNN (um tamanho de instância, duas
+  famílias espaciais, um checkpoint, cerca de 4 horas de CPU de rótulos). Não é uma afirmação
+  sobre ranking aprendido em geral.
+- Seletor aprendido, seletor guiado pela GNN e memória de subproblemas só foram avaliados nos
+  pilotos (16 instâncias); a evidência sobre eles é exploratória.
+- Dois valores-p da métrica secundária estão no limiar (0,0495) e não sustentam conclusão.
+- A contribuição do agrupamento em si não está isolada: falta comparar grupos por perfil de
+  custo com grupos aleatórios de mesmo tamanho.
+- A análise do desvio final foi corrigida depois de vista (emenda registrada no pré-registro);
+  o efeito foi de 4 execuções em 1.390.
 - Instâncias em maioria sintéticas. Fora de Holmberg, a qualidade é medida contra a melhor
   solução conhecida, não contra o ótimo.
 - As reconstruções são metodológicas, não reproduções do código original dos artigos.
@@ -660,8 +776,7 @@ diferença", e não como equivalência. A análise já está escrita em
   de objetivo do artigo original; a solução atual, passada como partida, faz o papel do corte.
 - O piloto 2 rodou antes da segunda auditoria do CLNS; o piloto 3 repete os métodos principais
   com o código corrigido e o quadro não muda.
-- Uma única máquina, três execuções concorrentes fixadas em núcleos. No piloto 3, 7 de 352
-  execuções ficaram marcadas por suspeita de contenção.
+- Uma única máquina, três execuções concorrentes fixadas em núcleos.
 - O código de `pesquisa/` ainda não passa em `ruff` (84 avisos, quase todos de nomes de
   variáveis matemáticas como `X` e `Q`) nem foi posto sob `mypy --strict`; o restante de `src/`
   passa nos dois.
@@ -807,7 +922,7 @@ tests/            139 testes (91 do estudo aplicado, 48 da pesquisa)
 - **Resultados negativos foram mantidos**: VSS negativo atribuído a gap do solver, filtro de candidatos que não se transfere entre instâncias, previsão de população que melhora o erro mas não a decisão.
 - Diferenças de custo de poucos décimos de ponto percentual entre projetos ou filtros (por exemplo, entre previsões de população) ficam **dentro do ruído do LNS**; não sustentam conclusões.
 - Não testei o mapa em navegadores de uso comum além do navegador embutido do Claude.
-- **Linha de pesquisa:** resultados de pilotos, sem significância estatística entre variantes; ver os [limites próprios](#limites-desta-parte).
+- **Linha de pesquisa:** o teste fechado rodou em parte com a máquina ocupada e avalia uma única GNN; ver os [limites próprios](#limites-desta-parte).
 - O repositório ainda não tem arquivo `LICENSE`.
 
 ---

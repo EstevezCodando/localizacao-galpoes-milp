@@ -490,6 +490,71 @@ def fig_reconstrucoes() -> None:
     salvar(fig, "10_reconstrucoes")
 
 
+def fig_fechado() -> None:
+    arq = RES / "fechado" / "analise.json"
+    if not arq.exists():
+        print("sem teste fechado")
+        return
+    an = json.loads(arq.read_text(encoding="utf-8"))
+    conjuntos = [("teste", "Teste (32)"), ("gen_corredor", "Corredor (16)"),
+                 ("gen_escala", "Escala 50×200 (16)"), ("holmberg", "Holmberg (71)")]
+    metodos = ["completo", "kernel", "adaptativa:pl", "hibridopl:rotacao", "adaptativa:gnn",
+               "hibrido:rotacao"]
+    cores = {"completo": TINTA, "kernel": AMBAR, "adaptativa:pl": CINZA,
+             "hibridopl:rotacao": VERDE, "adaptativa:gnn": "#8fb1ea", "hibrido:rotacao": AZUL}
+    fig, axs = plt.subplots(1, 2, figsize=(15, 5.2))
+    larg = 0.13
+    for painel, (campo, rot, k) in enumerate((("integral", "integral primal média (menor é melhor)", 1),
+                                              ("desvio_medio", "desvio final médio (%)", 100))):
+        ax = axs[painel]
+        for j, m in enumerate(metodos):
+            v, lo, hi = [], [], []
+            for c, _ in conjuntos:
+                r = next(x for x in an[c]["tabela"] if x["metodo"] == m)
+                v.append(k * r[campo])
+                lo.append(k * (r[campo] - r["integral_lo"]) if campo == "integral" else 0)
+                hi.append(k * (r["integral_hi"] - r[campo]) if campo == "integral" else 0)
+            x = np.arange(len(conjuntos)) + (j - 2.5) * larg
+            ax.bar(x, v, larg * 0.92, color=cores[m], label=NOMES.get(m, m),
+                   yerr=[lo, hi] if campo == "integral" else None,
+                   error_kw={"lw": 0.8, "capsize": 1.5, "ecolor": CINZA})
+        ax.set_xticks(np.arange(len(conjuntos)), [r for _, r in conjuntos])
+        ax.set_ylabel(rot)
+        ax.set_title(("Teste fechado: qualidade ao longo do tempo" if painel == 0
+                      else "Teste fechado: qualidade ao fim do orçamento"), loc="left")
+    axs[0].legend(fontsize=8.5, ncol=2, loc="upper left")
+    axs[0].set_xlabel("barra = média entre instâncias; traço = IC 95% por bootstrap")
+    axs[1].set_xlabel("em Holmberg, o desvio é em relação ao ótimo publicado")
+    fig.tight_layout()
+    salvar(fig, "f1_fechado_conjuntos")
+
+    ag = an["agregado"]
+    rot = {"H1": "H1: expansão PL − SCIP completo", "H2": "H2: expansão GNN − expansão PL",
+           "H3": "H3: híbrido PL − expansão PL", "H4": "H4: expansão PL − Kernel Search"}
+    fig, axs = plt.subplots(1, 2, figsize=(16, 3.8))
+    for ax, (chave, k, titulo, un) in zip(axs, (("hipoteses_integral", 1.0, "Integral primal", ""),
+                                               ("hipoteses_desvio", 100.0, "Desvio final", " p.p."))):
+        hs = ag[chave]
+        y = np.arange(len(hs))[::-1]
+        for yi, h in zip(y, hs):
+            sig = h["p_holm"] < 0.05
+            cor = (VERDE if h["dif_media"] < 0 else VERMELHO) if sig else CINZA
+            ax.plot([k * h["dif_lo"], k * h["dif_hi"]], [yi, yi], color=cor, lw=2.2)
+            ax.plot(k * h["dif_media"], yi, "o", color=cor, ms=7)
+            pv = "p (Holm) < 0,001" if h["p_holm"] < 0.001 else f"p (Holm) = {h['p_holm']:.4f}".replace(".", ",")
+            txt = f"{pv}\nA melhor em {h['a_melhor']}, B em {h['b_melhor']}"
+            ax.text(1.02, yi, txt, fontsize=8.5, color=cor, va="center", ha="left",
+                    transform=ax.get_yaxis_transform(), linespacing=1.3)
+        ax.axvline(0, color=TINTA, lw=0.8)
+        ax.locator_params(axis="x", nbins=6)
+        ax.set_yticks(y, [rot[h["hipotese"]] for h in hs])
+        ax.set_ylim(-0.6, len(hs) - 0.2)
+        ax.set_xlabel("diferença média A − B" + un + " (à esquerda do zero, A é melhor)")
+        ax.set_title(f"{titulo}, 64 instâncias; ponto = média, traço = IC 95%", loc="left")
+    fig.tight_layout()
+    salvar(fig, "f2_fechado_hipoteses")
+
+
 def main() -> None:
     p3 = json.loads((PILOTO3 / "agregados.json").read_text()) if (PILOTO3 / "agregados.json").exists() else None
     fig_caminho(p3)
@@ -513,6 +578,7 @@ def main() -> None:
         fig_medicao(p3, "p3")
         fig_memoria()
     fig_reconstrucoes()
+    fig_fechado()
 
 
 if __name__ == "__main__":
