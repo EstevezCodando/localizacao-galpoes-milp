@@ -1,4 +1,12 @@
 \section{What did not transfer: five reconstructions}\label{app:reconstructions}
+\noindent\emph{Scope.} The reconstructions below are local implementations with their own
+problems, objectives and budgets. They are not reproductions of the original code (for instance,
+the swap filter uses gradient-boosted regressors, not the reinforcement-learning policy of the
+original), and their limitations are those of our implementations. They are not used as evidence
+for the conclusions of the main text, and they include a result favorable to learning: the
+unsupervised MPNN for uniform facility location generalized in scale better than the classical
+algorithm before local search.
+
 
 We reconstructed five recent approaches in an open-source stack (Python 3.12, SCIP 10 via
 PySCIPOpt 6.2, HiGHS 1.15, OR-Tools 9.15, PyTorch on CPU). These are methodological
@@ -15,7 +23,7 @@ Approach & What the learned component does & Outcome against the classical count
 Learned branching \citep{gasse2019,gupta2020} & ranks branching candidates by imitating strong
 branching (953 samples) & on 20 \texttt{facilities} instances (100$\times$100), 91.7~s vs.\
 100.1~s for reliability pseudocost (shifted geometric means), but with 167 vs.\ 49 nodes and on
-par with plain pseudocost (93.2~s); top-1 accuracy equal to most-fractional (0.36 vs.\ 0.39) \\
+par with plain pseudocost (93.2~s); top-1 accuracy numerically close to most-fractional (0.36 vs.\ 0.39; no equivalence test) \\
 Learned swap filters \citep{guo2023swap,su2024urban} & selects which swaps of a $p$-median local
 search to evaluate & without fallback, the classical add-gain filter gave 47$\times$ speedup with
 6.6\% loss at $n=1000$; the learned filter gave 14$\times$ with 8.8\% and won only at the training
@@ -23,10 +31,12 @@ scale ($n=200$) \\
 Unsupervised MPNN for uniform facility location \citep{qian2026unifl} & predicts opening
 probabilities trained on an expected-cost loss & after stabilizing training (3 of 4 seeds
 collapsed in the pre-registered version), 1.026 of the best known at $n=1000$ vs.\ 1.186 for
-Mettu--Plaxton; with local search both are within 0.6\% of the optimum \\
+Mettu--Plaxton; with local search both are within 0.6\% of the reference (proven optimum for small $n$, best
+known solution for $n=1000$) \\
 Neural embedded MIP for location-routing \citep{kaleem2024neo} & a Deep Sets routing-cost
 surrogate embedded in the location MIP & with big-M ReLU encodings in SCIP the MIP never left its
-initial solution (dual gap 591\% after 120~s); a linear continuous approximation had median
+initial solution (solver-reported optimality gap of 591\% after 120~s, a different quantity from the truncated
+primal gap of Section~\ref{sec:metrics}); a linear continuous approximation had median
 deviation 0.03\% vs.\ 0.05--0.30\% for the neural variants \\
 Learned pruning (this paper, Section~\ref{sec:res-pruning}) & keeps the top-ranked facilities &
 the LP ranking matched or beat the GNN except at 80\% kept facilities \\
@@ -59,8 +69,8 @@ axis}: speedup, the running time of the full swap search divided by the running 
 filtered search from the same start (log scale; 10 means ten times faster). \emph{Vertical axis}:
 loss, the final cost relative to the best solution found by any configuration, in percent.
 Filled circles stop when no filtered swap improves (the regime of the original papers); hollow
-squares run one full sweep before stopping, which guarantees a true local optimum of the full
-neighborhood. \emph{Classical add-gain filter}: ranks entering facilities by
+squares run one full sweep before stopping, so that, when the sweep completes within the time limit, the result is a local optimum of
+the swap neighborhood. \emph{Classical add-gain filter}: ranks entering facilities by
 $\sum_j w_j \max(0, d^{(1)}_j - d_{kj})$ and leaving facilities by their removal loss.
 \emph{Learned filter}: two gradient-boosted regressors imitating the best exact swap gain, trained
 on networks with $n=200$. Source: \texttt{results/pesquisa/swap\_v2/}.}
@@ -71,3 +81,31 @@ The common pattern is that the speedups reported for learned components often co
 mechanism the learning plugs into (filtering candidate moves, decomposing the problem, embedding
 a cheaper objective) rather than from the learning itself, which is why the classical
 counterpart, given the same budget, is the necessary baseline.
+
+\section{Provenance of the results}\label{app:provenance}
+Table~\ref{tab:proven} links each table and figure of the main text to the run directory it was
+computed from. Run identifiers are hashes of the manifest, which covers the configuration, the
+versions of the libraries and the content of every source file under \texttt{src/}, the input
+instances and the models; analysis scripts and pre-registrations are versioned in the same
+repository but are not part of the manifest hash. The reference solution is computed within each
+run set, so values in different rows are not directly comparable (the reference changed in 13 to
+14 of the 16 validation instances from one pilot to the next).
+
+\begin{table}[t]\centering\small
+\caption{Provenance. All run directories are under \texttt{results/pesquisa/}. E: exploratory
+(validation instances); C: confirmatory (pre-registered).}\label{tab:proven}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lllll}
+\toprule
+Item & Instances & Run directory & Analysis & Status \\
+\midrule
+Fig.~\ref{fig:rho} & validation (32) & \texttt{etapa1/rho\_validacao.csv} & \texttt{paper/figuras/gerar\_figuras.py} & E \\
+Fig.~\ref{fig:pilot1} & validation (16), 1 seed & \texttt{clns/81dbbcb06942419706f3} & \texttt{scripts/agregados\_clns.py} & E \\
+Tab.~\ref{tab:pilot2}, Figs.~\ref{fig:pilot2}--\ref{fig:pilot2-wins}, \ref{fig:cpu} & validation (16), 3 seeds; before the second CLNS audit & \texttt{clns/eaa3f86d9312c0970ce9} & \texttt{scripts/agregados\_clns.py} & E \\
+Tab.~\ref{tab:pilot3}, Figs.~\ref{fig:pilot3}--\ref{fig:pilot3-mem} & validation (16), 3 seeds; after the audit & \texttt{clns/e1a72d506f53ea707aa1} & \texttt{scripts/agregados\_clns.py} & E \\
+Tabs.~\ref{tab:closed}--\ref{tab:hyp}, Figs.~\ref{fig:closed}--\ref{fig:closed-hyp} & test (32), corridor (16), scale (16) & \texttt{clns/f87a\ldots}, \texttt{6f38\ldots}, \texttt{ee80\ldots} & \texttt{scripts/analisar\_fechado.py} & C \\
+Tab.~\ref{tab:holmberg} & Holmberg (71) & \texttt{clns/3882eca9dc70b2d799f0} & \texttt{scripts/analisar\_fechado.py} & C (descriptive) \\
+Tab.~\ref{tab:olist} & Olist (4) & \texttt{clns/6fb102a566458da78987} & \texttt{scripts/analisar\_fechado.py} & C (descriptive) \\
+\bottomrule
+\end{tabular}}
+\end{table}

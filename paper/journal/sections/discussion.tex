@@ -54,8 +54,11 @@ articles.
 decomposition shows the value of coordination in this construction, not of grouping by cost
 profile against, e.g., random groups of the same sizes.
 \item In the pilots, the GNN-guided selector of the stand-alone CLNS computed its scores before
-the search clock started, so its trajectory is shifted by the inference time; this method was not
-part of the closed test.
+the search clock started, so its trajectory is shifted by the inference time. The shift is small
+(the recorded overrun of those runs has median 0 and maximum 0.48~s), the method was not part of
+the closed test, and the code will be corrected before that method is run again.
+\item The final deviation of the pilots was first computed from the returned objective; recomputed
+at $T$, three of the 944 pilot runs change and one table entry moves from 1.82\% to 1.84\%.
 \item The closed test was run on a machine that was not idle during two of its five sets; 16.5\%
 of the runs carry a contention flag. The conclusions on the primal integral are unchanged without
 the flagged runs, but the absolute values of the corridor and scale sets are upper estimates, and

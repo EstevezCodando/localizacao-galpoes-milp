@@ -18,7 +18,7 @@
    "integral": 0.021458758517658147,
    "integral_lo": 0.017077519709628577,
    "integral_hi": 0.02615018970636506,
-   "desvio_mediano": 0.005314052848380343,
+   "desvio_mediano": 0.005314052848380416,
    "ate_1pct": 0.75,
    "ate_01pct": 0.1875,
    "melhor_em": 0.3125,
@@ -29,7 +29,7 @@
    "integral": 0.021684170115278664,
    "integral_lo": 0.017136093127381735,
    "integral_hi": 0.026459664259941618,
-   "desvio_mediano": 0.005868823723054825,
+   "desvio_mediano": 0.005868823723055232,
    "ate_1pct": 0.875,
    "ate_01pct": 0.1875,
    "melhor_em": 0.3125,
@@ -62,7 +62,7 @@
    "integral": 0.023991037087730264,
    "integral_lo": 0.01832310542596155,
    "integral_hi": 0.03004172214932598,
-   "desvio_mediano": 0.009344453987918833,
+   "desvio_mediano": 0.009344453987919499,
    "ate_1pct": 0.5,
    "ate_01pct": 0.125,
    "melhor_em": 0.125,
@@ -73,7 +73,7 @@
    "integral": 0.025838858921655865,
    "integral_lo": 0.019425574490874977,
    "integral_hi": 0.03333382972835704,
-   "desvio_mediano": 0.009879024102750766,
+   "desvio_mediano": 0.0098790241027511,
    "ate_1pct": 0.5625,
    "ate_01pct": 0.125,
    "melhor_em": 0.1875,
@@ -84,7 +84,7 @@
    "integral": 0.034672141738752674,
    "integral_lo": 0.030483708034845743,
    "integral_hi": 0.0386183313459249,
-   "desvio_mediano": 0.023567205000158818,
+   "desvio_mediano": 0.023567205000158853,
    "ate_1pct": 0.0,
    "ate_01pct": 0.0,
    "melhor_em": 0.0,
@@ -95,7 +95,7 @@
    "integral": 0.03724440161166163,
    "integral_lo": 0.03198064165587385,
    "integral_hi": 0.04276270474059016,
-   "desvio_mediano": 0.02800196963272154,
+   "desvio_mediano": 0.028001969632721613,
    "ate_1pct": 0.0,
    "ate_01pct": 0.0,
    "melhor_em": 0.0,
@@ -106,7 +106,7 @@
    "integral": 0.0705602412656212,
    "integral_lo": 0.059508429857288325,
    "integral_hi": 0.08098588311148638,
-   "desvio_mediano": 0.024424486952891233,
+   "desvio_mediano": 0.024424486952891566,
    "ate_1pct": 0.1875,
    "ate_01pct": 0.0625,
    "melhor_em": 0.0625,
@@ -177,25 +177,25 @@
    "familia": "clusters",
    "razao": 1.5,
    "metodo": "adaptativa:gnn",
-   "desvio_mediano": 0.016493402590003647
+   "desvio_mediano": 0.01649340259000387
   },
   {
    "familia": "clusters",
    "razao": 1.5,
    "metodo": "adaptativa:pl",
-   "desvio_mediano": 0.011847039163233708
+   "desvio_mediano": 0.011847039163233819
   },
   {
    "familia": "clusters",
    "razao": 1.5,
    "metodo": "clns:rotacao",
-   "desvio_mediano": 0.025601684930775824
+   "desvio_mediano": 0.02560168493077586
   },
   {
    "familia": "clusters",
    "razao": 1.5,
    "metodo": "clns:rotacao+mem",
-   "desvio_mediano": 0.025603125405573118
+   "desvio_mediano": 0.025603125405573156
   },
   {
    "familia": "clusters",
@@ -207,25 +207,25 @@
    "familia": "clusters",
    "razao": 1.5,
    "metodo": "hibrido:rotacao",
-   "desvio_mediano": 0.002590805477978038
+   "desvio_mediano": 0.002590805477978001
   },
   {
    "familia": "clusters",
    "razao": 1.5,
    "metodo": "hibrido:rotacao+mem",
-   "desvio_mediano": 0.0025786785639750898
+   "desvio_mediano": 0.0025786785639750156
   },
   {
    "familia": "clusters",
    "razao": 1.5,
    "metodo": "hibridopl:rotacao",
-   "desvio_mediano": 0.004449375214872468
+   "desvio_mediano": 0.0044493752148725045
   },
   {
    "familia": "clusters",
    "razao": 1.5,
    "metodo": "hibridopl:rotacao+mem",
-   "desvio_mediano": 0.006367161237929131
+   "desvio_mediano": 0.006367161237929094
   },
   {
    "familia": "clusters",
@@ -237,19 +237,19 @@
    "familia": "clusters",
    "razao": 3.0,
    "metodo": "adaptativa:gnn",
-   "desvio_mediano": 0.016357886081211692
+   "desvio_mediano": 0.01635788608121236
   },
   {
    "familia": "clusters",
    "razao": 3.0,
    "metodo": "adaptativa:pl",
-   "desvio_mediano": -1.6653345369377348e-16
+   "desvio_mediano": 0.0
   },
   {
    "familia": "clusters",
    "razao": 3.0,
    "metodo": "clns:rotacao",
-   "desvio_mediano": 0.017709101910729646
+   "desvio_mediano": 0.01770910191072968
   },
   {
    "familia": "clusters",
@@ -261,7 +261,7 @@
    "familia": "clusters",
    "razao": 3.0,
    "metodo": "completo",
-   "desvio_mediano": 0.011880850377158247
+   "desvio_mediano": 0.011880850377158914
   },
   {
    "familia": "clusters",
@@ -285,37 +285,37 @@
    "familia": "clusters",
    "razao": 3.0,
    "metodo": "hibridopl:rotacao+mem",
-   "desvio_mediano": 0.007837467425213593
+   "desvio_mediano": 0.007837467425213629
   },
   {
    "familia": "clusters",
    "razao": 3.0,
    "metodo": "kernel",
-   "desvio_mediano": 0.00811873618351322
+   "desvio_mediano": 0.008118736183513331
   },
   {
    "familia": "uniforme",
    "razao": 1.5,
    "metodo": "adaptativa:gnn",
-   "desvio_mediano": 0.008329053459924407
+   "desvio_mediano": 0.008329053459924518
   },
   {
    "familia": "uniforme",
    "razao": 1.5,
    "metodo": "adaptativa:pl",
-   "desvio_mediano": 0.012970584719209088
+   "desvio_mediano": 0.0129705847192092
   },
   {
    "familia": "uniforme",
    "razao": 1.5,
    "metodo": "clns:rotacao",
-   "desvio_mediano": 0.024915124578914056
+   "desvio_mediano": 0.024915124578914094
   },
   {
    "familia": "uniforme",
    "razao": 1.5,
    "metodo": "clns:rotacao+mem",
-   "desvio_mediano": 0.018301063402841843
+   "desvio_mediano": 0.018301063402841877
   },
   {
    "familia": "uniforme",
@@ -327,7 +327,7 @@
    "familia": "uniforme",
    "razao": 1.5,
    "metodo": "hibrido:rotacao",
-   "desvio_mediano": 0.007380359698599015
+   "desvio_mediano": 0.007380359698599034
   },
   {
    "familia": "uniforme",
@@ -339,7 +339,7 @@
    "familia": "uniforme",
    "razao": 1.5,
    "metodo": "hibridopl:rotacao",
-   "desvio_mediano": 0.0030820229468094817
+   "desvio_mediano": 0.0030820229468095186
   },
   {
    "familia": "uniforme",
@@ -351,13 +351,13 @@
    "familia": "uniforme",
    "razao": 1.5,
    "metodo": "kernel",
-   "desvio_mediano": 0.010146876337801647
+   "desvio_mediano": 0.010146876337801869
   },
   {
    "familia": "uniforme",
    "razao": 3.0,
    "metodo": "adaptativa:gnn",
-   "desvio_mediano": 0.0006549159150620598
+   "desvio_mediano": 0.0006549159150622819
   },
   {
    "familia": "uniforme",
@@ -369,13 +369,13 @@
    "familia": "uniforme",
    "razao": 3.0,
    "metodo": "clns:rotacao",
-   "desvio_mediano": 0.033778310721158514
+   "desvio_mediano": 0.03377831072115848
   },
   {
    "familia": "uniforme",
    "razao": 3.0,
    "metodo": "clns:rotacao+mem",
-   "desvio_mediano": 0.02596604922730724
+   "desvio_mediano": 0.02596604922730731
   },
   {
    "familia": "uniforme",
@@ -387,7 +387,7 @@
    "familia": "uniforme",
    "razao": 3.0,
    "metodo": "hibrido:rotacao",
-   "desvio_mediano": 0.007402896990694371
+   "desvio_mediano": 0.0074028969906944075
   },
   {
    "familia": "uniforme",
@@ -399,19 +399,19 @@
    "familia": "uniforme",
    "razao": 3.0,
    "metodo": "hibridopl:rotacao",
-   "desvio_mediano": 0.00574171430601487
+   "desvio_mediano": 0.005741714306015333
   },
   {
    "familia": "uniforme",
    "razao": 3.0,
    "metodo": "hibridopl:rotacao+mem",
-   "desvio_mediano": 0.003732371038992007
+   "desvio_mediano": 0.003732371038992673
   },
   {
    "familia": "uniforme",
    "razao": 3.0,
    "metodo": "kernel",
-   "desvio_mediano": 0.004934910671697934
+   "desvio_mediano": 0.004934910671698045
   }
  ],
  "anytime": {

@@ -1,0 +1,207 @@
+{
+ "3.3_desvio_final_em_T": {
+  "piloto1": {
+   "execucoes": 160,
+   "melhoraram_apos_T": 0,
+   "metodos_afetados": {},
+   "sem_solucao_ate_T": 0,
+   "invalidas": 0,
+   "maior_mudanca_no_desvio_mediano_pp": 8.881784197001252e-14,
+   "desvio_mediano_T_pct": {
+    "adaptativa:gnn": 0.3198,
+    "clns:aleatorio": 1.9312,
+    "clns:alns": 2.7076,
+    "clns:aprendido": 1.6665,
+    "clns:dual": 1.2152,
+    "clns:rotacao": 1.9621,
+    "completo": 1.811,
+    "ingenua": 28.7555,
+    "lns": 1.2471,
+    "warm_classico": 3.1962
+   },
+   "desvio_mediano_retorno_pct": {
+    "adaptativa:gnn": 0.3198,
+    "clns:aleatorio": 1.9312,
+    "clns:alns": 2.7076,
+    "clns:aprendido": 1.6665,
+    "clns:dual": 1.2152,
+    "clns:rotacao": 1.9621,
+    "completo": 1.811,
+    "ingenua": 28.7555,
+    "lns": 1.2471,
+    "warm_classico": 3.1962
+   }
+  },
+  "piloto2": {
+   "execucoes": 432,
+   "melhoraram_apos_T": 3,
+   "metodos_afetados": {
+    "lns": 1,
+    "hibrido:gnn": 1,
+    "clns:alns": 1
+   },
+   "sem_solucao_ate_T": 0,
+   "invalidas": 0,
+   "maior_mudanca_no_desvio_mediano_pp": 0.01643875954295479,
+   "desvio_mediano_T_pct": {
+    "adaptativa:gnn": 0.8104,
+    "clns:alns": 2.4029,
+    "clns:aprendido": 2.1174,
+    "clns:gnn": 1.8818,
+    "clns:rotacao": 2.3097,
+    "completo": 2.6575,
+    "hibrido:aprendido": 0.5738,
+    "hibrido:gnn": 0.6217,
+    "hibrido:rotacao": 0.6309,
+    "lns": 1.8354,
+    "warm_classico": 3.5949
+   },
+   "desvio_mediano_retorno_pct": {
+    "adaptativa:gnn": 0.8104,
+    "clns:alns": 2.4029,
+    "clns:aprendido": 2.1174,
+    "clns:gnn": 1.8818,
+    "clns:rotacao": 2.3097,
+    "completo": 2.6575,
+    "hibrido:aprendido": 0.5738,
+    "hibrido:gnn": 0.6217,
+    "hibrido:rotacao": 0.6309,
+    "lns": 1.819,
+    "warm_classico": 3.5949
+   }
+  },
+  "piloto3": {
+   "execucoes": 352,
+   "melhoraram_apos_T": 0,
+   "metodos_afetados": {},
+   "sem_solucao_ate_T": 0,
+   "invalidas": 0,
+   "maior_mudanca_no_desvio_mediano_pp": 6.661338147750939e-14,
+   "desvio_mediano_T_pct": {
+    "adaptativa:gnn": 0.9344,
+    "adaptativa:pl": 0.1685,
+    "clns:rotacao": 2.8002,
+    "clns:rotacao+mem": 2.3567,
+    "completo": 2.4424,
+    "hibrido:rotacao": 0.8688,
+    "hibrido:rotacao+mem": 0.8688,
+    "hibridopl:rotacao": 0.5314,
+    "hibridopl:rotacao+mem": 0.5869,
+    "kernel": 0.9879
+   },
+   "desvio_mediano_retorno_pct": {
+    "adaptativa:gnn": 0.9344,
+    "adaptativa:pl": 0.1685,
+    "clns:rotacao": 2.8002,
+    "clns:rotacao+mem": 2.3567,
+    "completo": 2.4424,
+    "hibrido:rotacao": 0.8688,
+    "hibrido:rotacao+mem": 0.8688,
+    "hibridopl:rotacao": 0.5314,
+    "hibridopl:rotacao+mem": 0.5869,
+    "kernel": 0.9879
+   }
+  }
+ },
+ "4.11_bks_entre_pilotos": {
+  "mudou_1_para_2": 14,
+  "mudou_2_para_3": 13,
+  "instancias": 16,
+  "queda_relativa_mediana_2_para_3_pct": 0.02086200526079408
+ },
+ "4.9_curvas_piloto2_gap_pct": {
+  "t=5s": {
+   "adaptativa:gnn": 2.832,
+   "hibrido:aprendido": 3.536,
+   "hibrido:rotacao": 3.536,
+   "hibrido:gnn": 3.536
+  },
+  "t=15s": {
+   "adaptativa:gnn": 1.744,
+   "hibrido:aprendido": 1.945,
+   "hibrido:rotacao": 1.842,
+   "hibrido:gnn": 1.741
+  },
+  "t=30s": {
+   "adaptativa:gnn": 0.896,
+   "hibrido:aprendido": 1.265,
+   "hibrido:rotacao": 1.685,
+   "hibrido:gnn": 1.428
+  }
+ },
+ "3.8_relogio_piloto2": {
+  "clns:gnn": {
+   "t_total_mediano_s": 59.999828300000004,
+   "estouro_mediano_s": 0.0,
+   "estouro_max_s": 0.4803757999999973,
+   "ultimo_evento_max_s": 59.85416170000099
+  },
+  "clns:rotacao": {
+   "t_total_mediano_s": 59.99722895,
+   "estouro_mediano_s": 0.0,
+   "estouro_max_s": 0.2437889999999996,
+   "ultimo_evento_max_s": 45.9114572000035
+  },
+  "clns:aprendido": {
+   "t_total_mediano_s": 59.979022150000006,
+   "estouro_mediano_s": 0.0,
+   "estouro_max_s": 0.0754124999999987,
+   "ultimo_evento_max_s": 59.999900000002526
+  },
+  "hibrido:gnn": {
+   "t_total_mediano_s": 59.9978332,
+   "estouro_mediano_s": 0.0,
+   "estouro_max_s": 0.6675407999999976,
+   "ultimo_evento_max_s": 60.66733699999895
+  },
+  "hibrido:rotacao": {
+   "t_total_mediano_s": 59.998404199999996,
+   "estouro_mediano_s": 0.0,
+   "estouro_max_s": 0.2584456000000017,
+   "ultimo_evento_max_s": 57.99377870000171
+  },
+  "adaptativa:gnn": {
+   "t_total_mediano_s": 59.0058146,
+   "estouro_mediano_s": 0.0,
+   "estouro_max_s": 0.0,
+   "ultimo_evento_max_s": 57.162412899997435
+  }
+ },
+ "3.7_custos_reduzidos_assinados": {
+  "exemplo_parecer": {
+   "min_rc_y": -388.5814488484875,
+   "min_rc_x": -5.894091410389578,
+   "neg_y": 2,
+   "neg_x": 1
+  },
+  "validacao_32": {
+   "rc_y_negativos": 249,
+   "de": 960,
+   "rc_x_negativos": 474,
+   "de_x": 144000,
+   "todo_rc_y_negativo_tem_y_igual_a_1": true
+  }
+ },
+ "4.6_aninhamento_apos_reparo": {
+  "instancias": 32,
+  "K20_em_K40": 32,
+  "K40_em_K60": 32
+ },
+ "4.8_operador_abertura": {
+  "alvos": 127,
+  "clientes_livres": 1905,
+  "alvo_entre_os_10_mais_baratos": 1516,
+  "alvos_sem_nenhum_cliente": 3
+ },
+ "3.5_cargas": {
+  "demandas_representaveis_em_6_casas": true
+ },
+ "4.8_tamanho_dos_grupos": {
+  "n_grupos": 320,
+  "min": 5,
+  "p25": 12.0,
+  "mediana": 14.0,
+  "p75": 18.0,
+  "max": 31
+ }
+}

@@ -58,27 +58,24 @@ and avoids repetitions.
 
 \paragraph{Contributions.}
 \begin{itemize}
-\item A controlled comparison of learned and learning-free search-space reduction for the SSCFLP.
-In a pre-registered test the LP-based ranking was significantly better than the GNN; in
-exploratory pilots, learned subproblem selection did not separate from rotation
-(Sections~\ref{sec:res-test}, \ref{sec:res-pilot} and~\ref{sec:res-controls}).
-\item A coordinated decomposition for single-source capacity, with a proof that accepted moves
-are globally feasible and fixed costs are charged once, and a reduced-cost certificate that lets
-a restricted solve prove global optimality (Section~\ref{sec:method}).
-\item An identity of LNS subproblems adapted to the residual state of the SSCFLP, used as a
-memory in the spirit of POPMUSIC and of the masking in learning-to-delegate, and the measurement
-that more than half of the selected subproblems had already been tried without success (Sections~\ref{sec:memory}
+\item \textbf{A controlled comparison} of learned and learning-free search-space reduction for the
+SSCFLP, in which each learned component has a counterpart of the same function under the same
+budget. A pre-registered test answers RQ1--RQ3 (Section~\ref{sec:res-test}); exploratory pilots
+address RQ4 and subproblem selection (Sections~\ref{sec:res-pilot} and~\ref{sec:res-controls}).
+\item \textbf{A characterization of failure modes} under capacity coupling: ranking-based pruning
+that cannot be both small and safe, uncoordinated decomposition that produces infeasible unions,
+and a neighborhood search in which more than half of the selected subproblems had already been
+tried without success (Sections~\ref{sec:res-pruning}, \ref{sec:res-decomp}
 and~\ref{sec:res-controls}).
-\item Evidence, with quantified failure modes, of why pruning and uncoordinated decomposition
-are inadequate under capacity coupling (Sections~\ref{sec:res-pruning} and~\ref{sec:res-decomp}).
-\item An evaluation protocol for learned optimization methods that controls the sources of
-timing error we encountered: one pinned physical core per run, single-threaded numerical
-libraries, wall-clock and CPU time with a contention flag, primal integral with cumulative best
-incumbent, frozen data with content hashes, and pre-registered hypotheses
-(Section~\ref{sec:experiments}).
-\item An account of what did not transfer when reconstructing five recent learning-for-optimization
-approaches in an open-source stack (Appendix~\ref{app:reconstructions}).
+\item \textbf{A reproducible implementation with delimited guarantees}: a coordinated
+decomposition whose accepted moves are feasible for the full problem, a reduced-cost stopping
+rule that lets a restricted solve prove optimality, and an evaluation protocol with pinned cores,
+two clocks, frozen data and registered hypotheses (Sections~\ref{sec:method}
+and~\ref{sec:experiments}). The reduced-cost argument and the idea of remembering unproductive
+subproblems are classical; we use them, we do not claim them.
 \end{itemize}
+Appendix~\ref{app:reconstructions} reports, as supplementary material with its own scope, what we
+observed when reconstructing five recent learning-for-optimization approaches.
 
 In the pre-registered closed test, restricting the search space by the LP ranking more than
 halved the primal integral of the solver on the full model, while the same mechanism driven by

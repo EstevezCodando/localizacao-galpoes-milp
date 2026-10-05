@@ -47,7 +47,11 @@ def main() -> None:
     bks = df[df["valida"]].groupby("instancia")["objetivo"].min()
     bks = pd.concat([bks, df.groupby("instancia")["rotulo_melhor"].first()], axis=1).min(axis=1)
     df["bks"] = df["instancia"].map(bks)
-    df["desvio"] = np.where(df["valida"], df["objetivo"] / df["bks"] - 1, np.nan)
+    # Desvio final = g(T): melhor incumbente com instante <= T, não o objetivo devolvido (que pode
+    # ter melhorado num estouro). Sem solução até T => desvio 1; a execução fica no denominador.
+    df["obj_T"] = [min((o for t, o in tr if t <= a.horizonte + 1e-9), default=np.inf)
+                   for tr in df["traj"]]
+    df["desvio"] = np.minimum(1.0, df["obj_T"] / df["bks"] - 1)
     df["integral"] = [integral_primal(t, b, a.horizonte) for t, b in zip(df["traj"], df["bks"])]
     grade = np.arange(0, a.horizonte + 1e-9, 1.0)
     df["curva"] = [[gap_em(t, b, g) for g in grade] for t, b in zip(df["traj"], df["bks"])]

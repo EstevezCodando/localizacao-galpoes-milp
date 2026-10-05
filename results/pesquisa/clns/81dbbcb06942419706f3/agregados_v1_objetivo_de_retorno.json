@@ -18,7 +18,7 @@
    "integral": 0.02401918432523424,
    "integral_lo": 0.01770179039317509,
    "integral_hi": 0.030806852688905307,
-   "desvio_mediano": 0.016664614706398462,
+   "desvio_mediano": 0.016664614706398573,
    "ate_1pct": 0.3125,
    "ate_01pct": 0.1875,
    "melhor_em": 0.0625,
@@ -73,7 +73,7 @@
    "integral": 0.06179411376042271,
    "integral_lo": 0.050445463901493216,
    "integral_hi": 0.07305788526538369,
-   "desvio_mediano": 0.012471389228259855,
+   "desvio_mediano": 0.012471389228259966,
    "ate_1pct": 0.375,
    "ate_01pct": 0.125,
    "melhor_em": 0.0625,
@@ -84,7 +84,7 @@
    "integral": 0.06907842878661277,
    "integral_lo": 0.05645286425591184,
    "integral_hi": 0.0824408745313354,
-   "desvio_mediano": 0.03196194557978693,
+   "desvio_mediano": 0.03196194557978682,
    "ate_1pct": 0.1875,
    "ate_01pct": 0.0625,
    "melhor_em": 0.0625,
@@ -95,7 +95,7 @@
    "integral": 0.07366283853368967,
    "integral_lo": 0.06108436877010303,
    "integral_hi": 0.08542849056326608,
-   "desvio_mediano": 0.018110275863175596,
+   "desvio_mediano": 0.018110275863176484,
    "ate_1pct": 0.25,
    "ate_01pct": 0.25,
    "melhor_em": 0.125,
@@ -177,7 +177,7 @@
    "familia": "clusters",
    "razao": 1.5,
    "metodo": "adaptativa:gnn",
-   "desvio_mediano": 0.0005379195133196624
+   "desvio_mediano": 0.000537919513320051
   },
   {
    "familia": "clusters",
@@ -213,7 +213,7 @@
    "familia": "clusters",
    "razao": 1.5,
    "metodo": "completo",
-   "desvio_mediano": 0.01765335577013616
+   "desvio_mediano": 0.01765335577013638
   },
   {
    "familia": "clusters",
@@ -225,19 +225,19 @@
    "familia": "clusters",
    "razao": 1.5,
    "metodo": "lns",
-   "desvio_mediano": 0.002037265956685408
+   "desvio_mediano": 0.002037265956685519
   },
   {
    "familia": "clusters",
    "razao": 1.5,
    "metodo": "warm_classico",
-   "desvio_mediano": 0.03389655737341679
+   "desvio_mediano": 0.03389655737341657
   },
   {
    "familia": "clusters",
    "razao": 3.0,
    "metodo": "adaptativa:gnn",
-   "desvio_mediano": 0.011787225073809249
+   "desvio_mediano": 0.011787225073810581
   },
   {
    "familia": "clusters",
@@ -249,13 +249,13 @@
    "familia": "clusters",
    "razao": 3.0,
    "metodo": "clns:alns",
-   "desvio_mediano": 0.02302219265122185
+   "desvio_mediano": 0.023022192651221962
   },
   {
    "familia": "clusters",
    "razao": 3.0,
    "metodo": "clns:aprendido",
-   "desvio_mediano": 0.008840430712372171
+   "desvio_mediano": 0.008840430712372283
   },
   {
    "familia": "clusters",
@@ -273,7 +273,7 @@
    "familia": "clusters",
    "razao": 3.0,
    "metodo": "completo",
-   "desvio_mediano": 0.014732230483793796
+   "desvio_mediano": 0.014732230483794684
   },
   {
    "familia": "clusters",
@@ -285,19 +285,19 @@
    "familia": "clusters",
    "razao": 3.0,
    "metodo": "lns",
-   "desvio_mediano": 0.016080160064955384
+   "desvio_mediano": 0.016080160064955273
   },
   {
    "familia": "clusters",
    "razao": 3.0,
    "metodo": "warm_classico",
-   "desvio_mediano": 0.033329589878514976
+   "desvio_mediano": 0.033329589878514865
   },
   {
    "familia": "uniforme",
    "razao": 1.5,
    "metodo": "adaptativa:gnn",
-   "desvio_mediano": 0.006862984699409935
+   "desvio_mediano": 0.006862984699409491
   },
   {
    "familia": "uniforme",
@@ -357,7 +357,7 @@
    "familia": "uniforme",
    "razao": 3.0,
    "metodo": "adaptativa:gnn",
-   "desvio_mediano": 6.513976419697531e-05
+   "desvio_mediano": 6.513976419719736e-05
   },
   {
    "familia": "uniforme",
@@ -387,19 +387,19 @@
    "familia": "uniforme",
    "razao": 3.0,
    "metodo": "clns:rotacao",
-   "desvio_mediano": 0.033096047814716645
+   "desvio_mediano": 0.033096047814716534
   },
   {
    "familia": "uniforme",
    "razao": 3.0,
    "metodo": "completo",
-   "desvio_mediano": 0.030402492313188922
+   "desvio_mediano": 0.03040249231318881
   },
   {
    "familia": "uniforme",
    "razao": 3.0,
    "metodo": "ingenua",
-   "desvio_mediano": 0.3011339709805664
+   "desvio_mediano": 0.30113397098056627
   },
   {
    "familia": "uniforme",
@@ -411,7 +411,7 @@
    "familia": "uniforme",
    "razao": 3.0,
    "metodo": "warm_classico",
-   "desvio_mediano": 0.026506443240169375
+   "desvio_mediano": 0.026506443240169486
   }
  ],
  "anytime": {

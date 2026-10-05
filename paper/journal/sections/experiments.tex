@@ -61,6 +61,32 @@ subproblem memory of Section~\ref{sec:memory}.
 greedily repaired.
 \end{itemize}
 
+\paragraph{What each comparison holds fixed.} Table~\ref{tab:compar} lists, for each question,
+the pair of methods compared and what differs between them. Two comparisons are not clean and
+are reported as joint effects: the GNN-guided selector changes the selection rule and adds the
+\emph{opening} candidates, and the hybrid against the expansion alone changes the allocation of
+time ($\alpha T$ against $T$ for the expansion) as well as adding the CLNS.
+
+\begin{table}[t]\centering\small
+\caption{Comparability of the main comparisons. ``Same'' components are identical in code and
+parameters.}\label{tab:compar}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llll}
+\toprule
+Question & Methods compared & What differs & Evidence \\
+\midrule
+Does restriction help? (RQ1) & LP expansion vs.\ SCIP & restriction, LP solve & closed test (H1) \\
+Does the learned ranking help? (RQ2) & GNN vs.\ LP expansion & facility score only (one GNN checkpoint) & closed test (H2) \\
+Does CLNS after restriction help? (RQ3) & LP hybrid vs.\ LP expansion & CLNS phase \emph{and} time split $\alpha$ & closed test (H3) \\
+Expansion vs.\ classical method & LP expansion vs.\ kernel-search variant & growing sets vs.\ buckets; full model at the end & closed test (H4) \\
+Does learned selection help? & learned vs.\ rotation/ALNS & selector (same candidates) & pilots only \\
+Does GNN-guided selection help? & GNN-guided vs.\ rotation & selector \emph{and} opening candidates & pilots only \\
+Does memory help? & same search with/without memory & candidate filtering by key & pilot 3 only \\
+Does clustering help? & not isolated & -- & not tested \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
 \subsection{Protocol}\label{sec:protocol}
 An audit of an earlier version of our harness found that solver set-up time was counted twice in
 incumbent trajectories, that the primal integral did not use the cumulative best incumbent across

@@ -499,7 +499,7 @@ curvas não têm de coincidir antes disso: a expansão sozinha reparte seus est�
 | Híbrido, rotação | 0,0274 (0,021–0,035) | 0,63% | 62,5% |
 | Híbrido, guiado pela GNN | 0,0296 (0,022–0,040) | 0,62% | 68,8% |
 | CLNS, seletor aprendido | 0,0292 (0,023–0,036) | 2,12% | 12,5% |
-| LNS | 0,0700 (0,059–0,082) | 1,82% | 12,5% |
+| LNS | 0,0700 (0,059–0,082) | 1,84% | 12,5% |
 | SCIP (modelo completo) | 0,0795 (0,067–0,091) | 2,66% | 18,8% |
 
 As duas hipóteses registradas antes do piloto **não se confirmaram**: o híbrido não tem integral
