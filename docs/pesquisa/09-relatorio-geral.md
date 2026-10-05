@@ -20,10 +20,10 @@ corredor, escala, Holmberg e Olist, pré-registrado) está na seção 10 e é a 
 |---|---|
 | Aprender a **podar** centros acelera o SSCFLP com segurança? | Não. Para manter a melhor solução em 80% das instâncias é preciso ficar com cerca de 80% dos centros, com qualquer ranqueador. O ranking da relaxação linear, sem treino, é igual ou melhor que a GNN entre ρ = 0,2 e 0,7. |
 | Decompor por clusters funciona? | Só com coordenação. Sem ela, a união dos subproblemas violou a capacidade em todas as instâncias examinadas. Com capacidade residual e custo fixo pago uma vez (CLNS), toda solução aceita é viável. |
-| O que dá o melhor resultado? | Restringir os centros pelo ranking do PL. No teste fechado, a expansão adaptativa ordenada pelo PL teve menos da metade da integral primal do SCIP completo (0,050 contra 0,108; p < 0,001) e desvio final mediano de 0,50% contra 3,72%. Com a fase de CLNS, 0,042 e 0,35%. O Kernel Search clássico fica no mesmo nível (0,042). |
+| O que dá o melhor resultado? | Restringir os centros pelo ranking do PL. Em hardware dedicado, a expansão adaptativa ordenada pelo PL teve cerca de metade da integral primal do SCIP completo (0,033 contra 0,061; p < 0,001) e desvio final mediano de 0,35% contra 1,27%. O Kernel Search clássico fica no mesmo nível (0,027), e o ganho adicional da fase de CLNS não se replicou. |
 | O certificado de ótimo funciona? | Sim, em instâncias pequenas: em 59 das 71 instâncias de Holmberg a expansão parou com o ótimo global provado antes de resolver o modelo completo. Nas sintéticas 30 × 150 ele quase nunca fecha (1 em 32). |
 | E em instâncias reais grandes? | Nas duas maiores do Olist (600 e 850 clientes), só os métodos com CLNS chegaram perto da melhor solução conhecida (0,02% a 0,15%, contra 8,7% a 9,3% dos demais). São 4 instâncias, resultado descritivo. |
-| O aprendizado é o responsável pelo ganho? | Não. No teste fechado, trocar o ranking da relaxação linear pelo da GNN **piorou** a expansão de forma significativa (integral primal 0,089 contra 0,050 em 64 instâncias; p = 0,004 com correção de Holm). Em instâncias maiores que as do treino, a expansão com GNN não foi melhor que o SCIP completo. Nos pilotos, o seletor aprendido não se separou da rotação. |
+| O aprendizado é o responsável pelo ganho? | Não. Trocar o ranking da relaxação linear pelo da GNN **piorou** a integral primal da expansão, com efeito quase idêntico em duas rodadas independentes (+0,039; p = 0,004 local e p = 0,005 em hardware dedicado, com correção de Holm). Em hardware dedicado a expansão com GNN fica acima do SCIP completo. No desvio final o efeito não se replicou. Nos pilotos, o seletor aprendido não se separou da rotação. |
 | Por que o seletor importa pouco? | 54% a 58% dos subproblemas escolhidos pelo CLNS eram repetições de subproblemas que já tinham falhado. A busca é limitada pelo alcance das vizinhanças, não pela ordem em que são tentadas. |
 | As frentes da literatura se reproduzem? | Parcialmente. Em cinco reconstruções, a heurística clássica de mesma função capturou a maior parte do ganho atribuído ao aprendizado. |
 
@@ -544,6 +544,89 @@ afirmação estatística.
 em um tamanho de instância e duas famílias espaciais, com cerca de 4 horas de CPU de rótulos.
 Não é uma afirmação sobre ranking aprendido em geral.
 
+### 10.1 Replicação em hardware dedicado
+
+**Segunda rodada, em hardware dedicado.** Como a primeira rodada teve 16,5% das execuções
+marcadas por contenção, o teste fechado inteiro foi repetido em uma instância AWS EC2
+`c7i.2xlarge` (Xeon Platinum 8488C, 4 núcleos físicos com 1 thread cada, Ubuntu 24.04), com o
+mesmo código, os mesmos dados conferidos por hash e as mesmas sementes. A regra de leitura foi
+registrada **antes** de rodar ([pré-registro](10-preregistro-teste-fechado.md), seção 9): uma hipótese só é tratada como
+**confirmada** se for significativa (Holm, 5%) na rodada da nuvem **e** tiver o mesmo sinal na
+rodada local.
+
+| Rodada | Execuções | Mediana CPU ÷ parede | Marcadas por contenção | Maior estouro |
+|---|---:|---:|---:|---:|
+| Local (Windows, 3 execuções simultâneas, máquina em uso) | 1.390 | 0,957 | 229 | 0,94 s |
+| Nuvem (Linux, núcleos dedicados) | 1.390 | 1,000 | 0 | 0,08 s |
+
+**Hipóteses nas duas rodadas (64 instâncias sintéticas).** Diferença média A − B, com valor-p de
+Wilcoxon corrigido por Holm.
+
+| Hipótese | Métrica | Local | Nuvem | Veredito |
+|---|---|---|---|---|
+| **H1** expansão PL − SCIP completo | integral primal | −0,059; p < 0,001 | −0,029; p < 0,001 | **confirmada** |
+| | desvio final | −3,10 p.p.; p < 0,001 | −0,90 p.p.; p < 0,001 | **confirmada** |
+| **H2** expansão GNN − expansão PL | integral primal | +0,039; p = 0,004 | +0,039; p = 0,005 | **confirmada** (GNN pior) |
+| | desvio final | +0,57 p.p.; p = 0,043 | +0,52 p.p.; p = 0,056 | não replicada |
+| **H3** híbrido PL − expansão PL | integral primal | −0,008; p = 0,66 | −0,005; p = 0,72 | sem diferença nas duas |
+| | desvio final | −0,54 p.p.; p = 0,0495 | −0,28 p.p.; p = 0,056 | não replicada |
+| **H4** expansão PL − Kernel Search | integral primal | +0,008; p = 0,64 | +0,006; p = 0,41 | sem diferença nas duas |
+| | desvio final | −0,32 p.p.; p = 0,0495 | −0,20 p.p.; p = 0,49 | não replicada |
+
+| Método (64 instâncias) | Integral local | Integral nuvem | Desvio mediano local | Desvio mediano nuvem |
+|---|---:|---:|---:|---:|
+| Híbrido PL | 0,0420 | 0,0280 | 0,35% | 0,30% |
+| Kernel Search | 0,0422 | 0,0269 | 0,74% | 0,53% |
+| Expansão adaptativa (PL) | 0,0497 | 0,0326 | 0,50% | 0,35% |
+| Híbrido GNN | 0,0677 | 0,0478 | 0,62% | 0,30% |
+| Expansão adaptativa (GNN) | 0,0889 | 0,0712 | 0,64% | 0,54% |
+| SCIP (modelo completo) | 0,1083 | 0,0611 | 3,72% | 1,27% |
+
+**O que se sustenta nas duas rodadas.**
+
+- **Restringir pelo ranking do PL ajuda (H1).** Confirmada nas duas métricas. Em proporção, a
+  expansão fica com cerca de metade da integral do SCIP completo nas duas rodadas (0,050 contra
+  0,108 local; 0,033 contra 0,061 na nuvem). Em valor absoluto a diferença cai à metade, e no
+  desvio final cai de 3,1 para 0,9 ponto percentual: sem contenção o SCIP completo termina bem
+  melhor (desvio mediano de 1,27%, contra 3,72% na rodada local).
+- **O ranking aprendido é pior que o do PL na integral primal (H2).** A diferença é quase idêntica
+  nas duas rodadas (+0,039) e significativa nas duas; o PL vence em 45 de 64 instâncias na nuvem.
+  Na nuvem, a expansão com GNN (0,071) fica **acima** do SCIP completo (0,061), e no conjunto de
+  escala perde para ele em 11 de 16 instâncias.
+- **No desvio final, o efeito da GNN não se replica** pela regra registrada (p = 0,056 na nuvem):
+  a GNN é mais lenta para chegar, mas não há evidência confirmada de que termine pior.
+
+**O que não se sustenta.**
+
+- **A fase de CLNS (H3)** não muda a integral primal em nenhuma rodada, e o ganho no desvio final
+  que aparecia no limiar na rodada local não se replicou (p = 0,056). Fica como sugestão, não
+  como resultado.
+- **Expansão contra Kernel Search (H4):** sem diferença em nenhuma métrica na nuvem. O Kernel
+  Search tem a menor integral agregada na nuvem (0,027).
+
+**Holmberg na nuvem.** O certificado de custo reduzido provou o ótimo antes do último estágio em
+66 das 71 instâncias com o ranking do PL (63 com a GNN), em mediana de 0,4 s. A expansão com PL
+atinge o ótimo publicado em 67 instâncias; o SCIP completo, em 66.
+
+**Olist na nuvem (4 instâncias, descritivo).** Desvio final em relação à melhor solução conhecida:
+
+| Método | 30 × 150 | 60 × 300 | 100 × 600 | 150 × 850 |
+|---|---:|---:|---:|---:|
+| Híbrido PL | 0,09% | 0,43% | 0,93% | 0,02% |
+| Híbrido GNN | 0,09% | 0,42% | 0,97% | 1,36% |
+| Kernel Search | 0,01% | 0,66% | 2,31% | 7,74% |
+| SCIP (modelo completo) | 0,01% | 1,29% | 2,92% | 9,26% |
+| Expansão adaptativa (PL ou GNN) | 0,06% | 3,09% | 6,30% | 9,26% |
+
+O padrão da rodada local se repete: nas instâncias grandes, só os métodos com CLNS chegam perto
+da melhor solução. Na nuvem a expansão já devolve solução na maior instância, e o SCIP completo
+vai melhor nas intermediárias do que tinha ido localmente.
+
+**Leitura.** A contenção da primeira rodada não inverteu nenhuma conclusão, mas **inflou a
+vantagem absoluta sobre o SCIP completo**, sobretudo no desvio final, e produziu dois valores-p no
+limiar que não se replicaram. Os números absolutos a citar são os da rodada em hardware dedicado; os da rodada
+local ficam como primeira execução.
+
 ---
 
 ## 11. O que foi implementado
@@ -583,9 +666,8 @@ uv run python scripts/figuras_pesquisa.py
 
 **Fracos**
 
-- O teste fechado rodou com a máquina ocupada em dois dos cinco conjuntos: 16,5% das execuções
-  estão marcadas por contenção. As conclusões da integral primal se mantêm sem elas, mas os
-  valores absolutos de corredor e escala são estimativas por cima.
+- A primeira rodada do teste fechado teve 16,5% das execuções marcadas por contenção; a
+  segunda, em hardware dedicado, nenhuma. Os números absolutos a citar são os da segunda.
 - Dois valores-p da métrica secundária estão no limiar (0,0495 nos dois casos).
 - O resultado negativo sobre aprendizado vale para esta GNN e este orçamento de treino.
 - A maior parte das instâncias é sintética; Holmberg tem ótimo provado, mas tamanhos pequenos; o
@@ -598,8 +680,6 @@ uv run python scripts/figuras_pesquisa.py
 
 ## 13. Próximos passos
 
-1. **Replicar os conjuntos corredor e escala com a máquina ociosa**, para tirar a contenção dos
-   valores absolutos.
 1. **Vizinhanças de maior alcance** no CLNS (abrir e fechar vários centros de uma vez), já que
    a repetição medida mostra que o gargalo é o alcance e não a seleção.
 2. **EDA em linha** (passo 3 do plano): estimar durante a própria busca a distribuição de

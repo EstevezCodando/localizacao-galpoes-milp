@@ -113,3 +113,35 @@ análise ter sido vista, e por isso fica registrada como emenda, com as duas ver
   `tabelas_v1_objetivo_de_retorno.md`.
 
 Nenhuma hipótese, método, conjunto ou teste estatístico foi alterado.
+
+## 9. Emenda: segunda rodada em hardware dedicado (registrada em 05/10/2026, antes de rodá-la)
+
+**Motivo.** Na primeira rodada, 16,5% das execuções ficaram marcadas por contenção (máquina
+ocupada durante `gen_corredor` e `gen_escala`) e houve duas suspensões. O motivo é de medição e
+não depende do sentido dos resultados.
+
+**O que será feito.** O teste fechado inteiro (os cinco conjuntos, os seis métodos, os mesmos
+orçamentos e sementes) será repetido em uma instância de nuvem com núcleos dedicados:
+
+- AWS EC2 `c7i.2xlarge`, Intel Xeon Platinum 8488C, 4 núcleos físicos com 1 thread por núcleo,
+  16 GB, Ubuntu 24.04; 3 execuções simultâneas, um núcleo livre para o sistema, como no protocolo.
+- Código: `src/alocacao_capacitada/pesquisa` idêntico byte a byte ao do commit do pré-registro
+  (conferido pelos hashes de blob do git). Dados e modelos conferidos pela trava
+  `data/frozen/LOCK.json` na instância.
+- Única diferença de ambiente: `scripts/linux/corrigir_highs.sh` renomeia o SONAME da `libhighs`
+  do pacote `highspy`, porque no Linux ela colide com a do `ortools`. Não altera código nem
+  versões de biblioteca.
+- Uma calibração de 24 execuções em 4 instâncias de **validação** foi feita antes para conferir
+  que o ambiente funciona e que a razão CPU ÷ parede fica perto de 1. Nenhuma instância de teste
+  foi executada na nuvem antes desta emenda.
+
+**Como as duas rodadas serão lidas (fixado agora).**
+
+- As duas rodadas são relatadas lado a lado, com a mesma análise (`scripts/analisar_fechado.py`,
+  desvio final em T). Nenhuma é descartada.
+- Tempos absolutos e integrais não são comparáveis entre as rodadas (hardware diferente); cada
+  rodada tem a própria referência (BKS) calculada dentro dela.
+- Uma hipótese é tratada como **confirmada** somente se for significativa (Holm, 5%) na rodada
+  da nuvem **e** tiver o mesmo sinal na rodada local. Se as rodadas discordarem em sinal, ou se
+  só uma for significativa, o resultado é relatado como **não replicado**.
+- Os critérios de descarte por suspensão e a marca de contenção valem como antes.

@@ -77,10 +77,11 @@ subproblems are classical; we use them, we do not claim them.
 Appendix~\ref{app:reconstructions} reports, as supplementary material with its own scope, what we
 observed when reconstructing five recent learning-for-optimization approaches.
 
-In the pre-registered closed test, restricting the search space by the LP ranking more than
-halved the primal integral of the solver on the full model, while the same mechanism driven by
-the learned ranking was significantly worse than its LP-driven counterpart and, on instances
-larger than those seen in training, no better than the full solver. On real instances with up to
+In the pre-registered closed test, run twice on different hardware, restricting the search
+space by the LP ranking about halved the primal integral of the solver on the full model, while
+the same mechanism driven by the learned ranking had a significantly worse primal integral than
+its LP-driven counterpart in both rounds and, on dedicated hardware, was numerically above the full
+solver. On real instances with up to
 850 customers, only the methods with the coordinated neighborhood search came close to the best
 known solution on the two largest.
 Section~\ref{sec:related} reviews related work; Section~\ref{sec:problem} states the problem, its

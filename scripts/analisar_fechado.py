@@ -133,6 +133,8 @@ def fmt_hip(linhas: list[dict[str, object]], k: float) -> str:
 
 def main() -> None:
     runs = dict(a.split("=", 1) for a in sys.argv[1:])
+    global OUT
+    OUT = Path(runs.pop("saida", str(OUT)))  # ex.: saida=results/pesquisa/fechado_nuvem
     dados = {c: carregar(c, Path(r)) for c, r in runs.items()}
     res: dict[str, object] = {"runs": runs}
     md = ["# Teste fechado — tabelas\n"]

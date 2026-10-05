@@ -13,15 +13,17 @@ More than half of the subproblems selected by the neighborhood search had alread
 without success from the same local state, which suggests, without proving it, that the search
 is limited by the reach of its neighborhoods more than by their order.
 
-The pre-registered closed test, on 139 instances that no pilot had used, sharpened these
-conclusions. Restricting the facilities by the LP ranking more than halved the primal integral
-of the full solver. Replacing the LP ranking by the GNN made the expansion significantly worse,
-increasingly so away from the training distribution, to the point of matching the full solver on
-larger instances. Kernel search, a learning-free method from 2014, was at the level of the nested
-expansion. The neighborhood-search phase did not change the primal integral, lowered the final
-deviation by about half a percentage point at the threshold of significance, and was the only
-component that came close to the best known solution on real instances with 600 and 850
-customers (four instances, reported descriptively).
+The pre-registered closed test, on 139 instances that no pilot had used, was run twice, and
+we retain only what both rounds support. Restricting the facilities by the LP ranking about
+halved the primal integral of the full solver. Replacing the LP ranking by the GNN made the
+primal integral of the expansion significantly worse, by the same amount in both rounds, and on
+dedicated hardware numerically worse than the full solver; that it also ends worse was not replicated. A
+kernel-search variant, a learning-free method from 2014, was at the level of the expansion. The
+neighborhood-search phase did not change the primal integral and its effect on the final
+deviation was not replicated; it was the component that came close to the best known solution on
+real instances with 600 and 850 customers (four instances, reported descriptively). The first
+round ran partly under contention, which inflated the advantage over the full solver without
+reversing any conclusion.
 
 The practical recommendation is to report, for any learned search-space reduction, the
 learning-free method with the same function and the same budget. Future work includes

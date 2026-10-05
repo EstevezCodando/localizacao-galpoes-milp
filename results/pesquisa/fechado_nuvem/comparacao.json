@@ -1,0 +1,271 @@
+{
+ "regra": "confirmada = significativa (Holm 5%) na nuvem e mesmo sinal na local",
+ "hipoteses_integral": [
+  {
+   "hipotese": "H1",
+   "a": "adaptativa:pl",
+   "b": "completo",
+   "local": {
+    "hipotese": "H1",
+    "a": "adaptativa:pl",
+    "b": "completo",
+    "n": 64,
+    "dif_media": -0.058583536721015766,
+    "dif_lo": -0.08355052668300027,
+    "dif_hi": -0.031037461551923995,
+    "a_melhor": 55,
+    "b_melhor": 9,
+    "p": 2.266687078501716e-06,
+    "p_holm": 9.066748314006864e-06
+   },
+   "nuvem": {
+    "hipotese": "H1",
+    "a": "adaptativa:pl",
+    "b": "completo",
+    "n": 64,
+    "dif_media": -0.028455728436096613,
+    "dif_lo": -0.045080164958633984,
+    "dif_hi": -0.008041595049320501,
+    "a_melhor": 55,
+    "b_melhor": 9,
+    "p": 2.1932167536795056e-06,
+    "p_holm": 8.772867014718023e-06
+   },
+   "mesmo_sinal": true,
+   "veredito": "confirmada"
+  },
+  {
+   "hipotese": "H2",
+   "a": "adaptativa:gnn",
+   "b": "adaptativa:pl",
+   "local": {
+    "hipotese": "H2",
+    "a": "adaptativa:gnn",
+    "b": "adaptativa:pl",
+    "n": 64,
+    "dif_media": 0.03920982915355834,
+    "dif_lo": 0.013459400364971017,
+    "dif_hi": 0.07059716524795252,
+    "a_melhor": 22,
+    "b_melhor": 42,
+    "p": 0.0014230246101340823,
+    "p_holm": 0.004269073830402247
+   },
+   "nuvem": {
+    "hipotese": "H2",
+    "a": "adaptativa:gnn",
+    "b": "adaptativa:pl",
+    "n": 64,
+    "dif_media": 0.03853807566251401,
+    "dif_lo": 0.012915563506747621,
+    "dif_hi": 0.0692650224925702,
+    "a_melhor": 19,
+    "b_melhor": 45,
+    "p": 0.0015967367223034329,
+    "p_holm": 0.0047902101669102986
+   },
+   "mesmo_sinal": true,
+   "veredito": "confirmada"
+  },
+  {
+   "hipotese": "H3",
+   "a": "hibridopl:rotacao",
+   "b": "adaptativa:pl",
+   "local": {
+    "hipotese": "H3",
+    "a": "hibridopl:rotacao",
+    "b": "adaptativa:pl",
+    "n": 64,
+    "dif_media": -0.007728550601608666,
+    "dif_lo": -0.01792183590240877,
+    "dif_hi": 0.0007004644776669653,
+    "a_melhor": 31,
+    "b_melhor": 33,
+    "p": 0.6589413132631801,
+    "p_holm": 0.6589413132631801
+   },
+   "nuvem": {
+    "hipotese": "H3",
+    "a": "hibridopl:rotacao",
+    "b": "adaptativa:pl",
+    "n": 64,
+    "dif_media": -0.004615632528807078,
+    "dif_lo": -0.013512741798743587,
+    "dif_hi": 0.0023516940183189046,
+    "a_melhor": 31,
+    "b_melhor": 33,
+    "p": 0.7230108485635914,
+    "p_holm": 0.7230108485635914
+   },
+   "mesmo_sinal": true,
+   "veredito": "sem diferença nas duas"
+  },
+  {
+   "hipotese": "H4",
+   "a": "adaptativa:pl",
+   "b": "kernel",
+   "local": {
+    "hipotese": "H4",
+    "a": "adaptativa:pl",
+    "b": "kernel",
+    "n": 64,
+    "dif_media": 0.007580492057585407,
+    "dif_lo": -0.0011977990797409621,
+    "dif_hi": 0.01761780893711625,
+    "a_melhor": 36,
+    "b_melhor": 28,
+    "p": 0.3190372799501302,
+    "p_holm": 0.6380745599002604
+   },
+   "nuvem": {
+    "hipotese": "H4",
+    "a": "adaptativa:pl",
+    "b": "kernel",
+    "n": 64,
+    "dif_media": 0.005767164852273466,
+    "dif_lo": -0.0009883583468732026,
+    "dif_hi": 0.013885585909397322,
+    "a_melhor": 38,
+    "b_melhor": 26,
+    "p": 0.2038617707116589,
+    "p_holm": 0.4077235414233178
+   },
+   "mesmo_sinal": true,
+   "veredito": "sem diferença nas duas"
+  }
+ ],
+ "hipoteses_desvio": [
+  {
+   "hipotese": "H1",
+   "a": "adaptativa:pl",
+   "b": "completo",
+   "local": {
+    "hipotese": "H1",
+    "a": "adaptativa:pl",
+    "b": "completo",
+    "n": 64,
+    "dif_media": -0.03102838978649423,
+    "dif_lo": -0.040677174798401064,
+    "dif_hi": -0.02182598722233639,
+    "a_melhor": 50,
+    "b_melhor": 7,
+    "p": 1.2130586782650348e-08,
+    "p_holm": 4.8522347130601394e-08
+   },
+   "nuvem": {
+    "hipotese": "H1",
+    "a": "adaptativa:pl",
+    "b": "completo",
+    "n": 64,
+    "dif_media": -0.009023860101499885,
+    "dif_lo": -0.013090837294002183,
+    "dif_hi": -0.004917777175673769,
+    "a_melhor": 44,
+    "b_melhor": 15,
+    "p": 2.6048813252809732e-05,
+    "p_holm": 0.00010419525301123893
+   },
+   "mesmo_sinal": true,
+   "veredito": "confirmada"
+  },
+  {
+   "hipotese": "H2",
+   "a": "adaptativa:gnn",
+   "b": "adaptativa:pl",
+   "local": {
+    "hipotese": "H2",
+    "a": "adaptativa:gnn",
+    "b": "adaptativa:pl",
+    "n": 64,
+    "dif_media": 0.005720811955293207,
+    "dif_lo": 0.0013785915217132277,
+    "dif_hi": 0.010465072242548877,
+    "a_melhor": 15,
+    "b_melhor": 32,
+    "p": 0.014301220341775426,
+    "p_holm": 0.04290366102532628
+   },
+   "nuvem": {
+    "hipotese": "H2",
+    "a": "adaptativa:gnn",
+    "b": "adaptativa:pl",
+    "n": 64,
+    "dif_media": 0.005171442999569788,
+    "dif_lo": 0.0013429062728317746,
+    "dif_hi": 0.009403640425681932,
+    "a_melhor": 16,
+    "b_melhor": 29,
+    "p": 0.0185651091582633,
+    "p_holm": 0.055695327474789905
+   },
+   "mesmo_sinal": true,
+   "veredito": "não replicada"
+  },
+  {
+   "hipotese": "H3",
+   "a": "hibridopl:rotacao",
+   "b": "adaptativa:pl",
+   "local": {
+    "hipotese": "H3",
+    "a": "hibridopl:rotacao",
+    "b": "adaptativa:pl",
+    "n": 64,
+    "dif_media": -0.005369306333456439,
+    "dif_lo": -0.01061839172144225,
+    "dif_hi": -0.001163659756848504,
+    "a_melhor": 38,
+    "b_melhor": 19,
+    "p": 0.024734632229695894,
+    "p_holm": 0.04946926445939179
+   },
+   "nuvem": {
+    "hipotese": "H3",
+    "a": "hibridopl:rotacao",
+    "b": "adaptativa:pl",
+    "n": 64,
+    "dif_media": -0.0028006849965080322,
+    "dif_lo": -0.005934711101845325,
+    "dif_hi": 8.391902119883912e-05,
+    "a_melhor": 36,
+    "b_melhor": 17,
+    "p": 0.02290033836521044,
+    "p_holm": 0.055695327474789905
+   },
+   "mesmo_sinal": true,
+   "veredito": "não replicada"
+  },
+  {
+   "hipotese": "H4",
+   "a": "adaptativa:pl",
+   "b": "kernel",
+   "local": {
+    "hipotese": "H4",
+    "a": "adaptativa:pl",
+    "b": "kernel",
+    "n": 64,
+    "dif_media": -0.003189189520665301,
+    "dif_lo": -0.0069117074985480635,
+    "dif_hi": 0.00034490598119509865,
+    "a_melhor": 33,
+    "b_melhor": 20,
+    "p": 0.049247921916060804,
+    "p_holm": 0.04946926445939179
+   },
+   "nuvem": {
+    "hipotese": "H4",
+    "a": "adaptativa:pl",
+    "b": "kernel",
+    "n": 64,
+    "dif_media": -0.002032587453967562,
+    "dif_lo": -0.004510392904670255,
+    "dif_hi": 0.0004082293083057833,
+    "a_melhor": 24,
+    "b_melhor": 23,
+    "p": 0.490936150676622,
+    "p_holm": 0.490936150676622
+   },
+   "mesmo_sinal": true,
+   "veredito": "não replicada"
+  }
+ ]
+}

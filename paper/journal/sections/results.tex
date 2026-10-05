@@ -428,6 +428,91 @@ Adaptive expansion (GNN) & 0.06 & 3.06 & 8.68 & -- \\
 \end{tabular}
 \end{table}
 
+\subsection{Replication on dedicated hardware}\label{sec:res-repl}
+Because 16.5\% of the runs of the closed test carried a contention flag
+(Section~\ref{sec:res-measure}), we repeated the whole closed test on a cloud instance with
+dedicated cores (AWS EC2 \texttt{c7i.2xlarge}, Intel Xeon Platinum 8488C, four physical cores
+with one thread each, Ubuntu~24.04), with byte-identical research code, hash-verified data and
+models, and the same seeds. Before running it we registered how the two rounds would be read: a
+hypothesis counts as \emph{confirmed} only if it is significant (Holm, 5\%) in the second round
+\emph{and} has the same sign in the first; otherwise it is reported as not replicated. Absolute
+times and integrals are not comparable across rounds, since the hardware differs, and each round
+uses its own reference solutions. In the second round all 1{,}390 runs had a CPU/wall ratio of
+1.00 and none was flagged; the largest budget overrun was 0.08~s.
+
+\begin{table}[t]\centering\small
+\caption{The four pre-registered hypotheses in the two rounds of the closed test (64 pooled
+synthetic instances). $\bar\Delta$: mean per-instance difference A~$-$~B (negative favors A; the
+deviation is in percentage points); $p_{\mathrm{H}}$: Holm-corrected Wilcoxon $p$-value.
+\emph{Verdict} follows the rule registered before the second round.}\label{tab:repl}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lll rr rr l}
+\toprule
+ & & & \multicolumn{2}{c}{First round (local)} & \multicolumn{2}{c}{Second round (dedicated)} & \\
+ & A $-$ B & Metric & $\bar\Delta$ & $p_{\mathrm{H}}$ & $\bar\Delta$ & $p_{\mathrm{H}}$ & Verdict \\
+\midrule
+H1 & expansion (LP) $-$ SCIP & primal integral & $-0.059$ & $<0.001$ & $-0.029$ & $<0.001$ & confirmed \\
+ & & final deviation & $-3.10$ & $<0.001$ & $-0.90$ & $<0.001$ & confirmed \\
+H2 & expansion (GNN) $-$ expansion (LP) & primal integral & $+0.039$ & 0.004 & $+0.039$ & 0.005 & confirmed \\
+ & & final deviation & $+0.57$ & 0.043 & $+0.52$ & 0.056 & not replicated \\
+H3 & LP hybrid $-$ expansion (LP) & primal integral & $-0.008$ & 0.659 & $-0.005$ & 0.723 & no difference \\
+ & & final deviation & $-0.54$ & 0.050 & $-0.28$ & 0.056 & not replicated \\
+H4 & expansion (LP) $-$ kernel search & primal integral & $+0.008$ & 0.638 & $+0.006$ & 0.408 & no difference \\
+ & & final deviation & $-0.32$ & 0.050 & $-0.20$ & 0.491 & not replicated \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{table}[t]\centering\small
+\caption{Pooled synthetic set (64 instances) in the two rounds. $P$: mean primal integral;
+\emph{Dev.}: median final deviation (\%). Values of different rounds are not directly comparable.}
+\label{tab:repl-methods}
+\begin{tabular}{lrrrr}
+\toprule
+ & \multicolumn{2}{c}{First round (local)} & \multicolumn{2}{c}{Second round (dedicated)} \\
+Method & $P$ & Dev. & $P$ & Dev. \\
+\midrule
+Kernel search & 0.0422 & 0.74 & 0.0269 & 0.53 \\
+LP hybrid & 0.0420 & 0.35 & 0.0280 & 0.30 \\
+Adaptive expansion (LP) & 0.0497 & 0.50 & 0.0326 & 0.35 \\
+Hybrid (GNN) & 0.0677 & 0.62 & 0.0478 & 0.30 \\
+SCIP (full model) & 0.1083 & 3.72 & 0.0611 & 1.27 \\
+Adaptive expansion (GNN) & 0.0889 & 0.64 & 0.0712 & 0.54 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Tables~\ref{tab:repl} and~\ref{tab:repl-methods} give the outcome. Two statements are confirmed.
+\emph{Restriction by the LP ranking helps} (H1), on both metrics: in both rounds the LP-ranked
+expansion has about half the primal integral of SCIP on the full model (0.033 against 0.061 on
+dedicated hardware). The absolute difference is half of what the first round showed, and the
+difference in final deviation falls from 3.1 to 0.9 percentage points: without contention the
+full solver ends much better (median deviation 1.27\% against 3.72\%). \emph{The learned ranking
+is worse than the LP ranking in primal integral} (H2): the difference is almost identical in the
+two rounds ($+0.039$), and on dedicated hardware the LP ranking is better in 45 of the 64
+instances. There the GNN-ranked expansion (0.071) has a higher primal integral than SCIP on the
+full model (0.061), and on the scale set it ends worse than the full solver in 11 of 16
+instances.
+
+Three statements are \emph{not} confirmed. The higher final deviation of the GNN-ranked expansion
+does not pass the registered rule ($p_{\mathrm{H}}=0.056$): the learned ranking is slower to reach
+good solutions, but we have no confirmed evidence that it ends worse. The reduction of the final
+deviation by the CLNS phase (H3), at the threshold in the first round, was not replicated
+($p_{\mathrm{H}}=0.056$), and the phase does not change the primal integral in either round. The
+expansion and the kernel-search variant (H4) do not differ on any metric on dedicated hardware,
+where kernel search has the lowest pooled primal integral (0.027).
+
+On the Holmberg instances the certificate \eqref{eq:cert} proved optimality before the last
+stage in 66 of 71 instances with the LP ranking (63 with the GNN), in a median of 0.4~s, and the
+LP-ranked expansion reached the published optimum in 67 instances against 66 for the full solver.
+On the Olist instances the pattern of the first round repeats: on the two largest, the LP hybrid
+ends 0.93\% and 0.02\% from the best known solution, against 2.9\% and 9.3\% for the full solver
+and 6.3\% and 9.3\% for the expansion alone.
+
+The contention of the first round did not reverse any conclusion, but it inflated the absolute
+advantage over the full solver and produced two threshold $p$-values that did not replicate. The
+absolute figures to be cited are those of the second round.
+
 \subsection{Ablations}
 \todo{$\alpha\in\{0.3,0.5,0.7\}$; without the opening subproblem; without the LP start; cluster
 size 10/15/30.}
@@ -455,8 +540,9 @@ as pre-registered all runs are kept in the main analysis. Repeating the tests of
 Table~\ref{tab:hyp} without the flagged runs (38--42 instances remain per comparison) gives the
 same conclusions for the primal integral: H1 ($p_{\mathrm{Holm}}<0.001$) and H2
 ($p_{\mathrm{Holm}}=0.006$) significant, H3 and H4 not ($p_{\mathrm{Holm}}=0.54$). Absolute
-primal integrals of the corridor and scale sets should nevertheless be read as upper estimates,
-and a replication of these two sets on an idle machine is listed as future work.
+primal integrals of the corridor and scale sets of this round should nevertheless be read as
+upper estimates; Section~\ref{sec:res-repl} reports a second round of the whole test on dedicated
+hardware, in which no run was flagged.
 
 \begin{figure}[t]\centering
 \includegraphics[width=0.7\linewidth]{../figuras/piloto2_cpu_parede.pdf}

@@ -8,15 +8,15 @@ that solves growing restricted problems over ranked facilities and stops when re
 certify optimality, and a cluster-oriented large neighborhood search that re-optimizes groups of
 customers over residual capacities, for which every accepted move is feasible for the full
 problem. Facilities are ranked by a graph neural network or by the linear relaxation; a variant
-of kernel search is the classical baseline. In a pre-registered test on 139 instances unseen
-during development, the expansion ranked by the linear relaxation had less than half the primal
-integral of the solver on the full model on 64 synthetic instances (0.050 against 0.108,
-$p<0.001$). Replacing that ranking by the learned one made the expansion significantly worse
-(0.089, $p=0.004$ after Holm's correction), and no better than the full solver on instances
-larger than those used for training. The neighborhood search did not change the primal integral
-and lowered the final deviation by about half a percentage point, at the threshold of
-significance. On 71 benchmark instances with known optima, the reduced-cost certificate proved
-optimality before the full model was solved in 59. The results concern one trained ranker and one
-machine, part of the test ran under contention, and the evidence on learned subproblem selection
-is exploratory.
+of kernel search is the classical baseline. A pre-registered test on 139 instances unseen
+during development was run twice, on a workstation and on dedicated cloud cores, and a hypothesis
+is called confirmed only if both rounds agree. On 64 synthetic instances the expansion ranked by
+the linear relaxation had about half the primal integral of the solver on the full model in both
+rounds (0.033 against 0.061 on dedicated hardware, $p<0.001$). Replacing that ranking by the
+learned one made the primal integral significantly worse, by the same amount in both rounds
+($+0.039$; $p=0.005$ after Holm's correction), and numerically above that of the full solver on dedicated
+hardware. The neighborhood search did not change the primal integral, and its effect on the final
+deviation was not replicated. On 71 benchmark instances with known optima, the reduced-cost
+certificate proved optimality before the full model was solved in 66. The results concern one
+trained ranker, and the evidence on learned subproblem selection is exploratory.
 \end{abstract}

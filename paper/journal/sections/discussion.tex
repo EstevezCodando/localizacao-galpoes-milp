@@ -6,9 +6,9 @@ to search} than \emph{what to remove}. Heuristic pruning by a ranking is irrever
 capacity constraint (safe exclusion by reduced costs, which we use, is a different matter); guidance keeps the full domain reachable and only changes the order in which
 the search visits it. This matches the trend from learned pruning towards trust regions
 \citep{han2023}, learned neighborhoods \citep{huang2023} and learned delegation
-\citep{li2021delegate}. The closed test supports the first half of this statement and qualifies the second: guidance
-by a ranking roughly halved the primal integral of the full solver, but the ranking that worked
-was the one read from the LP relaxation, not the learned one.
+\citep{li2021delegate}. Both rounds of the closed test support the first half of this statement and qualify the
+second: guidance by a ranking roughly halved the primal integral of the full solver, but the
+ranking that worked was the one read from the LP relaxation, not the learned one.
 
 \paragraph{Where the gain came from.}
 In the closed test the gain over the full solver was obtained by the restriction mechanisms with
@@ -59,11 +59,13 @@ the search clock started, so its trajectory is shifted by the inference time. Th
 the closed test, and the code will be corrected before that method is run again.
 \item The final deviation of the pilots was first computed from the returned objective; recomputed
 at $T$, three of the 944 pilot runs change and one table entry moves from 1.82\% to 1.84\%.
-\item The closed test was run on a machine that was not idle during two of its five sets; 16.5\%
-of the runs carry a contention flag. The conclusions on the primal integral are unchanged without
-the flagged runs, but the absolute values of the corridor and scale sets are upper estimates, and
-those two sets should be replicated on an idle machine.
-\item Two of the four hypotheses on the secondary metric have corrected $p$-values of 0.0495 (both). We do not build conclusions on them.
+\item The first round of the closed test was run on a machine that was not idle during two of
+its five sets; 16.5\% of its runs carry a contention flag. The whole test was therefore repeated
+on dedicated hardware, and only statements supported by both rounds are called confirmed.
+\item Two hypotheses on the secondary metric had corrected $p$-values of 0.0495 in the first round
+and 0.056 in the second. By the registered rule they are not replicated.
+\item The two rounds differ in hardware, operating system and concurrency of other work, not in
+instances or seeds; they are a replication of the measurement, not of the sampling of instances.
 \item The GNN was trained on one instance size and two spatial families. The negative result on
 learning concerns this ranker and this training budget (about four CPU-hours of labels), not
 learned ranking in general.
