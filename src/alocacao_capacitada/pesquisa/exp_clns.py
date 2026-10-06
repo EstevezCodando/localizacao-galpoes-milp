@@ -8,7 +8,9 @@ Métodos: completo, warm_classico, lns, adaptativa:<gnn|pl> (delegados ao execut
 kernel (Kernel Search clássico), clns:<rotacao|aleatorio|alns|dual|aprendido|gnn>,
 hibrido:<seletor> (expansão adaptativa por GNN + CLNS), hibridopl:<seletor> (idem com ranking
 do PL, sem aprendizado) e ingenua (decomposição sem coordenação + reparo). O sufixo "+mem" em
-clns/hibrido/hibridopl liga a memória de subproblemas (ex.: hibrido:rotacao+mem).
+clns/hibrido/hibridopl liga a memória de subproblemas (ex.: hibrido:rotacao+mem). Outros sufixos,
+combináveis, são controles de diagnóstico: "+alea" troca os grupos por perfil por grupos aleatórios
+de mesmos tamanhos; "+k20" e "+k30" ampliam de 10 para 20 ou 30 os centros candidatos por cliente.
 
 uv run python -m alocacao_capacitada.pesquisa.exp_clns coletar --workers 3
 uv run python -m alocacao_capacitada.pesquisa.exp_clns treinar
@@ -144,8 +146,19 @@ def _ranqueadores():  # type: ignore[no-untyped-def]
     return _RK
 
 
+def _opcoes(metodo: str) -> tuple[str, dict]:
+    """Separa "pol:seletor+op1+op2" em base e argumentos do CLNS."""
+    base, *ops = metodo.split("+")
+    kw: dict = {"memoria": "mem" in ops, "agrupamento": "aleatorio" if "alea" in ops else "perfil",
+                "k_cand": next((int(o[1:]) for o in ops if o[:1] == "k" and o[1:].isdigit()), 10)}
+    desconhecidas = [o for o in ops if o not in ("mem", "alea") and not (o[:1] == "k" and o[1:].isdigit())]
+    if desconhecidas:
+        raise ValueError(f"opções desconhecidas em {metodo}: {desconhecidas}")
+    return base, kw
+
+
 def _hibrido(p, tempo: float, nome_sel: str, seed: int,  # type: ignore[no-untyped-def]
-             rank: str = "gnn", memoria: bool = False) -> tuple:
+             rank: str = "gnn", **kw_clns) -> tuple:
     """Expansão adaptativa em ALFA do orçamento (ranking `rank`: "gnn" ou "pl"), depois CLNS no
     restante, partindo da solução adaptativa, reaproveitando o PL e (no seletor 'gnn') o ranking
     da GNN. Com rank="pl" nada é aprendido: é o controle que isola o efeito da GNN."""
@@ -165,7 +178,7 @@ def _hibrido(p, tempo: float, nome_sel: str, seed: int,  # type: ignore[no-untyp
     sel = _seletor(nome_sel)
     s2 = C.clns(p, max(tempo - gasto, 0.05), sel, seed=seed, atrib_inicial=s1.atribuicao,
                 lp_pronto=(lp.rc_x, lp.x), gnn=prob_gnn if nome_sel == "gnn" else None,
-                t_offset=gasto, memoria=memoria)
+                t_offset=gasto, **kw_clns)
     traj = list(s1.trajetoria) + s2.trajetoria
     extra = {"t_adaptativa": gasto, "obj_adaptativa": s1.objetivo, "iteracoes": s2.iteracoes,
              "subproblemas": s2.iteracoes, "nos_scip_adaptativa": s1.nos,
@@ -226,20 +239,22 @@ def _rodar(args: tuple[str, str, float, int]) -> dict[str, object]:
             extra = {"nos": s.nos, "estagios": s.estagios, "fracao_final": s.fracao_final,
                      "t_pl": s.t_score}
         elif metodo.startswith(("hibrido:", "hibridopl:")):
-            base, _, mem = metodo.partition("+")
+            base, kw = _opcoes(metodo)
             pol, nome = base.split(":")
             obj, traj, valida, extra = _hibrido(p, tempo, nome, seed,
-                                                rank="pl" if pol == "hibridopl" else "gnn",
-                                                memoria=mem == "mem")
+                                                rank="pl" if pol == "hibridopl" else "gnn", **kw)
         else:
-            base, _, mem = metodo.partition("+")
+            base, kw = _opcoes(metodo)
             nome = base.split(":")[1]
             gnn = None
-            if nome == "gnn":
+            t_gnn = 0.0
+            if nome == "gnn":  # a inferência entra no mesmo relógio e desconta do orçamento
+                tg = time.perf_counter()
                 sc, _, _ = _ranqueadores().score("gnn", p, seed=0)
                 gnn = 1.0 / (1.0 + np.exp(-sc))
+                t_gnn = time.perf_counter() - tg
             sel = _seletor(nome)
-            s2 = C.clns(p, tempo, sel, seed=seed, gnn=gnn, memoria=mem == "mem")
+            s2 = C.clns(p, max(tempo - t_gnn, 0.05), sel, seed=seed, gnn=gnn, t_offset=t_gnn, **kw)
             obj, traj, valida = s2.objetivo, s2.trajetoria, s2.valida
             extra = {"iteracoes": s2.iteracoes, "subproblemas": s2.iteracoes, "t_pl": s2.t_pl,
                      "t_inicial": s2.t_inicial, "t_selecao": s2.t_selecao, "t_sub": s2.t_sub,
@@ -261,7 +276,7 @@ def avaliar(split: str, tempo: float, workers: int, metodos: tuple[str, ...],
     from alocacao_capacitada.pesquisa.registro import Registro, manifesto
 
     hash_dados = congelar.verificar(split)  # falha se os dados divergirem da trava
-    precisa_modelos = any(m.partition("+")[0].endswith(("aprendido", ":gnn"))
+    precisa_modelos = any(m.split("+")[0].endswith(("aprendido", ":gnn"))
                           or m.startswith("hibrido:") for m in metodos)
     hash_modelos = congelar.verificar("modelos") if precisa_modelos else None
     arqs = sorted((RAIZ / split).glob("*.pkl"))

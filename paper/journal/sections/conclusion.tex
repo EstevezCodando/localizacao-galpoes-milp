@@ -10,8 +10,10 @@ the solver on the full model. For the learned components the pilots found no evi
 favored the linear-relaxation ranking over the GNN, and learned subproblem selection did not
 separate from rotation.
 More than half of the subproblems selected by the neighborhood search had already been tried
-without success from the same local state, which suggests, without proving it, that the search
-is limited by the reach of its neighborhoods more than by their order.
+without success from the same local state, and when re-solved with a much larger time limit 98\%
+of them were proven to contain no better solution: the search is limited by the reach of its
+subproblems, part of which was the restriction of each customer to ten candidate facilities, and
+not by their order.
 
 The pre-registered closed test, on 139 instances that no pilot had used, was run twice, and
 we retain only what both rounds support. Restricting the facilities by the LP ranking about

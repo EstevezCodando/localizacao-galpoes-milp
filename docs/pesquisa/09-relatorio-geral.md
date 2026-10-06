@@ -24,7 +24,7 @@ corredor, escala, Holmberg e Olist, pré-registrado) está na seção 10 e é a 
 | O certificado de ótimo funciona? | Sim, em instâncias pequenas: em 59 das 71 instâncias de Holmberg a expansão parou com o ótimo global provado antes de resolver o modelo completo. Nas sintéticas 30 × 150 ele quase nunca fecha (1 em 32). |
 | E em instâncias reais grandes? | Nas duas maiores do Olist (600 e 850 clientes), só os métodos com CLNS chegaram perto da melhor solução conhecida (0,02% a 0,15%, contra 8,7% a 9,3% dos demais). São 4 instâncias, resultado descritivo. |
 | O aprendizado é o responsável pelo ganho? | Não. Trocar o ranking da relaxação linear pelo da GNN **piorou** a integral primal da expansão, com efeito quase idêntico em duas rodadas independentes (+0,039; p = 0,004 local e p = 0,005 em hardware dedicado, com correção de Holm). Em hardware dedicado a expansão com GNN fica acima do SCIP completo. No desvio final o efeito não se replicou. Nos pilotos, o seletor aprendido não se separou da rotação. |
-| Por que o seletor importa pouco? | 54% a 58% dos subproblemas escolhidos pelo CLNS eram repetições de subproblemas que já tinham falhado. A busca é limitada pelo alcance das vizinhanças, não pela ordem em que são tentadas. |
+| Por que o seletor importa pouco? | Porque a busca esgota as vizinhanças. 54% a 58% dos subproblemas escolhidos pelo CLNS eram repetições, e 98% dos repetidos reexecutados com mais tempo foram provados sem solução melhor. Ampliar de 10 para 30 os centros candidatos por cliente baixou o desvio do CLNS sozinho de 2,46% para 1,22% (p = 0,002); trocar o agrupamento por perfil por grupos aleatórios não fez diferença significativa. |
 | As frentes da literatura se reproduzem? | Parcialmente. Em cinco reconstruções, a heurística clássica de mesma função capturou a maior parte do ganho atribuído ao aprendizado. |
 
 ![Caminho percorrido](img/01_caminho.png)
@@ -629,7 +629,65 @@ local ficam como primeira execução.
 
 ---
 
-## 11. O que foi implementado
+## 11. Etapa 7 — diagnósticos de validação
+
+Depois do teste fechado, três diagnósticos pedidos pelo parecer do orientador foram
+[registrados](12-preregistro-diagnosticos.md) e rodados nas 16 instâncias de **validação**, em hardware dedicado (368
+execuções de busca e 512 reexecuções de subproblemas, nenhuma marcada por contenção). São
+exploratórios: servem para escolher entre explicações, não para confirmar hipóteses.
+
+**D1 — Um subproblema que falhou por limite de tempo estava esgotado?** O CLNS rodou 30 s e, de
+cada execução, até 8 subproblemas que eram repetição de uma falha anterior foram reexecutados do
+mesmo estado com limites de 5 s e de 30 s.
+
+| Partida | Subproblemas reexecutados | Ótimo provado, sem melhoria | Melhorou com 30 s | Indeterminado |
+|---|---:|---:|---:|---:|
+| Arredondamento do PL | 128 | 126 | 2 | 0 |
+| Solução da expansão adaptativa | 128 | 126 | 2 | 0 |
+
+Em 252 de 256 casos (98%) o solver **provou** que o subproblema não tinha solução melhor, em
+mediana de menos de 0,01 s. As quatro melhorias vieram de subproblemas de fronteira e de
+liberação, com ganho mediano de 0,07% do custo. A falha repetida não era falta de tempo: o
+subproblema estava esgotado. Isso sustenta, nestas instâncias, a memória de subproblemas como
+heurística segura, e mostra que o limite de 0,5 s não é o gargalo.
+
+**D2 — O agrupamento por perfil de custo importa?** A mesma busca, trocando só a composição dos
+grupos por grupos aleatórios de mesmos tamanhos.
+
+| Comparação (aleatório − perfil) | Integral primal | Desvio final | Leitura |
+|---|---|---|---|
+| CLNS sozinho | +0,0045; p = 0,77 | +0,53 p.p.; p = 0,30 | sem diferença significativa; estimativas favorecem o perfil |
+| Híbrido PL | +0,0001; p = 1,00 | +0,02 p.p.; p = 1,00 | nenhuma diferença |
+
+Não há evidência de que agrupar por perfil de custo seja o que faz o CLNS funcionar. O que se
+pode afirmar é o valor da **coordenação** (capacidade residual e custo fixo pago uma vez), não do
+critério de agrupamento. Com grupos aleatórios a busca resolve quase o dobro de subproblemas por
+execução, possivelmente porque eles ficam mais fáceis e menos úteis.
+
+**D3 — O corte de 10 centros candidatos por cliente limita a busca?**
+
+| Comparação | Integral primal | Desvio final | Leitura |
+|---|---|---|---|
+| CLNS sozinho, 30 centros − 10 | −0,0097; p = 0,11 | **−1,44 p.p.; p = 0,002** | o corte limitava o CLNS: desvio mediano de 2,46% para 1,22% |
+| Híbrido PL, 20 centros − 10 | +0,0001; p = 1,00 | −0,09 p.p.; p = 0,98 | nenhuma diferença |
+| Híbrido PL, 30 centros − 10 | +0,0007; p = 1,00 | +0,01 p.p.; p = 1,00 | nenhuma diferença |
+
+Valores-p de Wilcoxon com correção de Holm sobre as cinco comparações de D2 e D3.
+
+**O que os diagnósticos mudam na leitura.**
+
+- A explicação "o CLNS é limitado pelo alcance das vizinhanças" ganha dois apoios diretos: os
+  subproblemas repetidos estavam provadamente esgotados (D1), e ampliar os centros candidatos
+  melhora o CLNS sozinho de forma significativa (D3). Parte do "estaciona a ~2%" dos pilotos era
+  efeito do corte de 10 centros, não só da forma dos grupos.
+- No híbrido, que parte de uma solução já boa, nem o agrupamento nem o número de candidatos faz
+  diferença. O que resta para melhorar ali não está nessas duas escolhas.
+- A contribuição do agrupamento por perfil fica **não demonstrada**; o artigo passa a reivindicar
+  só a coordenação.
+
+---
+
+## 12. O que foi implementado
 
 | Componente | Arquivo | Conteúdo |
 |---|---|---|
@@ -655,7 +713,7 @@ uv run python scripts/figuras_pesquisa.py
 
 ---
 
-## 12. Pontos fortes, pontos fracos e ameaças à validade
+## 13. Pontos fortes, pontos fracos e ameaças à validade
 
 **Fortes**
 
@@ -678,10 +736,11 @@ uv run python scripts/figuras_pesquisa.py
 
 ---
 
-## 13. Próximos passos
+## 14. Próximos passos
 
-1. **Vizinhanças de maior alcance** no CLNS (abrir e fechar vários centros de uma vez), já que
-   a repetição medida mostra que o gargalo é o alcance e não a seleção.
+1. **Vizinhanças de maior alcance** no CLNS. Os diagnósticos mostram que os subproblemas
+   repetidos estão esgotados e que ampliar os centros candidatos ajuda o CLNS sozinho; falta testar
+   isso em instâncias novas e encontrar o que limita o híbrido.
 2. **EDA em linha** (passo 3 do plano): estimar durante a própria busca a distribuição de
    abertura dos centros a partir das soluções visitadas, no lugar da GNN treinada fora.
 3. **CP-SAT contra SCIP** como solver dos subproblemas (passo 4).
@@ -695,7 +754,7 @@ uv run python scripts/figuras_pesquisa.py
 
 ---
 
-## 14. Onde está cada coisa
+## 15. Onde está cada coisa
 
 | O quê | Onde |
 |---|---|

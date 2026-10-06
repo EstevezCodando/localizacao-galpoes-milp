@@ -10,7 +10,7 @@ dados abertos do IBGE e do OpenStreetMap, previsão de demanda e validação con
 Inclui uma linha de pesquisa aberta sobre **redução do espaço de busca com e sem aprendizado de máquina**,
 com pré-registro, dados congelados e manuscrito.
 
-`Python 3.12` · `OR-Tools (SCIP, GLOP)` · `HiGHS` · `scikit-learn` · `uv` · `mypy --strict` · `ruff` · `pytest (139 testes)`
+`Python 3.12` · `OR-Tools (SCIP, GLOP)` · `HiGHS` · `scikit-learn` · `uv` · `mypy --strict` · `ruff` · `pytest (143 testes)`
 Pesquisa: `PySCIPOpt (SCIP 10)` · `PyTorch (CPU)` · `LightGBM` · `psutil` · `LaTeX`
 
 [Mapa e resultados](docs/index.html) · [Estudo integrado](docs/estudo_integrado/index.html) · [Linha de pesquisa](#linha-de-pesquisa-aprender-o-espaço-de-busca) · [Problema](#o-problema) · [Resultados](#resultados) · [Dados](#dados-e-fontes) · [Como executar](#como-executar) · [Limitações](#limitações-e-honestidade-dos-números)
@@ -414,7 +414,7 @@ aprendido é comparado com o **equivalente clássico de mesma função**, no mes
 
 ![Caminho percorrido](docs/pesquisa/img/01_caminho.png)
 
-*A figura cobre as seis etapas de desenvolvimento; a sétima, o teste fechado, está na tabela abaixo e na [seção própria](#o-teste-fechado). Cada caixa traz o que foi feito, o que foi medido e a decisão que levou à etapa seguinte.
+*A figura cobre as seis etapas de desenvolvimento; o teste fechado e os diagnósticos estão na tabela abaixo e nas seções [O teste fechado](#o-teste-fechado) e [Diagnósticos de validação](#diagnósticos-de-validação). Cada caixa traz o que foi feito, o que foi medido e a decisão que levou à etapa seguinte.
 Vermelho marca caminhos descartados com base em medição; verde, resultado positivo; azul, a
 etapa mais recente.*
 
@@ -427,6 +427,7 @@ etapa mais recente.*
 | 5. Híbrido | Expansão adaptativa em metade do tempo, CLNS na outra metade | Desvio final de 0,57% a 0,63%, contra 0,81% da expansão e 2,66% do SCIP | Testar se a GNN é necessária |
 | 6. Controles e memória | Kernel Search, híbrido só com PL, memória de subproblemas | Nenhuma diferença significativa a favor da GNN; 54% a 58% dos subproblemas do CLNS eram repetições | O ranking do PL passa a ser a referência; congelar o método e testar |
 | 7. Teste fechado | 1.390 execuções em 139 instâncias novas, com hipóteses pré-registradas, repetidas em hardware dedicado | Expansão com PL tem cerca de metade da integral do SCIP; com GNN, a integral piora, nas duas rodadas | Isolar o efeito do agrupamento; diagnosticar a repetição de subproblemas |
+| 8. Diagnósticos | Subproblemas repetidos reexecutados com mais tempo; grupos aleatórios; 10 contra 30 centros candidatos | 98% dos repetidos estavam provadamente esgotados; o agrupamento não fez diferença significativa; 30 candidatos baixam o desvio do CLNS sozinho de 2,46% para 1,22% | Reivindicar a coordenação, não o agrupamento; buscar vizinhanças de maior alcance |
 
 ### Por que a capacidade muda tudo
 
@@ -625,6 +626,10 @@ uv run pytest tests/test_pesquisa_g0.py tests/test_clns.py tests/test_pesquisa_r
 # avaliação no mesmo orçamento, com registro versionado (manifesto + SQLite)
 uv run python -m alocacao_capacitada.pesquisa.exp_clns avaliar --split validacao --tempo 60 --workers 3 --limite 16
 uv run python scripts/agregados_clns.py results/pesquisa/clns/<run_id> --horizonte 60
+uv run python scripts/analisar_fechado.py teste=<run> gen_corredor=<run> gen_escala=<run> holmberg=<run> olist=<run>
+uv run python scripts/comparar_rodadas.py results/pesquisa/fechado results/pesquisa/fechado_nuvem
+uv run python scripts/diag_repeticao.py --workers 3    # diagnóstico D1
+uv run python scripts/analisar_diagnosticos.py results/pesquisa/diagnosticos <run_d2_d3>
 uv run python scripts/figuras_pesquisa.py        # figuras desta seção
 uv run python paper/figuras/gerar_figuras.py     # figuras do manuscrito
 ```
@@ -632,9 +637,10 @@ uv run python paper/figuras/gerar_figuras.py     # figuras do manuscrito
 | Onde | O quê |
 |---|---|
 | `src/alocacao_capacitada/pesquisa/` | modelo estrito, PL com duais, gerador, GNN, expansão adaptativa, Kernel Search, CLNS, memória de subproblemas, medição, congelamento, reconstruções |
-| `docs/pesquisa/` | pré-registros, relatórios por frente, auditorias e relatório geral |
+| `docs/pesquisa/` | pré-registros (`00`, `07`, `08`, `10` com emendas, `12`), relatórios por frente, auditorias e relatório geral (`09`) |
 | `paper/` | manuscrito em inglês (`journal/`, elsarticle), versão nas normas ABNT (`abnt/`) e versão curta (`short/`, LNCS) |
-| `results/pesquisa/` | resultados brutos, agregados e manifestos |
+| `results/pesquisa/` | resultados brutos, agregados e manifestos: pilotos (`clns/`), teste fechado local (`fechado/`), teste fechado em hardware dedicado (`nuvem/`, `fechado_nuvem/`) e diagnósticos (`diagnosticos/`) |
+| `scripts/linux/` | correção de ambiente e scripts para rodar em Linux (o conflito entre as bibliotecas nativas do OR-Tools e do `highspy` só aparece lá) |
 | `data/processed/pesquisa/` | instâncias, rótulos e modelos congelados |
 
 ### O teste fechado
@@ -838,6 +844,62 @@ vantagem absoluta sobre o SCIP completo**, sobretudo no desvio final, e produziu
 limiar que não se replicaram. Os números absolutos a citar são os da rodada em hardware dedicado; os da rodada
 local ficam como primeira execução.
 
+### Diagnósticos de validação
+
+Depois do teste fechado, três diagnósticos pedidos pelo parecer do orientador foram
+[registrados](docs/pesquisa/12-preregistro-diagnosticos.md) e rodados nas 16 instâncias de **validação**, em hardware dedicado (368
+execuções de busca e 512 reexecuções de subproblemas, nenhuma marcada por contenção). São
+exploratórios: servem para escolher entre explicações, não para confirmar hipóteses.
+
+**D1 — Um subproblema que falhou por limite de tempo estava esgotado?** O CLNS rodou 30 s e, de
+cada execução, até 8 subproblemas que eram repetição de uma falha anterior foram reexecutados do
+mesmo estado com limites de 5 s e de 30 s.
+
+| Partida | Subproblemas reexecutados | Ótimo provado, sem melhoria | Melhorou com 30 s | Indeterminado |
+|---|---:|---:|---:|---:|
+| Arredondamento do PL | 128 | 126 | 2 | 0 |
+| Solução da expansão adaptativa | 128 | 126 | 2 | 0 |
+
+Em 252 de 256 casos (98%) o solver **provou** que o subproblema não tinha solução melhor, em
+mediana de menos de 0,01 s. As quatro melhorias vieram de subproblemas de fronteira e de
+liberação, com ganho mediano de 0,07% do custo. A falha repetida não era falta de tempo: o
+subproblema estava esgotado. Isso sustenta, nestas instâncias, a memória de subproblemas como
+heurística segura, e mostra que o limite de 0,5 s não é o gargalo.
+
+**D2 — O agrupamento por perfil de custo importa?** A mesma busca, trocando só a composição dos
+grupos por grupos aleatórios de mesmos tamanhos.
+
+| Comparação (aleatório − perfil) | Integral primal | Desvio final | Leitura |
+|---|---|---|---|
+| CLNS sozinho | +0,0045; p = 0,77 | +0,53 p.p.; p = 0,30 | sem diferença significativa; estimativas favorecem o perfil |
+| Híbrido PL | +0,0001; p = 1,00 | +0,02 p.p.; p = 1,00 | nenhuma diferença |
+
+Não há evidência de que agrupar por perfil de custo seja o que faz o CLNS funcionar. O que se
+pode afirmar é o valor da **coordenação** (capacidade residual e custo fixo pago uma vez), não do
+critério de agrupamento. Com grupos aleatórios a busca resolve quase o dobro de subproblemas por
+execução, possivelmente porque eles ficam mais fáceis e menos úteis.
+
+**D3 — O corte de 10 centros candidatos por cliente limita a busca?**
+
+| Comparação | Integral primal | Desvio final | Leitura |
+|---|---|---|---|
+| CLNS sozinho, 30 centros − 10 | −0,0097; p = 0,11 | **−1,44 p.p.; p = 0,002** | o corte limitava o CLNS: desvio mediano de 2,46% para 1,22% |
+| Híbrido PL, 20 centros − 10 | +0,0001; p = 1,00 | −0,09 p.p.; p = 0,98 | nenhuma diferença |
+| Híbrido PL, 30 centros − 10 | +0,0007; p = 1,00 | +0,01 p.p.; p = 1,00 | nenhuma diferença |
+
+Valores-p de Wilcoxon com correção de Holm sobre as cinco comparações de D2 e D3.
+
+**O que os diagnósticos mudam na leitura.**
+
+- A explicação "o CLNS é limitado pelo alcance das vizinhanças" ganha dois apoios diretos: os
+  subproblemas repetidos estavam provadamente esgotados (D1), e ampliar os centros candidatos
+  melhora o CLNS sozinho de forma significativa (D3). Parte do "estaciona a ~2%" dos pilotos era
+  efeito do corte de 10 centros, não só da forma dos grupos.
+- No híbrido, que parte de uma solução já boa, nem o agrupamento nem o número de candidatos faz
+  diferença. O que resta para melhorar ali não está nessas duas escolhas.
+- A contribuição do agrupamento por perfil fica **não demonstrada**; o artigo passa a reivindicar
+  só a coordenação.
+
 ### Limites desta parte
 
 - A primeira rodada do teste fechado teve 16,5% das execuções marcadas por contenção; a segunda,
@@ -850,8 +912,10 @@ local ficam como primeira execução.
   pilotos (16 instâncias); a evidência sobre eles é exploratória.
 - Dois valores-p da métrica secundária ficaram no limiar na primeira rodada (0,0495) e não se
   replicaram na segunda (0,056).
-- A contribuição do agrupamento em si não está isolada: falta comparar grupos por perfil de
-  custo com grupos aleatórios de mesmo tamanho.
+- A contribuição do agrupamento por perfil de custo **não ficou demonstrada**: em um diagnóstico
+  exploratório, grupos aleatórios de mesmo tamanho não diferiram de forma significativa.
+- O corte de 10 centros candidatos por cliente, fixado antes dos experimentos, limitava o CLNS
+  sozinho; o teste fechado usou esse corte do começo ao fim.
 - A análise do desvio final foi corrigida depois de vista (emenda registrada no pré-registro);
   o efeito foi de 4 execuções em 1.390.
 - Instâncias em maioria sintéticas. Fora de Holmberg, a qualidade é medida contra a melhor
@@ -881,7 +945,7 @@ uv run pytest --ignore=tests/test_clns.py --ignore=tests/test_pesquisa_g0.py \
 uv run ruff check src --exclude src/alocacao_capacitada/pesquisa   # lint
 
 uv sync --group pesquisa                                   # acrescenta PySCIPOpt, PyTorch, LightGBM, psutil
-uv run pytest                                              # os 139 testes (91 + 48 da pesquisa)
+uv run pytest                                              # os 143 testes (91 + 52 da pesquisa)
 ```
 
 A linha de pesquisa tem os próprios comandos, em [Como reproduzir a pesquisa](#como-reproduzir-a-pesquisa).
@@ -943,6 +1007,8 @@ uv run python -m alocacao_capacitada.analysis.study --out results/uma_pasta_nova
 uv run python scripts/render_study.py --data results/uma_pasta_nova --out docs/estudo_integrado
 ```
 
+> **Linux:** depois do `uv sync --group pesquisa`, rode `bash scripts/linux/corrigir_highs.sh`; sem isso `ortools` e `highspy` não carregam no mesmo processo. Quatro testes do estudo aplicado (frete e aluguel) falham no Linux por uma dependência de leitura de HTML que ainda não investiguei; os da pesquisa passam.
+>
 > O `Dockerfile` existe, mas **não foi testado**, e cobre só o comando `alocacao-capacitada` do estudo aplicado (não instala o grupo `pesquisa`). A coleta de páginas usa o Cavuca, que é opcional e não vem com o projeto: instale-o à parte ou passe outra função de busca ao `PoliteCollector`. Os brutos grandes (`data/raw`, `data/bronze/ibge`, os PBF e os shapefiles) ficam fora do git; as tabelas de `data/reference/` e os resultados de `results/` são versionados.
 
 ---
@@ -975,7 +1041,7 @@ data/processed/pesquisa/  instâncias, rótulos e modelos da pesquisa, congelado
 results/          saídas versionadas dos experimentos (results/foco/ para o recorte,
                   results/pesquisa/ para a linha de pesquisa)
 data/frozen/      LOCK.json com o hash SHA-256 de cada instância e modelo da pesquisa
-tests/            139 testes (91 do estudo aplicado, 48 da pesquisa)
+tests/            143 testes (91 do estudo aplicado, 52 da pesquisa)
 ```
 
 ---

@@ -101,11 +101,11 @@ class Estado:
     """Dados fixos da instância + estatísticas de cada candidato ao longo da busca."""
 
     def __init__(self, prob: Problema, tamanho: int, seed: int, rc: np.ndarray | None,
-                 gnn: np.ndarray | None = None) -> None:
+                 gnn: np.ndarray | None = None, agrupamento: str = "perfil") -> None:
         self.prob = prob
         self.gnn = gnn  # probabilidade (GNN) de cada centro estar numa boa solução, ou None
         self.unit = prob.cost / prob.demand[None, :]
-        self.gs = grupos(prob, tamanho, seed)
+        self.gs = grupos(prob, tamanho, seed, agrupamento)
         self.viz = _vizinhos_grupos(prob, self.gs) if len(self.gs) > 1 else None
         self.rc = rc  # custos reduzidos de x_ij no PL forte, shape (m, n) (ou None)
         self.tamanho = tamanho
@@ -359,7 +359,7 @@ def clns(prob: Problema, tempo: float, seletor: Seletor, tamanho: int = 15, t_su
          atrib_inicial: np.ndarray | None = None,
          lp_pronto: tuple[np.ndarray, np.ndarray] | None = None,
          gnn: np.ndarray | None = None, t_offset: float = 0.0,
-         memoria: bool = False) -> SaidaClns:
+         memoria: bool = False, agrupamento: str = "perfil", k_cand: int = 10) -> SaidaClns:
     """`atrib_inicial`: partida externa (ex.: expansão adaptativa); `lp_pronto` = (rc_x, x) já
     calculados (não recalcula nem cobra de novo); `gnn` = probabilidades por centro;
     `t_offset` = tempo já gasto antes desta chamada, somado à trajetória (relógio único).
@@ -389,7 +389,7 @@ def clns(prob: Problema, tempo: float, seletor: Seletor, tamanho: int = 15, t_su
     obj = validar(prob, a).objetivo
     t_ini = time.perf_counter() - ti
     traj = [(t_offset + time.perf_counter() - t0, obj)]
-    est = Estado(prob, tamanho, seed, rc, gnn)
+    est = Estado(prob, tamanho, seed, rc, gnn, agrupamento)
     tent = {t: 0 for t in (*TIPOS, "abertura")}
     acc = {t: 0 for t in (*TIPOS, "abertura")}
     t_sel = t_subs = 0.0
@@ -416,7 +416,7 @@ def clns(prob: Problema, tempo: float, seletor: Seletor, tamanho: int = 15, t_su
         if orc <= 0.02:
             break
         tr = time.perf_counter()
-        cand = reotimizar(prob, a, c.livres, orc)
+        cand = reotimizar(prob, a, c.livres, orc, k_cand=k_cand)
         dt = time.perf_counter() - tr
         t_subs += dt
         ganho = 0.0

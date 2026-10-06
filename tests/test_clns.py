@@ -146,3 +146,35 @@ def test_kernel_search_valido_e_no_prazo(prob) -> None:  # type: ignore[no-untyp
     assert s.t_total <= 8.0 + 1.0
     objs = [o for _, o in s.trajetoria]
     assert min(objs) == pytest.approx(s.objetivo)
+
+
+def test_grupos_aleatorios_tem_os_mesmos_tamanhos(prob) -> None:  # type: ignore[no-untyped-def]
+    from alocacao_capacitada.pesquisa.decomposicao import grupos
+
+    perfil = grupos(prob, 15, 0)
+    alea = grupos(prob, 15, 0, "aleatorio")
+    assert sorted(map(len, perfil)) == sorted(map(len, alea))
+    assert np.array_equal(np.sort(np.concatenate(alea)), np.arange(prob.n))
+    assert any(not np.array_equal(a, b) for a, b in zip(perfil, alea))
+
+
+def test_reotimizar_informa_status(prob) -> None:  # type: ignore[no-untyped-def]
+    a = C.inicial_pl(prob, relaxacao_linear(prob).x)
+    info: dict = {}
+    novo = reotimizar(prob, a, np.arange(10), 5.0, info=info)
+    assert novo is not None and info["status"] in ("optimal", "timelimit")
+    assert info["dual"] <= info["primal"] + 1e-6
+
+
+def test_opcoes_de_metodo() -> None:
+    from alocacao_capacitada.pesquisa.exp_clns import _opcoes
+
+    assert _opcoes("clns:rotacao") == ("clns:rotacao", {"memoria": False, "agrupamento": "perfil", "k_cand": 10})
+    assert _opcoes("hibridopl:rotacao+alea+k30+mem")[1] == {"memoria": True, "agrupamento": "aleatorio", "k_cand": 30}
+    with pytest.raises(ValueError):
+        _opcoes("clns:rotacao+xyz")
+
+
+def test_clns_com_grupos_aleatorios_e_k_ampliado_e_valido(prob) -> None:  # type: ignore[no-untyped-def]
+    s = C.clns(prob, 5.0, C.SELETORES["rotacao"](), seed=0, agrupamento="aleatorio", k_cand=20)
+    assert s.valida

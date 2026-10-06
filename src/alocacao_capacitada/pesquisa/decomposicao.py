@@ -71,8 +71,18 @@ def construtivo(prob: Problema) -> np.ndarray:
     return a
 
 
-def grupos(prob: Problema, tamanho: int, seed: int = 0) -> list[np.ndarray]:
-    """K-means sobre o perfil de custo unitário a todos os centros."""
+def grupos(prob: Problema, tamanho: int, seed: int = 0, modo: str = "perfil") -> list[np.ndarray]:
+    """K-means sobre o perfil de custo unitário a todos os centros.
+
+    modo="aleatorio" é o controle do agrupamento: mesmos tamanhos de grupo do k-means, com os
+    clientes embaralhados (a única coisa que muda é QUEM está em cada grupo)."""
+    if modo == "aleatorio":
+        base = grupos(prob, tamanho, seed, "perfil")
+        perm = np.random.default_rng(seed + 7919).permutation(prob.n)
+        cortes = np.cumsum([len(g) for g in base])[:-1]
+        return [np.sort(g) for g in np.split(perm, cortes)]
+    if modo != "perfil":
+        raise ValueError(modo)
     from sklearn.cluster import KMeans
 
     if tamanho <= 0:
@@ -98,7 +108,7 @@ def _vizinhos_grupos(prob: Problema, gs: list[np.ndarray]) -> np.ndarray:
 
 
 def reotimizar(prob: Problema, a: np.ndarray, livres: np.ndarray, tempo: float,
-               k_cand: int = 10) -> np.ndarray | None:
+               k_cand: int = 10, info: dict | None = None) -> np.ndarray | None:
     """Reotimiza os clientes `livres` com o restante fixo. Candidatos de cada livre: seus k_cand
     centros mais baratos + o centro atual (garante que a solução atual é viável e é dada como
     dica). Devolve a atribuição completa ou None."""
@@ -160,6 +170,10 @@ def reotimizar(prob: Problema, a: np.ndarray, livres: np.ndarray, tempo: float,
         return a.copy()
     md.setParam("limits/time", restante)
     md.optimize()
+    if info is not None:  # diagnóstico: o subproblema foi resolvido ou só interrompido?
+        info.update(status=md.getStatus(), nos=int(md.getNNodes()), dual=float(md.getDualbound()),
+                    primal=float(md.getPrimalbound()) if md.getNSols() else float("inf"),
+                    tempo=float(md.getSolvingTime()), variaveis=len(x) + len(y))
     if md.getNSols() == 0:
         return None
     best = md.getBestSol()

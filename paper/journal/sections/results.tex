@@ -216,8 +216,8 @@ not translate into a measurable gain: for CLNS alone the primal integral went fr
 0.0347 ($p=0.18$) and the median deviation from 2.80\% to 2.36\% ($p=0.12$); inside the hybrids
 there was no change (differences below 0.0003 in $P$). One reading, compatible with these data but not established by them, is that the CLNS is limited
 by the \emph{reach} of its neighborhoods (or by the ten-facility candidate restriction, or by the
-short limits) more than by the order in which they are tried. Re-solving a sample of repeated
-subproblems with larger limits would separate these explanations and is listed as future work.
+short limits) more than by the order in which they are tried. Section~\ref{sec:res-diag} reports a diagnostic that re-solves repeated subproblems with larger
+limits and separates these explanations.
 
 \begin{figure}[t]\centering
 \includegraphics[width=0.49\linewidth]{../figuras/piloto3_integral.pdf}\hfill
@@ -512,6 +512,42 @@ and 6.3\% and 9.3\% for the expansion alone.
 The contention of the first round did not reverse any conclusion, but it inflated the absolute
 advantage over the full solver and produced two threshold $p$-values that did not replicate. The
 absolute figures to be cited are those of the second round.
+
+\subsection{Exploratory diagnostics}\label{sec:res-diag}
+After the closed test we ran three diagnostics on the 16 validation instances, on the dedicated
+hardware, to choose among the explanations left open above. They were registered before running,
+but they reuse instances seen in the pilots and are exploratory. Holm's correction is applied over
+the five comparisons of the second and third diagnostics.
+
+\paragraph{Were the repeated subproblems exhausted?} We ran the CLNS with rotation for 30~s from
+two starting points (the LP-rounded solution and the solution of the LP-ranked expansion) and,
+from each run, re-solved up to eight subproblems that were repetitions of an earlier failure, from
+the same state, with limits of 5 and 30~s instead of 0.5~s. Of 256 re-solved subproblems, 252
+(98\%) terminated with proven optimality and no improvement, in a median of less than 0.01~s; four
+improved with the 30~s limit, by a median of 0.07\% of the cost, all of the boundary or release
+type. A repeated failure was therefore almost always a solved subproblem, not an interrupted one.
+On these instances the memory of Section~\ref{sec:memory} would have discarded a useful subproblem
+in about 2\% of the cases, and the 0.5~s limit is not what limits the search.
+
+\paragraph{Does clustering by cost profile matter?} Replacing the clusters by random groups of the
+same sizes, everything else equal, did not change the result significantly: for the CLNS alone
+the primal integral rose by 0.0045 ($p_{\mathrm{H}}=0.77$) and the final deviation by 0.53
+percentage points ($p_{\mathrm{H}}=0.30$); for the LP hybrid the differences were 0.0001 and 0.02
+points. The point estimates favor the cost-profile clusters for the CLNS alone, but we cannot
+claim that the grouping criterion is what makes the CLNS work. What the comparison with the naive
+decomposition supports is the coordination, not the clustering.
+
+\paragraph{Does the ten-facility candidate restriction limit the search?} Allowing each free
+customer its 30 cheapest facilities instead of 10 lowered the median final deviation of the CLNS
+alone from 2.46\% to 1.22\% (mean difference $-1.44$ points, better in 14 of 16 instances,
+$p_{\mathrm{H}}=0.002$), with fewer than half as many subproblems solved per run. In the LP hybrid, 20 or
+30 candidates made no difference (differences below 0.1 point, $p_{\mathrm{H}}\ge0.98$).
+
+Taken together, the diagnostics support the reading that the CLNS is limited by the reach of its
+subproblems, and locate part of that limit in the candidate restriction rather than in the
+clusters: the plateau near 2\% observed in the pilots for the CLNS alone was partly an effect of
+restricting each customer to ten facilities. They also show that this is not what limits the
+hybrid, which starts from a much better solution.
 
 \subsection{Ablations}
 \todo{$\alpha\in\{0.3,0.5,0.7\}$; without the opening subproblem; without the LP start; cluster
